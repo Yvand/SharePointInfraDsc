@@ -1,0 +1,13 @@
+[ClassVersion("1.0.0.0"), FriendlyName("SPContentDatabase")]
+class MSFT_SPContentDatabase : OMI_BaseResource
+{
+    [Key, Description("Specifies the name of the content database")] String Name;
+    [Write, Description("The name of the database server to host the content DB")] string DatabaseServer;
+    [Required, Description("The URL of the web application")] string WebAppUrl;
+    [Write, Description("Should the database be enabled")] Boolean Enabled;
+    [Write, Description("Specify the site collection warning limit for the content database")] Uint16 WarningSiteCount;
+    [Write, Description("Specify the site collection maximum limit for the content database")] Uint16 MaximumSiteCount;
+    [Write, Description("Present to create this database, absent to ensure it does not exist"), ValueMap{"Present","Absent"}, Values{"Present","Absent"}] string Ensure;
+    [Write, Description("Should SQL Server authentication be used to connect to the database?")] Boolean UseSQLAuthentication;
+    [Write, Description("If using SQL authentication, the SQL credentials to use to connect to the instance"), EmbeddedInstance("MSFT_Credential")] String DatabaseCredentials;
+};

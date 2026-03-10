@@ -1,0 +1,22 @@
+[ClassVersion("1.0.0.0"), FriendlyName("SPUserProfileServiceApp")]
+class MSFT_SPUserProfileServiceApp : OMI_BaseResource
+{
+    [Key, Description("The name of the user profile service")] string Name;
+    [Write, Description("The proxy name, if not specified will be /Name of service app/ Proxy")] string ProxyName;
+    [Required, Description("The name of the application pool to run the service app in")] string ApplicationPool;
+    [Write, Description("The URL of the my site host collection")] string MySiteHostLocation;
+    [Write, Description("The Managed Path of the my site sites")] string MySiteManagedPath;
+    [Write, Description("The name of the profile database")] string ProfileDBName;
+    [Write, Description("The name of the server to host the profile database")] string ProfileDBServer;
+    [Write, Description("The name of the social database")] string SocialDBName;
+    [Write, Description("The name of the database server to host the social database")] string SocialDBServer;
+    [Write, Description("The name of the sync database")] string SyncDBName;
+    [Write, Description("The name of the database server to host the sync database")] string SyncDBServer;
+    [Write, Description("Whether Farm should resolve NetBIOS domain names")] boolean EnableNetBIOS;
+    [Write, Description("Specifies if the service application should be configured to use AD Import")] boolean NoILMUsed;
+    [Write, Description("Specifies which SiteNamingConflictResolution should be used"), ValueMap{"Username_CollisionError","Username_CollisionDomain","Domain_Username"}, Values{"Username_CollisionError","Username_CollisionDomain","Domain_Username"}] string SiteNamingConflictResolution;
+    [Write, Description("Specifies if an issue with Service App Proxy Groups should be automatically corrected (see wiki for more info). Default value is true.")] boolean UpdateProxyGroup;
+    [Write, Description("Present if the service app should exist, absent if it should not"), ValueMap{"Present","Absent"}, Values{"Present","Absent"}] string Ensure;
+    [Write, Description("Should SQL Server authentication be used to connect to the database?")] Boolean UseSQLAuthentication;
+    [Write, Description("If using SQL authentication, the SQL credentials to use to connect to the instance"), EmbeddedInstance("MSFT_Credential")] String DatabaseCredentials;
+};

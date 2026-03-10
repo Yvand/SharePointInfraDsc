@@ -1,0 +1,25 @@
+TOPIC
+    about_SqlServerDsc
+
+SHORT DESCRIPTION
+    Commands and DSC resources for deployment and configuration of Microsoft SQL Server, SQL Server Reporting Services and Power BI Report Server.
+
+LONG DESCRIPTION
+    This module contains commands and DSC resources for deployment and configuration of Microsoft SQL Server, SQL Server Reporting Services and Power BI Report Server.
+
+EXAMPLES
+    PS C:\> Get-DscResource -Module SqlServerDsc
+
+NOTE:
+    Thank you to the DSC Community contributors who contributed to this module by
+    writing code, sharing opinions, and provided feedback.
+
+TROUBLESHOOTING NOTE:
+    Go to the Github repository for read about issues, submit a new issue, and read
+    about new releases. https://github.com/dsccommunity/SqlServerDsc
+
+SEE ALSO
+    - https://github.com/dsccommunity/SqlServerDsc
+
+KEYWORDS
+    DSC, DscResource, SqlServer, PowerBI, ReportingServices, ReportServer

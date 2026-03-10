@@ -1,0 +1,287 @@
+.NAME
+    SqlAudit
+
+.SYNOPSIS
+    The SqlAudit DSC resource is used to create, modify, or remove
+    server audits.
+
+.DESCRIPTION
+    The SqlAudit DSC resource is used to create, modify, or remove
+    server audits.
+
+    The built-in parameter PSDscRunAsCredential can be used to run the resource
+    as another user. The resource will then authenticate to the SQL Server
+    instance as that user. It also possible to instead use impersonation by the
+    parameter Credential.
+
+    ## Requirements
+
+    * Target machine must be running Windows Server 2012 or later.
+    * Target machine must be running SQL Server Database Engine 2012 or later.
+    * Target machine must have access to the SQLPS PowerShell module or the SqlServer
+      PowerShell module.
+
+    ## Known issues
+
+    All issues are not listed here, see https://github.com/dsccommunity/SqlServerDsc/issues?q=is%3Aissue+is%3Aopen+in%3Atitle+SqlAudit.
+
+    ### Property Reasons does not work with PSDscRunAsCredential
+
+    When using the built-in parameter PSDscRunAsCredential the read-only
+    property Reasons will return empty values for the properties Code
+    and **Phrase. The built-in property PSDscRunAsCredential does not work
+    together with class-based resources that using advanced type like the parameter
+    Reasons have.
+
+    ### Using Credential property
+
+    SQL Authentication and Group Managed Service Accounts is not supported as
+    impersonation credentials. Currently only Windows Integrated Security is
+    supported to use as credentials.
+
+    For Windows Authentication the username must either be provided with the User
+    Principal Name (UPN), e.g. username@domain.local or if using non-domain
+    (for example a local Windows Server account) account the username must be
+    provided without the NetBIOS name, e.g. username. Using the NetBIOS name, e.g
+    using the format DOMAIN\username will not work.
+
+    See more information in https://github.com/dsccommunity/SqlServerDsc/wiki/CredentialOverview.
+
+.PARAMETER Name
+    Key - System.String
+    The name of the audit.
+
+.PARAMETER LogType
+    Write - System.String
+    Allowed values: SecurityLog, ApplicationLog
+    Specifies the to which log an audit logs to. Mutually exclusive to parameter
+    Path.
+
+.PARAMETER Path
+    Write - System.String
+    Specifies the destination path for a file audit. Mutually exclusive to parameter
+    LogType.
+
+.PARAMETER AuditFilter
+    Write - System.String
+
+.PARAMETER MaximumFiles
+    Write - Nullable[System.UInt32]
+    Specifies the number of files on disk. Mutually exclusive to parameter
+    MaximumRolloverFiles. Mutually exclusive to parameter LogType.
+
+.PARAMETER MaximumFileSize
+    Write - Nullable[System.UInt32]
+    Specifies the maximum file size in units by parameter MaximumFileSizeUnit.
+    If this is specified the parameter MaximumFileSizeUnit must also be
+    specified. Mutually exclusive to parameter LogType. Minimum allowed value
+    is 2 (MB). It also allowed to set the value to 0 which mean unlimited file
+    size.
+
+.PARAMETER MaximumFileSizeUnit
+    Write - System.String
+    Allowed values: Megabyte, Gigabyte, Terabyte
+    Specifies the unit that is used for the file size.
+    If this is specified the parameter MaximumFileSize must also be
+    specified. Mutually exclusive to parameter LogType.
+
+.PARAMETER MaximumRolloverFiles
+    Write - Nullable[System.UInt32]
+    Specifies the amount of files on disk before SQL Server starts reusing
+    the files. Mutually exclusive to parameter MaximumFiles and LogType.
+
+.PARAMETER OnFailure
+    Write - System.String
+    Allowed values: Continue, FailOperation, Shutdown
+    Specifies what should happen when writing events to the store fails.
+    This can be Continue, FailOperation, or Shutdown.
+
+.PARAMETER QueueDelay
+    Write - Nullable[System.UInt32]
+    Specifies the maximum delay before a event is written to the store.
+    When set to low this could impact server performance.
+    When set to high events could be missing when a server crashes.
+
+.PARAMETER AuditGuid
+    Write - System.String
+
+.PARAMETER ReserveDiskSpace
+    Write - Nullable[System.Boolean]
+    Specifies if the needed file space should be reserved. only needed
+    when writing to a file log. Mutually exclusive to parameter LogType.
+
+.PARAMETER Enabled
+    Write - Nullable[System.Boolean]
+    Specifies if the audit should be enabled. Defaults to $false.
+
+.PARAMETER Ensure
+    Write - Ensure
+    Specifies if the server audit should be present or absent. If set to Present
+    the audit will be added if it does not exist, or updated if the audit exist.
+    If Absent then the audit will be removed from the server. Defaults to
+    Present.
+
+.PARAMETER Force
+    Write - Nullable[System.Boolean]
+    Specifies if it is allowed to re-create the server audit if a current audit
+    exist with the same name but of a different audit type. Defaults to $false
+    not allowing server audits to be re-created.
+
+.EXAMPLE 1
+
+This example shows how to ensure that an audit destination
+is absent on the instance sqltest.company.local\DSC.
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName SqlServerDsc
+
+    node localhost
+    {
+        SqlAudit FileAudit_Server
+        {
+            Ensure               = 'Present'
+            ServerName           = 'SQL2019-01'
+            InstanceName         = 'INST01'
+            Name                 = 'FileAudit'
+            Path                 = 'C:\Temp\audit'
+            MaximumFileSize      = 10
+            MaximumFileSizeUnit  = 'Megabyte'
+            MaximumRolloverFiles = 11
+            Enabled              = $true
+            Credential           = $SqlAdministratorCredential
+        }
+    }
+}
+
+.EXAMPLE 2
+
+This example shows how to ensure that the windows security event log
+audit destination is present on the instance sqltest.company.local\DSC.
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName SqlServerDsc
+
+    node localhost
+    {
+        SqlAudit SecurityLogAudit_Server
+        {
+            Ensure               = 'Present'
+            ServerName           = 'sqltest.company.local'
+            InstanceName         = 'DSC'
+            Name                 = 'SecLogAudit'
+            LogType              = 'SecurityLog'
+            Enabled              = $true
+            Credential           = $SqlAdministratorCredential
+        }
+    }
+}
+
+.EXAMPLE 3
+
+This example shows how to ensure that the windows security event log
+audit destination is present on the instance sqltest.company.local\DSC.
+The server should shutdown when logging is not possible.
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName SqlServerDsc
+
+    node localhost
+    {
+        SqlAudit SecurityLogAudit_Server
+        {
+            Ensure       = 'Present'
+            ServerName   = 'sqltest.company.local'
+            InstanceName = 'DSC'
+            Name         = 'SecLogAudit'
+            OnFailure    = 'Shutdown'
+            Enabled      = $true
+            Credential   = $SqlAdministratorCredential
+        }
+    }
+}
+
+.EXAMPLE 4
+
+This example shows how to ensure that the windows security event log
+audit destination is present on the instance sqltest.company.local\DSC.
+and adds a filter so only users with a name lie administrator are audited
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName SqlServerDsc
+
+    node localhost
+    {
+        SqlAudit SecurityLogAudit_Server
+        {
+            Ensure       = 'Present'
+            ServerName   = 'sqltest.company.local'
+            InstanceName = 'DSC'
+            Name         = 'SecLogAudit'
+            LogType      = 'SecurityLog'
+            Enabled      = $true
+            AuditFilter  = '([server_principal_name] like ''%ADMINISTRATOR'')'
+            Credential   = $SqlAdministratorCredential
+        }
+    }
+}
+
+.EXAMPLE 5
+
+This example shows how to ensure that an audit destination
+is absent on the instance sqltest.company.local\DSC.
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName SqlServerDsc
+
+    node localhost
+    {
+        SqlAudit FileAudit_Server
+        {
+            Ensure       = 'Absent'
+            ServerName   = 'sqltest.company.local'
+            InstanceName = 'DSC'
+            Name         = 'FileAudit'
+            Credential   = $SqlAdministratorCredential
+        }
+    }
+}

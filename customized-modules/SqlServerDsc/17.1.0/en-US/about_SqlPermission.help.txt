@@ -1,0 +1,248 @@
+.NAME
+    SqlPermission
+
+.SYNOPSIS
+    The SqlPermission DSC resource is used to grant, deny or revoke
+    server permissions for a login.
+
+.DESCRIPTION
+    The SqlPermission DSC resource is used to grant, deny or revoke
+    Server permissions for a login. For more information about permissions,
+    please read the article https://docs.microsoft.com/en-us/sql/relational-databases/security/permissions-database-engine.
+
+    > [!CAUTION]
+    > When revoking permission with PermissionState 'GrantWithGrant', both the
+    > grantee and all the other users the grantee has granted the same permission
+    > to, will also get their permission revoked.
+
+    ## Requirements
+
+    * Target machine must be running Windows Server 2012 or later.
+    * Target machine must be running SQL Server Database Engine 2012 or later.
+    * Target machine must have access to the SQLPS PowerShell module or the SqlServer
+      PowerShell module.
+
+    ## Known issues
+
+    All issues are not listed here, see https://github.com/dsccommunity/SqlServerDsc/issues?q=is%3Aissue+is%3Aopen+in%3Atitle+SqlPermission.
+
+    ### PSDscRunAsCredential not supported
+
+    The built-in property PSDscRunAsCredential does not work with class-based
+    resources that using advanced type like the parameters Permission and
+    Reasons has. Use the parameter Credential instead of PSDscRunAsCredential.
+
+    ### Using Credential property.
+
+    SQL Authentication and Group Managed Service Accounts is not supported as
+    impersonation credentials. Currently only Windows Integrated Security is
+    supported to use as credentials.
+
+    For Windows Authentication the username must either be provided with the User
+    Principal Name (UPN), e.g. 'username@domain.local' or if using non-domain
+    (for example a local Windows Server account) account the username must be
+    provided without the NetBIOS name, e.g. 'username'. The format 'DOMAIN\username'
+    will not work.
+
+    See more information in https://github.com/dsccommunity/SqlServerDsc/wiki/CredentialOverview.
+
+    ### Invalid values during compilation
+
+    The parameter Permission is of type [ServerPermission]. If a property
+    in the type is set to an invalid value an error will occur, correct the
+    values in the properties to valid values.
+    This happens when the values are validated against the [ValidateSet()]
+    of the resource. When there is an invalid value the following error will
+    be thrown when the configuration is run (it will not show during compilation):
+
+    `plaintext
+    Failed to create an object of PowerShell class SqlPermission.
+        + CategoryInfo          : InvalidOperation: (root/Microsoft/...ConfigurationManager:String) [], CimException
+        + FullyQualifiedErrorId : InstantiatePSClassObjectFailed
+        + PSComputerName        : localhost
+    `
+
+.PARAMETER Name
+    Key - System.String
+    The name of the user that should be granted or denied the permission.
+
+.PARAMETER Permission
+    Write - ServerPermission[]
+    An array of server permissions to enforce. Any permission that is not
+    part of the desired state will be revoked.
+
+    Must provide all permission states (Grant, Deny, GrantWithGrant) with
+    at least an empty string array for the advanced type ServerPermission's
+    property Permission.
+
+    Valid permission names can be found in the article https://docs.microsoft.com/en-us/dotnet/api/microsoft.sqlserver.management.smo.serverpermissionset#properties.
+
+    This is an array of CIM instances of advanced type ServerPermission from
+    the namespace root/Microsoft/Windows/DesiredStateConfiguration.
+
+.PARAMETER PermissionToInclude
+    Write - ServerPermission[]
+    An array of server permissions to include to the current state. The
+    current state will not be affected unless the current state contradict the
+    desired state. For example if the desired state specifies a deny permissions
+    but in the current state that permission is granted, that permission will
+    be changed to be denied.
+
+    Valid permission names can be found in the article https://docs.microsoft.com/en-us/dotnet/api/microsoft.sqlserver.management.smo.serverpermissionset#properties.
+
+    This is an array of CIM instances of advanced type ServerPermission from
+    the namespace root/Microsoft/Windows/DesiredStateConfiguration.
+
+.PARAMETER PermissionToExclude
+    Write - ServerPermission[]
+    An array of server permissions to exclude (revoke) from the current state.
+
+    Valid permission names can be found in the article https://docs.microsoft.com/en-us/dotnet/api/microsoft.sqlserver.management.smo.serverpermissionset#properties.
+
+    This is an array of CIM instances of advanced type ServerPermission from
+    the namespace root/Microsoft/Windows/DesiredStateConfiguration.
+
+.EXAMPLE 1
+
+This example shows how to ensure that the login "NT AUTHORITY\SYSTEM" and
+"NT SERVICE\ClusSvc" is granted "AlterAnyAvailabilityGroup" and "ViewServerState"
+permissions.
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName 'SqlServerDsc'
+
+    node localhost
+    {
+        SqlPermission 'SQLConfigureServerPermission-SYSTEM'
+        {
+            ServerName   = 'sql01.company.local'
+            InstanceName = 'DSC'
+            Name         = 'NT AUTHORITY\SYSTEM'
+            Credential   = $SqlAdministratorCredential
+            Permission   = @(
+                ServerPermission
+                {
+                    State      = 'Grant'
+                    Permission = @('AlterAnyAvailabilityGroup', 'ViewServerState')
+                }
+                ServerPermission
+                {
+                    State      = 'GrantWithGrant'
+                    Permission = @()
+                }
+                ServerPermission
+                {
+                    State      = 'Deny'
+                    Permission = @()
+                }
+            )
+        }
+
+        SqlPermission 'SQLConfigureServerPermission-ClusterSvc'
+        {
+            ServerName   = 'sql01.company.local'
+            InstanceName = 'DSC'
+            Name         = 'NT SERVICE\ClusSvc'
+            Credential   = $SqlAdministratorCredential
+            Permission   = @(
+                ServerPermission
+                {
+                    State      = 'Grant'
+                    Permission = @('AlterAnyAvailabilityGroup', 'ViewServerState')
+                }
+                ServerPermission
+                {
+                    State      = 'GrantWithGrant'
+                    Permission = @()
+                }
+                ServerPermission
+                {
+                    State      = 'Deny'
+                    Permission = @()
+                }
+            )
+        }
+    }
+}
+
+.EXAMPLE 2
+
+This example shows how to enforce that if the login CONTOSO\SQLAdmin would
+be granted the permission "CreateEndpoint" outside of DSC, it is revoked.
+Any other existing permissions in the states Grant, Deny, and GrantWithGrant
+will not be changed (unless the contradict with the desired state).
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName 'SqlServerDsc'
+
+    node localhost
+    {
+        SqlPermission 'Set_Permissions_SQLAdmin'
+        {
+            ServerName            = 'sql01.company.local'
+            InstanceName          = 'DSC'
+            Name                  = 'CONTOSO\SQLAdmin'
+            Credential            = $SqlAdministratorCredential
+            PermissionToExclude   = @(
+                ServerPermission
+                {
+                    State      = 'Grant'
+                    Permission = @('CreateEndpoint')
+                }
+            )
+        }
+    }
+}
+
+.EXAMPLE 3
+
+This example shows how to ensure that the login CONTOSO\SQLAdmin is granted
+the "AlterAnyAvailabilityGroup" and "ViewServerState" permissions.
+Any existing permissions in the states Grant, Deny, and GrantWithGrant will
+not be changed (unless the contradict with the desired state).
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName 'SqlServerDsc'
+
+    node localhost
+    {
+        SqlPermission 'Set_Database_Permissions_SQLAdmin'
+        {
+            ServerName            = 'sql01.company.local'
+            InstanceName          = 'DSC'
+            Name                  = 'CONTOSO\SQLAdmin'
+            Credential            = $SqlAdministratorCredential
+            PermissionToInclude   = @(
+                ServerPermission
+                {
+                    State      = 'Grant'
+                    Permission = @('AlterAnyAvailabilityGroup', 'ViewServerState')
+                }
+            )
+        }
+    }
+}

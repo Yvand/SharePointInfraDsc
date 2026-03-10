@@ -1,0 +1,15 @@
+[ClassVersion("1.0.0.0")]
+class MSFT_SPServiceAppSecurityEntry
+{
+    [Required, Description("The username for the entry")] String Username;
+    [Required, Description("The access levels for the entry")] String AccessLevels[];
+};
+[ClassVersion("1.0.0.0"), FriendlyName("SPServiceAppSecurity")]
+class MSFT_SPServiceAppSecurity : OMI_BaseResource
+{
+    [Key, Description("The name of the service application you wish to apply security settings to")] String ServiceAppName;
+    [Key, Description("Administrators will set the administrators for the service app, SharingPermissions will set those granted access through the permissions button seen in the Sharing section of the ribbon in central admin"), ValueMap{"Administrators","SharingPermissions"}, Values{"Administrators","SharingPermissions"}] string SecurityType;
+    [Write, Description("A list of members to set the group to. Those not in this list will be removed"), EmbeddedInstance("MSFT_SPServiceAppSecurityEntry")] String Members[];
+    [Write, Description("A list of members to add. Members not in this list will be left in the group"), EmbeddedInstance("MSFT_SPServiceAppSecurityEntry")] String MembersToInclude[];
+    [Write, Description("A list of members to remove. Members not in this list will be left in the group")] String MembersToExclude[];
+};

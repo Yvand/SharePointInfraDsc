@@ -1,0 +1,6 @@
+[ClassVersion("1.0.0.0"), FriendlyName("SPProjectServerPermissionMode")]
+class MSFT_SPProjectServerPermissionMode : OMI_BaseResource
+{
+    [Key, Description("The default zone URL of the Project site to set permissions for")] string Url;
+    [Required, Description("What permission mode should PWA use"), ValueMap{"SharePoint","ProjectServer"}, Values{"SharePoint","ProjectServer"}] string PermissionMode;
+};

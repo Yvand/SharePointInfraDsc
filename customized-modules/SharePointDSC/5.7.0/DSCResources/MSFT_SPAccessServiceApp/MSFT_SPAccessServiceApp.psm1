@@ -1,0 +1,269 @@
+function Get-TargetResource
+{
+    [CmdletBinding()]
+    [OutputType([System.Collections.Hashtable])]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Name,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ApplicationPool,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DatabaseServer,
+
+        [Parameter()]
+        [ValidateSet("Present", "Absent")]
+        [System.String]
+        $Ensure = "Present"
+    )
+
+    Write-Verbose -Message "Getting Access Services service app '$Name'"
+
+    $productVersion = Get-SPDscInstalledProductVersion
+    if ($productVersion.FileMajorPart -eq 16 `
+            -and $productVersion.FileBuildPart -gt 13000)
+    {
+        $message = ("Since SharePoint Server Subscription Edition the Access Services does no longer " + `
+                "exists. See https://docs.microsoft.com/en-us/sharepoint/what-s-new/what-s-deprecated-or-removed-from-sharepoint-server-2019#access-services-2013 " + `
+                "for more info.")
+        Add-SPDscEvent -Message $message `
+            -EntryType 'Error' `
+            -EventID 100 `
+            -Source $MyInvocation.MyCommand.Source
+        throw $message
+    }
+
+    $result = Invoke-SPDscCommand -Arguments $PSBoundParameters `
+        -ScriptBlock {
+        $params = $args[0]
+
+        $serviceApps = Get-SPServiceApplication | Where-Object -FilterScript {
+            $_.Name -eq $params.Name
+        }
+        $nullReturn = @{
+            Name            = $params.Name
+            ApplicationPool = $params.ApplicationPool
+            DatabaseServer  = $params.DatabaseServer
+            Ensure          = "Absent"
+        }
+        if ($null -eq $serviceApps)
+        {
+            return $nullReturn
+        }
+        $serviceApp = $serviceApps | Where-Object -FilterScript {
+            $_.GetType().FullName -eq "Microsoft.Office.Access.Services.MossHost.AccessServicesWebServiceApplication"
+        }
+
+        if ($null -eq $serviceApp)
+        {
+            return $nullReturn
+        }
+        else
+        {
+            ### Find database server name
+            $context = [Microsoft.SharePoint.SPServiceContext]::GetContext($serviceApp.ServiceApplicationProxyGroup, [Microsoft.SharePoint.SPSiteSubscriptionIdentifier]::Default)
+            $dbserver = (Get-SPAccessServicesDatabaseServer $context).ServerName
+            return @{
+                Name            = $serviceApp.DisplayName
+                DatabaseServer  = $dbserver
+                ApplicationPool = $serviceApp.ApplicationPool.Name
+                Ensure          = "Present"
+            }
+        }
+    }
+    return $result
+}
+
+function Set-TargetResource
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Name,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ApplicationPool,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DatabaseServer,
+
+        [Parameter()]
+        [ValidateSet("Present", "Absent")]
+        [System.String]
+        $Ensure = "Present"
+    )
+
+    Write-Verbose -Message "Setting Access Services service app '$Name'"
+
+    $productVersion = Get-SPDscInstalledProductVersion
+    if ($productVersion.FileMajorPart -eq 16 `
+            -and $productVersion.FileBuildPart -gt 13000)
+    {
+        $message = ("Since SharePoint Server Subscription Edition the Access Services does no longer " + `
+                "exists. See https://docs.microsoft.com/en-us/sharepoint/what-s-new/what-s-deprecated-or-removed-from-sharepoint-server-2019#access-services-2013" + `
+                "for more info.")
+        Add-SPDscEvent -Message $message `
+            -EntryType 'Error' `
+            -EventID 100 `
+            -Source $MyInvocation.MyCommand.Source
+        throw $message
+    }
+
+    $result = Get-TargetResource @PSBoundParameters
+
+    if ($result.Ensure -eq "Absent" -and $Ensure -eq "Present")
+    {
+        Write-Verbose -Message "Creating Access Services Application $Name"
+        Invoke-SPDscCommand -Arguments $PSBoundParameters `
+            -ScriptBlock {
+
+            $params = $args[0]
+
+            $app = New-SPAccessServicesApplication -Name $params.Name `
+                -ApplicationPool $params.ApplicationPool `
+                -Default `
+                -DatabaseServer $params.DatabaseServer
+
+            $app | New-SPAccessServicesApplicationProxy | Out-Null
+        }
+    }
+    if ($Ensure -eq "Absent")
+    {
+        Write-Verbose -Message "Removing Access Service Application $Name"
+        Invoke-SPDscCommand -Arguments $PSBoundParameters `
+            -ScriptBlock {
+
+            $params = $args[0]
+
+            $app = Get-SPServiceApplication | Where-Object -FilterScript {
+                $_.Name -eq $params.Name -and `
+                    $_.GetType().FullName -eq "Microsoft.Office.Access.Services.MossHost.AccessServicesWebServiceApplication"
+            }
+
+            $proxies = Get-SPServiceApplicationProxy
+            foreach ($proxyInstance in $proxies)
+            {
+                if ($app.IsConnected($proxyInstance))
+                {
+                    $proxyInstance.Delete()
+                }
+            }
+
+            Remove-SPServiceApplication -Identity $app -Confirm:$false
+        }
+    }
+}
+
+function Test-TargetResource
+{
+    [CmdletBinding()]
+    [OutputType([System.Boolean])]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Name,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ApplicationPool,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DatabaseServer,
+
+        [Parameter()]
+        [ValidateSet("Present", "Absent")]
+        [System.String]
+        $Ensure = "Present"
+    )
+
+    Write-Verbose -Message "Testing for Access Service Application '$Name'"
+
+    $PSBoundParameters.Ensure = $Ensure
+
+    $CurrentValues = Get-TargetResource @PSBoundParameters
+
+    Write-Verbose -Message "Current Values: $(Convert-SPDscHashtableToString -Hashtable $CurrentValues)"
+    Write-Verbose -Message "Target Values: $(Convert-SPDscHashtableToString -Hashtable $PSBoundParameters)"
+
+    if ($CurrentValues.DatabaseServer -ne $DatabaseServer)
+    {
+        $message = "Specified database server does not match the actual database " + `
+            "server. This resource cannot move the database to a different " + `
+            "SQL instance. Actual: $($CurrentValues.DatabaseServer), " + `
+            "Desired: $DatabaseServer"
+        Write-Verbose -Message $message
+        Add-SPDscEvent -Message $message -EntryType 'Error' -EventID 1 -Source $MyInvocation.MyCommand.Source
+        $result = $false
+    }
+    else
+    {
+        $result = Test-SPDscParameterState -CurrentValues $CurrentValues `
+            -Source $($MyInvocation.MyCommand.Source) `
+            -DesiredValues $PSBoundParameters `
+            -ValuesToCheck @("Ensure")
+    }
+
+    Write-Verbose -Message "Test-TargetResource returned $result"
+
+    return $result
+}
+
+function Export-TargetResource
+{
+    $VerbosePreference = "SilentlyContinue"
+    $ParentModuleBase = Get-Module "SharePointDsc" -ListAvailable | Select-Object -ExpandProperty Modulebase
+    $module = Join-Path -Path $ParentModuleBase -ChildPath  "\DSCResources\MSFT_SPAccessServiceApp\MSFT_SPAccessServiceApp.psm1" -Resolve
+    $Content = ''
+    $params = Get-DSCFakeParameters -ModulePath $module
+    $serviceApps = Get-SPServiceApplication
+    $serviceApps = $serviceApps | Where-Object -FilterScript { [string]$_.GetType().FullName -eq "Microsoft.Office.Access.Services.MossHost.AccessServicesWebServiceApplication" }
+
+    $i = 1
+    $total = $serviceApps.Length
+    foreach ($spAccessService in $serviceApps)
+    {
+        try
+        {
+            $serviceName = $spAccessService.Name
+            Write-Host "Scanning Access Service Application [$i/$total] {$serviceName}"
+
+            $params.Name = $serviceName
+            $params.DatabaseServer = "`$ConfigurationData.NonNodeData.DatabaseServer"
+            $results = Get-TargetResource @params
+
+            $results = Repair-Credentials -results $results
+
+            Add-ConfigurationDataEntry -Node "NonNodeData" -Key "DatabaseServer" -Value $results.DatabaseServer -Description "Name of the Database Server associated with the destination SharePoint Farm;"
+            $results.DatabaseServer = "`$ConfigurationData.NonNodeData.DatabaseServer"
+            $PartialContent = "        SPAccessServiceApp " + $serviceName.Replace(" ", "") + "`r`n"
+            $PartialContent += "        {`r`n"
+            $currentBlock = Get-DSCBlock -Params $results -ModulePath $module
+            $currentBlock = Convert-DSCStringParamToVariable -DSCBlock $currentBlock -ParameterName "DatabaseServer"
+            $currentBlock = Convert-DSCStringParamToVariable -DSCBlock $currentBlock -ParameterName "PsDscRunAsCredential"
+            $PartialContent += $currentBlock
+            $PartialContent += "        }`r`n"
+            $Content += $PartialContent
+            $i++
+        }
+        catch
+        {
+            $_
+            $Global:ErrorLog += "[Access Service Application]" + $spAccessService.Name + "`r`n"
+            $Global:ErrorLog += "$_`r`n`r`n"
+        }
+    }
+    return $Content
+}
+
+Export-ModuleMember -Function *-TargetResource

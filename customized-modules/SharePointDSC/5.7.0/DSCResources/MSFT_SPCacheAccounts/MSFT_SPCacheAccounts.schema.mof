@@ -1,0 +1,8 @@
+[ClassVersion("1.0.0.0"), FriendlyName("SPCacheAccounts")]
+class MSFT_SPCacheAccounts : OMI_BaseResource
+{
+    [Key, Description("The URL of the web application to set the accounts for")] string WebAppUrl;
+    [Required, Description("The account name for the super user")] string SuperUserAlias;
+    [Required, Description("The account name for the super reader")] string SuperReaderAlias;
+    [Write, Description("Should the web app policy be set for these accounts?")] boolean SetWebAppPolicy;
+};

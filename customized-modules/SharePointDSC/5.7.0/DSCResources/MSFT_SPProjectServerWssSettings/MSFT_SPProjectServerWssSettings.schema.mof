@@ -1,0 +1,6 @@
+[ClassVersion("1.0.0.0"), FriendlyName("SPProjectServerWssSettings")]
+class MSFT_SPProjectServerWssSettings : OMI_BaseResource
+{
+    [Key, Description("The default zone URL of the Project site to set WSS settings for")] string Url;
+    [Required, Description("How should new SharePoint sites be created?"), ValueMap{"AutoCreate","UserChoice","DontCreate"}, Values{"AutoCreate","UserChoice","DontCreate"}] string CreateProjectSiteMode;
+};

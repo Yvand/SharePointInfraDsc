@@ -1,0 +1,8 @@
+[ClassVersion("1.0.0.0"), FriendlyName("SPSitePropertyBag")]
+class MSFT_SPSitePropertyBag : OMI_BaseResource
+{
+    [Key, Description("The URL of the site collection")] string Url;
+    [Key, Description("The key of the SPSite property")] string Key;
+    [Write, Description("Value of the SPSite property")] String Value;
+    [Write, Description("Set to present to ensure the SPSite property exists, or absent to ensure it is removed"), ValueMap{"Present","Absent"}, Values{"Present","Absent"}] string Ensure;
+};

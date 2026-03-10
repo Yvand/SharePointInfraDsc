@@ -1,0 +1,10 @@
+[ClassVersion("1.0.0.0"), FriendlyName("SPWebAppSuiteBar")]
+class MSFT_SPWebAppSuiteBar : OMI_BaseResource
+{
+    [Key, Description("The URL of the web application")] string WebAppUrl;
+    [Write, Description("SP2016+: Url to take the users to when the suite bar logo is clicked. This only works on classic pages for SP2019 and newer.")] String SuiteNavBrandingLogoNavigationUrl;
+    [Write, Description("SP2016+: Alternative text for the Suite Bar Logo. This only works on classic pages for SP2019 and newer.")] String SuiteNavBrandingLogoTitle;
+    [Write, Description("SP2016+: URL of the logo for the Suite Bar. This only works on classic pages for SP2019 and newer.")] String SuiteNavBrandingLogoUrl;
+    [Write, Description("SP2016+: Text to display at the left hand side of the suite bar. No built in support of showing this on web pages in SP2019 and newer.")] String SuiteNavBrandingText;
+    [Write, Description("SP2013+: HTML to inject in the left hand-side of the Suite Bar. Only works in classic pages with a SharePoint 2013 master page in SharePoint 2016 and newer.")] String SuiteBarBrandingElementHtml;
+};

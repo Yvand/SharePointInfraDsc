@@ -1,0 +1,206 @@
+.NAME
+    SqlRSSetup
+
+.SYNOPSIS
+    The SqlRSSetup DSC resource is used to install, repair, or uninstall
+    SQL Server Reporting Services (SSRS) or Power BI Report Server (PBIRS).
+
+.DESCRIPTION
+    The SqlRSSetup DSC resource is used to install, repair, or uninstall
+    SQL Server Reporting Services (SSRS) or Power BI Report Server (PBIRS).
+
+    The built-in parameter PSDscRunAsCredential can be used to run the resource
+    as another user. The resource will then install as that user, otherwise
+    install as SYSTEM.
+
+    >[!TIP]
+    >To install Microsoft SQL Server Reporting Services 2016 (or older),
+    >please use the resource SqlSetup instead.
+
+    > [!IMPORTANT]
+    > When using the action 'Uninstall' and the target node to begin with
+    > requires a restart, on the first run the Microsoft SQL Server Reporting
+    > Services instance will not be uninstalled, but instead exits with code
+    > 3010 and the node will be, by default, restarted. On the second run after
+    > restart, the Microsoft SQL Server Reporting Services instance will be
+    > uninstalled. If the parameter SuppressRestart is used, then the node must
+    > be restarted manually before the Microsoft SQL Server Reporting Services
+    > instance will be successfully uninstalled.
+    >
+    > The Microsoft SQL Server Reporting Services log will indicate that a
+    > restart is required by outputting; "*No action was taken as a system
+    > reboot is required (0x8007015E)*". The log is default located in the
+    > SSRS folder in %TEMP%, e.g. C:\Users\<user>\AppData\Local\Temp\SSRS.
+
+
+    ## Requirements
+
+    * Target machine must be running Windows Server 2012 or later.
+    * Target machine must have access to the SQL Server Reporting Services or
+      Power BI Report Server installation media.
+    * SYSTEM account or the users passed in the credentials for the PsDscRunAsCredential
+      common parameter must have permissions to connect to the location
+      where the Microsoft SQL Server Reporting Services or Microsoft Power
+      BI Report Server media is placed.
+    * The parameter AcceptLicensingTerms must be set to $true.
+    * The parameter InstanceName can only be set to SSRS or PBIRS since there
+      is no way to change the instance name.
+
+    ## Known issues
+
+    * When using action 'Uninstall', the same version of the executable as the
+      version of the installed product must be used. If not, sometimes the uninstall
+      is successful (because the executable returns exit code 0) but the instance
+      was not actually removed.
+
+    All issues are not listed here, see https://github.com/dsccommunity/SqlServerDsc/issues?q=is%3Aissue+is%3Aopen+in%3Atitle+SqlRSSetup.
+
+.PARAMETER InstanceName
+    Key - System.String
+    Specifies the instance name for the Reporting Services instance. This
+    must be either 'SSRS' for SQL Server Reporting Services or 'PBIRS' for
+    Power BI Report Server.
+
+.PARAMETER Action
+    Required - InstallAction
+    Specifies the action to take for the Reporting Services instance.
+    This can be 'Install', 'Repair', or 'Uninstall'.
+
+.PARAMETER AcceptLicensingTerms
+    Required - System.Boolean
+    Required parameter for Install and Repair actions to be able to run unattended.
+    By specifying this parameter you acknowledge the acceptance of all license terms
+    and notices for the specified features, the terms and notices that the setup
+    executable normally asks for.
+
+.PARAMETER MediaPath
+    Required - System.String
+    Specifies the path where to find the SQL Server installation media. On this
+    path the SQL Server setup executable must be found.
+
+.PARAMETER ProductKey
+    Write - System.String
+    Specifies the product key to use for the installation or repair, e.g.
+    '12345-12345-12345-12345-12345'. This parameter is mutually exclusive with
+    the parameter Edition.
+
+.PARAMETER EditionUpgrade
+    Write - Nullable[System.Boolean]
+    Upgrades the edition of the installed product. Requires that either the
+    ProductKey or the Edition parameter is also assigned. By default no edition
+    upgrade is performed.
+
+.PARAMETER Edition
+    Write - System.String
+    Allowed values: Developer, Evaluation, ExpressAdvanced
+    Specifies a free custom edition to use for the installation or repair. This
+    parameter is mutually exclusive with the parameter ProductKey.
+
+.PARAMETER LogPath
+    Write - System.String
+    Specifies the file path where to write the log files, e.g. 'C:\Logs\Install.log'.
+    By default log files are created under %TEMP%.
+
+.PARAMETER InstallFolder
+    Write - System.String
+    Specifies the folder where to install the product, e.g. 'C:\Program Files\SSRS'.
+    By default the product is installed under the default installation folder.
+
+    Reporting Services: %ProgramFiles%\Microsoft SQL Server Reporting Services
+    Power BI Report Server: %ProgramFiles%\Microsoft Power BI Report Server
+
+.PARAMETER SuppressRestart
+    Write - Nullable[System.Boolean]
+    Suppresses the restart of the computer after the installation, repair, or
+    uninstallation is finished. By default the computer is restarted after the
+    operation is finished.
+
+.PARAMETER ForceRestart
+    Write - Nullable[System.Boolean]
+    Forces a restart of the computer after the installation, repair, or
+    uninstallation is finished, regardless of the operation's outcome. This
+    parameter overrides SuppressRestart.
+
+.PARAMETER VersionUpgrade
+    Write - Nullable[System.Boolean]
+    Specifies whether to upgrade the version of the installed product. By default,
+    no version upgrade is performed.
+
+    If this parameter is specified the installed product version will be compared
+    against the product version of the setup executable. If the installed product
+    version is lower than the product version of the setup executable, the setup
+    will perform an upgrade. If the installed product version is equal to or higher
+    than the product version of the setup executable, no upgrade will be performed.
+
+.PARAMETER Timeout
+    Write - Nullable[System.UInt32]
+    Specifies how long to wait for the setup process to finish. Default value
+    is 7200 seconds (2 hours). If the setup process does not finish before
+    this time, an exception will be thrown.
+
+.EXAMPLE 1
+
+This example shows how to install a Microsoft SQL Server Reporting Service
+instance (2017 or newer).
+
+Configuration Example
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSCredential]
+        $SqlInstallCredential
+    )
+
+    Import-DscResource -ModuleName 'SqlServerDsc'
+
+    node localhost
+    {
+        SqlRSSetup 'InstallDefaultInstance'
+        {
+            InstanceName         = 'SSRS'
+            Action               = 'Install'
+            AcceptLicensingTerms = $true
+            MediaPath            = 'C:\InstallMedia\SQLServerReportingServices.exe'
+            Edition              = 'Developer'
+
+            PsDscRunAsCredential = $SqlInstallCredential
+        }
+    }
+}
+
+.EXAMPLE 2
+
+This example shows how to install a Microsoft SQL Server Reporting Service
+instance (2017 or newer).
+
+Configuration Example
+{
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSCredential]
+        $SqlInstallCredential
+    )
+
+    Import-DscResource -ModuleName 'SqlServerDsc'
+
+    node localhost
+    {
+        SqlRSSetup 'InstallDefaultInstance'
+        {
+            InstanceName         = 'SSRS'
+            Action               = 'Uninstall'
+            MediaPath            = 'C:\InstallMedia\SQLServerReportingServices.exe'
+
+            # This needs to be set to although it is not used during uninstall.
+            AcceptLicensingTerms = $true
+
+            PsDscRunAsCredential = $SqlInstallCredential
+        }
+    }
+}

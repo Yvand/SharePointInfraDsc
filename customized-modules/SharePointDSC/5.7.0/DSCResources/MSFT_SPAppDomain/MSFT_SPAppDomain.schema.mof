@@ -1,0 +1,7 @@
+[ClassVersion("1.0.0.0"), FriendlyName("SPAppDomain")]
+class MSFT_SPAppDomain : OMI_BaseResource
+{
+    [Key, Description("The domain name for apps to use in this farm")] string AppDomain;
+    [Required, Description("The prefix to go on to app URLs")] string Prefix;
+
+};
