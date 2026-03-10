@@ -1,0 +1,40 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "generate all dsc archives",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/Generate-DSCArchive.ps1",
+            "args": [
+                "-dscConfigFile",
+                "*",
+                "-dscFolderPath",
+                "'${workspaceFolder}\\sharepoint-adfs-full'"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "generate specific dsc archive",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/Generate-DSCArchive.ps1",
+            "args": [
+                "-dscConfigFile",
+                "${input:dscConfigFile}",
+                "-dscFolderPath",
+                "'${workspaceFolder}\\sharepoint-adfs-full'"
+            ],
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "type": "promptString",
+            "id": "dscConfigFile",
+            "description": "Name of the DSC configuration file.",
+            "default": "dsc-spse-main"
+        }
+    ]
+}
