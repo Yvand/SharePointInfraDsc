@@ -8,7 +8,7 @@
             "type": "shell",
             "command": "${workspaceFolder}${/}scripts${/}Generate-DSCArchive.ps1",
             "args": [
-                "-dscConfigFile",
+                "-vmName",
                 "*",
                 "-dscFolderPath",
                 "'${workspaceFolder}${/}sharepoint-adfs-full'"
@@ -21,7 +21,7 @@
             "type": "shell",
             "command": "${workspaceFolder}${/}scripts${/}Generate-DSCArchive.ps1",
             "args": [
-                "-dscConfigFile",
+                "-vmName",
                 "${fileBasenameNoExtension}",
                 "-dscFolderPath",
                 "'${fileWorkspaceFolder}'"
@@ -33,8 +33,8 @@
             "type": "shell",
             "command": "${workspaceFolder}${/}scripts${/}Generate-DSCArchive.ps1",
             "args": [
-                "-dscConfigFile",
-                "${input:dscConfigFile}",
+                "-vmName",
+                "${input:vmName}",
                 "-dscFolderPath",
                 "'${fileWorkspaceFolder}'"
             ],
@@ -44,9 +44,9 @@
     "inputs": [
         {
             "type": "promptString",
-            "id": "dscConfigFile",
-            "description": "Name of the DSC configuration file.",
-            "default": "dsc-spse-main"
+            "id": "vmName",
+            "description": "Name of the VM for which to generate the DSC archive.",
+            "default": "spse-main"
         }
     ]
 }

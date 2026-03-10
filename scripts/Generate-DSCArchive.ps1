@@ -1,16 +1,15 @@
 #Requires -PSEdition Desktop
 #Requires -Module Az.Compute
 
-# Get-Command -Verb Publish -Noun AzVM* -Module Az.Compute
-
 param(
-    [string] $dscConfigFile = "*",
+    [string] $vmName = "*",
     [string] $dscFolderPath
 )
 
 if (Test-Path $dscFolderPath) {
-    Write-Host "Generating DSC archives in folder '$dscFolderPath' for '$dscConfigFile'" -ForegroundColor Cyan
-    $dscSourceFilePaths = Get-ChildItem $dscFolderPath -File -Filter "$dscConfigFile*.ps1"
+    if ($vmName.StartsWith("dsc-")) { $vmName = $vmName.Substring(4) }
+    Write-Host "Generating DSC archives in folder '$dscFolderPath' for '$vmName'" -ForegroundColor Cyan
+    $dscSourceFilePaths = Get-ChildItem $dscFolderPath -File -Filter "dsc-$vmName*.ps1"
     foreach ($dscSourceFilePath in $dscSourceFilePaths) {
         $dscArchiveFilePath = "$($dscSourceFilePath.DirectoryName)\$($dscSourceFilePath.BaseName).zip"
         Publish-AzVMDscConfiguration -ConfigurationPath "$dscFolderPath\$($dscSourceFilePath.Name)" -OutputArchivePath $dscArchiveFilePath -Force -Verbose
