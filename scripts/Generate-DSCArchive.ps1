@@ -6,7 +6,7 @@ param(
     [string] $dscFolderPath
 )
 
-if (Test-Path $dscFolderPath) {
+if (Test-Path -PathType Container -Path $dscFolderPath) {
     if ($vmName.StartsWith("dsc-")) { $vmName = $vmName.Substring(4) }
     Write-Host "Generating DSC archives in folder '$dscFolderPath' for '$vmName'" -ForegroundColor Cyan
     $dscSourceFilePaths = Get-ChildItem $dscFolderPath -File -Filter "dsc-$vmName*.ps1"
