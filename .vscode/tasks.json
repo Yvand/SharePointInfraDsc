@@ -17,14 +17,26 @@
             "problemMatcher": []
         },
         {
-            "label": "generate specific dsc archive",
+            "label": "generate dsc archive for current file",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/Generate-DSCArchive.ps1",
+            "args": [
+                "-dscConfigFile",
+                "${fileBasenameNoExtension}",
+                "-dscFolderPath",
+                "'${fileWorkspaceFolder}'"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "generate dsc archive for specified file",
             "type": "shell",
             "command": "${workspaceFolder}/scripts/Generate-DSCArchive.ps1",
             "args": [
                 "-dscConfigFile",
                 "${input:dscConfigFile}",
                 "-dscFolderPath",
-                "'${workspaceFolder}\\sharepoint-adfs-full'"
+                "'${fileWorkspaceFolder}'"
             ],
             "problemMatcher": []
         }
