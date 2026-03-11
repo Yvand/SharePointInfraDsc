@@ -27,7 +27,8 @@ jobs:
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Az.Compute, PSDesiredStateConfiguration
+          #Install-Module Az.Compute, PSDesiredStateConfiguration
+          Install-Module PSDesiredStateConfiguration
 
       - name: Install dsc modules
         shell: pwsh
