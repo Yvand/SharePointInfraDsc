@@ -23,7 +23,7 @@ jobs:
           path: "~/.local/share/powershell/Modules"
           key: ${{ runner.os }}-mandatory-modules
       - name: Install mandatory modules
-        if: steps.cacher.outputs.cache-hit != 'true'
+        #if: steps.cacher.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
