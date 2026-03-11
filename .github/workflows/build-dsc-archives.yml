@@ -32,7 +32,7 @@ jobs:
       - name: Install dsc modules
         shell: pwsh
         env:
-          scriptsFolder: "${{ github.workspace }}}/scripts"
+          scriptsFolder: "${{ github.workspace }}/scripts"
         run: |
           Write-Host "yoyo"
           Write-Host "dsc_folder: ${{ env.dsc_folder }}"
@@ -41,7 +41,7 @@ jobs:
           Write-Host "Get DSC files in folder '${{ env.scriptsFolder }}'"
           $dscFilesPath = Get-ChildItem ${{ env.scriptsFolder }} -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
-              $dscModules = ${{ env.scriptsFolder }}/Get-DscModules -dscFilePath "$dscFilePath"
+              $dscModules = ${{ env.scriptsFolder }}/Get-DscModules.ps1 -dscFilePath "$dscFilePath"
               Write-Host "DSC modules for '$dscFilePath': $dscModules"
           }
           
