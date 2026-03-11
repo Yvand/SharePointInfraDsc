@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+
+###########################################################################
+# This configuration will modify Personalization Settings.                #
+# PowerShell module: Microsoft.Windows.Settings (v0.1.0-alpha)            #
+###########################################################################
+
+properties:
+  resources:
+    - resource: Microsoft.Windows.Settings/WindowsSettings
+      directives:
+        allowPrerelease: true
+        description: Configure Personalization Settings
+        securityContext: current
+      settings:
+        # Color Settings
+        AppColorMode: Dark
+        SystemColorMode: Dark
+        
+        # # Start Menu Folders
+        # # Valid folder names: Documents, Downloads, Music, Pictures, Videos, Network, UserProfile, Explorer, Settings
+        # StartFolders:
+        #   - Documents
+        #   - Downloads
+        #   - Settings
+        #   - Explorer
+        #   - Network
+        
+        # Taskbar Settings
+        TaskbarAlignment: Left
+        # TaskbarGroupingMode: Control how taskbar buttons are grouped
+        # Valid values: Always, WhenFull, Never
+        #TaskbarGroupingMode: WhenFull
+
+    - resource: Microsoft.Windows.Developer/Taskbar
+      directives:
+        description: Modify taskbar settings
+        allowPrerelease: true
+      settings:
+        Alignment: Left # [KeepCurrentValue, Middle]
+        HideLabelsMode: Never # [KeepCurrentValue, WhenFull, Always]
+        SearchBoxMode: ShowIconOnly # [KeepCurrentValue, ShowIconOnly, SearchBox, Hide]
+        TaskViewButton: Hide # [KeepCurrentValue, Hide]
+        WidgetsButton: Hide # [KeepCurrentValue, Hide]
+        RestartExplorer: false # Use caution when setting `RestartExplorer: true` as this will force explorer to close. Required for `HideLabelsMode`.
+    - resource: Microsoft.Windows.Developer/WindowsExplorer
+      directives:
+        description: Modify Windows Explorer settings
+        allowPrerelease: true
+      settings:
+        FileExtensions: Show  # [KeepCurrentValue, Hide]
+        HiddenFiles: Show # [KeepCurrentValue, Hide]
+        ItemCheckBoxes: Show  # [KeepCurrentValue, Hide]
+        RestartExplorer: true # Use caution when setting `RestartExplorer: true` as this will force explorer to close. Required for all WindowsExplorer settings.
+  
+  configurationVersion: 0.2.0
