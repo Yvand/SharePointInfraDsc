@@ -37,7 +37,7 @@ jobs:
           Write-Host "Get DSC files in folder '${{ env.dsc_folder }}'"
           $dscFilesPath = Get-ChildItem ${{ env.dsc_folder }} -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
-              $dscMissingModules = ${{ env.scriptsFolder }}/Get-DscMissingModules.ps1 -dscFilePath "$dscFilePath"
+              $dscMissingModules = ${{ env.scriptsFolder }}/Get-MissingDscModules.ps1 -dscFilePath "$dscFilePath"
               Write-Host "Found $($dscMissingModules.Count) missing DSC module(s) for '$dscFilePath':"
               foreach ($dscMissingModule in $dscMissingModules) {
                 Write-Host "Running command: '$($dscMissingModule)'"
