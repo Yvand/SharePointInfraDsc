@@ -1,4 +1,6 @@
 name: Build DSC archives
+permissions:
+  contents: read
 
 on:
   workflow_dispatch
@@ -7,11 +9,30 @@ jobs:
   # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
   install-dependencies:
     name: Install dependencies
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    env:
+      dsc_folder: "${{ github.workspace }}/sharepoint-adfs-full"
     steps:
       - uses: actions/checkout@v6
+      - name: Setup PowerShell module cache
+        id: cacher
+        uses: actions/cache@v4
+        with:
+          path: "~/.local/share/powershell/Modules"
+          key: ${{ runner.os }}-AzCompute
       - name: Install mandatory modules
+        if: steps.cacher.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module Az.Compute
+
+      - name: Install dsc modules
+        shell: pwsh
+        env:
+          dsfFilesFolder: "${{ github.workspace }}}/sharepoint-adfs-full"
+        run: |
+          Write-Host "yoyo"
+          Write-Host "dsc_folder: ${{ env.dsc_folder }}"
+          Write-Host "dsfFilesFolder: ${{ env.dsfFilesFolder }}"
+
