@@ -21,13 +21,13 @@ jobs:
         uses: actions/cache@v5
         with:
           path: "~/.local/share/powershell/Modules"
-          key: ${{ runner.os }}-AzCompute
+          key: ${{ runner.os }}-mandatory-modules
       - name: Install mandatory modules
         if: steps.cacher.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Az.Compute
+          Install-Module Az.Compute, PSDesiredStateConfiguration
 
       - name: Install dsc modules
         shell: pwsh
