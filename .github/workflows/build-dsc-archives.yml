@@ -1,0 +1,17 @@
+name: Build DSC archives
+
+on:
+  workflow_dispatch
+
+jobs:
+  # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
+  install-dependencies:
+    name: Install dependencies
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install mandatory modules
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Az.Compute
