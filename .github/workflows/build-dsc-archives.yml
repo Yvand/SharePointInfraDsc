@@ -32,11 +32,18 @@ jobs:
       - name: Install dsc modules
         shell: pwsh
         env:
-          dsfFilesFolder: "${{ github.workspace }}}/sharepoint-adfs-full"
+          scriptsFolder: "${{ github.workspace }}}/scripts"
         run: |
           Write-Host "yoyo"
           Write-Host "dsc_folder: ${{ env.dsc_folder }}"
-          Write-Host "dsfFilesFolder: ${{ env.dsfFilesFolder }}"
+          Write-Host "dsfFilesFolder: ${{ env.scriptsFolder }}"
           Write-Host "github.workspace: ${{ github.workspace }}"
+          Write-Host "Get DSC files in folder '${{ env.scriptsFolder }}'
+          $dscFilesPath = Get-ChildItem ${{ env.scriptsFolder }} -File -Filter "dsc-*.ps1"
+          foreach ($dscFilePath in $dscFilesPath) {
+              $dscArchiveFilePath = "$($dscSourceFilePath.DirectoryName)\$($dscSourceFilePath.BaseName).zip"
+              $dscModules = ${{ env.scriptsFolder }}/Get-DscModules -dscFilePath "$dscArchiveFilePath"
+              Write-Host "DSC modules for '$dscArchiveFilePath': $dscModules"
+          }
           
 
