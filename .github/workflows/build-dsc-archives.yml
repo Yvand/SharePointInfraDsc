@@ -34,12 +34,8 @@ jobs:
         env:
           scriptsFolder: "${{ github.workspace }}/scripts"
         run: |
-          Write-Host "yoyo"
-          Write-Host "dsc_folder: ${{ env.dsc_folder }}"
-          Write-Host "dsfFilesFolder: ${{ env.scriptsFolder }}"
-          Write-Host "github.workspace: ${{ github.workspace }}"
-          Write-Host "Get DSC files in folder '${{ env.scriptsFolder }}'"
-          $dscFilesPath = Get-ChildItem ${{ env.scriptsFolder }} -File -Filter "dsc-*.ps1"
+          Write-Host "Get DSC files in folder '${{ env.dsc_folder }}'"
+          $dscFilesPath = Get-ChildItem ${{ env.dsc_folder }} -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
               $dscModules = ${{ env.scriptsFolder }}/Get-DscModules.ps1 -dscFilePath "$dscFilePath"
               Write-Host "DSC modules for '$dscFilePath': $dscModules"
