@@ -10,6 +10,8 @@ if (Test-Path -PathType Leaf -Path $dscFilePathResolved) {
     Write-Host "Getting module dependencies for DSC file '$dscFilePathResolved'" -ForegroundColor Cyan
     $parseResult = [Microsoft.WindowsAzure.Commands.Common.Extensions.DSC.Publish.ConfigurationParsingHelper]::ParseConfiguration($dscFilePathResolved)
     # return $parseResult.RequiredModules
+    Write-Host "$($parseResult.Errors.Count) errors"
+    foreach ($parseErr in $parseResult.Errors) { Write-Host "Error: '$($parseErr.Message)' ($($parseErr.ErrorId) - $($parseErr.Extent))" }
     return $parseResult.Errors | Where-Object ErrorId -eq "ModuleNotFoundDuringParse" | Select-Object -Property Extent
 }
 else {
