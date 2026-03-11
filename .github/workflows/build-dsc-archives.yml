@@ -38,7 +38,9 @@ jobs:
           $dscFilesPath = Get-ChildItem ${{ env.dsc_folder }} -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
               $dscModules = ${{ env.scriptsFolder }}/Get-DscModules.ps1 -dscFilePath "$dscFilePath"
-              Write-Host "DSC modules for '$dscFilePath': $dscModules"
+              Write-Host "Found $($dscModules.Count) DSC modules for '$dscFilePath':"
+              foreach ($module in $modules.GetEnumerator())
+              {
+                Write-Host "Requires module '$($module.Key)' version '$($module.Value)'"
+              }
           }
-          
-
