@@ -55,7 +55,7 @@ jobs:
           $customModulesPath = Get-ChildItem "${{ env.customModulesFolder }}" -Directory
           foreach ($customModulePath in $customModulesPath) {
             Write-Host "Replacing module '$($customModulePath.BaseName)' with its customized version..."
-            Move-Item -Force -Recurse -Path $customModulePath -Destination $modulesLocation
+            Move-Item -Path $customModulePath -Destination $modulesLocation -Force
           }
 
       - name: Build DSC archives
@@ -72,4 +72,4 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: dsc-archives
-          path: ${{ env.dsc_folder }}/*.zip
+          path: ${{ env.dsc_folder }}/*
