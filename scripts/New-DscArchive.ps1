@@ -1,4 +1,4 @@
-#Requires -PSEdition Desktop
+# #Requires -PSEdition Desktop
 #Requires -Module Az.Compute
 
 param(
