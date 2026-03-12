@@ -55,7 +55,7 @@ jobs:
           $customModulesPath = Get-ChildItem "${{ env.customModulesFolder }}" -Directory
           foreach ($customModulePath in $customModulesPath) {
             Write-Host "Replacing module '$($customModulePath.BaseName)' with its customized version..."
-            Move-Item -Path $customModulePath -Destination $modulesLocation -Force
+            Move-Item -Path $customModulePath.FullName -Destination $modulesLocation -Force
           }
 
       - name: Build DSC archives
