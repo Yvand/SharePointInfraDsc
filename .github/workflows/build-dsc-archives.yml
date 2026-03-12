@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup PowerShell module cache
+        if: false
         id: cacher
         uses: actions/cache@v5
         with:
@@ -24,13 +25,13 @@ jobs:
           key: ${{ runner.os }}-mandatory-modules
       - name: Install mandatory modules
         #if: steps.cacher.outputs.cache-hit != 'true'
-        shell: pwsh
+        shell: powershell
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module Az.Compute #, PSDesiredStateConfiguration
 
       - name: Install dsc modules
-        shell: pwsh
+        shell: powershell
         env:
           scriptsFolder: "${{ github.workspace }}/scripts"
         run: |
@@ -46,7 +47,7 @@ jobs:
           }
 
       - name: Build DSC archives
-        shell: pwsh
+        shell: powershell
         env:
           scriptsFolder: "${{ github.workspace }}/scripts"
         run: |
