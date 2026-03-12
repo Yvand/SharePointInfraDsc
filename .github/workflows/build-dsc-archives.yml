@@ -55,3 +55,8 @@ jobs:
               Write-Host "Creating DSC archive for '$($dscFilePath.BaseName)'."
               ${{ env.scriptsFolder }}/New-New-DscArchive.ps1 -vmName "$($dscFilePath.BaseName)"
           }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dsc-archives
+          path: ${{ env.dsc_folder }}/*.zip
