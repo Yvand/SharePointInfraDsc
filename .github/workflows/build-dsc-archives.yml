@@ -39,9 +39,9 @@ jobs:
           $dscFilesPath = Get-ChildItem ${{ env.dsc_folder }} -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
               $dscMissingModules = ${{ env.scriptsFolder }}/Get-MissingDscModules.ps1 -dscFilePath "$dscFilePath"
-              Write-Host "Found $($dscMissingModules.Count) missing DSC module(s) for '$dscFilePath':"
+              Write-Host "Found $($dscMissingModules.Count) missing DSC module(s) for '$dscFilePath'."
               foreach ($dscMissingModule in $dscMissingModules) {
-                Write-Host "Running command: '$($dscMissingModule)'"
-                Invoke-Expression $dscMissingModule
+                Write-Host "Installing module '$($dscMissingModule.Name)' version '$($dscMissingModule.Version)'..."
+                Install-Module -Name $dscMissingModule.Name -RequiredVersion $dscMissingModule.Version -Scope AllUsers
               }
           }
