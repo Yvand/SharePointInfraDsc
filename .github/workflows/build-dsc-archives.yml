@@ -5,7 +5,7 @@ permissions:
 on:
   workflow_dispatch:
   push: 
-    branches: main
+    branches: [main]
 
 jobs:
   # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
