@@ -53,7 +53,7 @@ jobs:
           $dscFilesPath = Get-ChildItem ${{ env.dsc_folder }} -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
               Write-Host "Creating DSC archive for '$($dscFilePath.BaseName)'."
-              ${{ env.scriptsFolder }}/New-New-DscArchive.ps1 -vmName "$($dscFilePath.BaseName)"
+              ${{ env.scriptsFolder }}/New-DscArchive.ps1 -vmName "$($dscFilePath.BaseName)"
           }
 
       - uses: actions/upload-artifact@v7
