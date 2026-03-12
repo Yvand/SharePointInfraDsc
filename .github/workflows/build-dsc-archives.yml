@@ -46,6 +46,18 @@ jobs:
               }
           }
 
+      - name: Replace customized modules
+        shell: powershell
+        env:
+          customModulesFolder: "${{ github.workspace }}/scripts"
+        run: |
+          $modulesLocation = "$($Env:ProgramFiles)\WindowsPowerShell\Modules"
+          $customModulesPath = Get-ChildItem "${{ env.customModulesFolder }}" -Directory
+          foreach ($customModulePath in $customModulesPath) {
+            Write-Host "Replacing module '$($customModulePath.BaseName)' with its customized version..."
+            Move-Item -Force -Recurse -Path $customModulePath -Destination $modulesLocation
+          }
+
       - name: Build DSC archives
         shell: powershell
         env:
