@@ -36,9 +36,9 @@ jobs:
           scriptsFolder: "${{ github.workspace }}/scripts"
         run: |
           Write-Host "Get DSC files in folder '${{ env.dsc_folder }}'"
-          $dscFilesPath = Get-ChildItem ${{ env.dsc_folder }} -File -Filter "dsc-*.ps1"
+          $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
-              $dscMissingModules = ${{ env.scriptsFolder }}/Get-MissingDscModules.ps1 -dscFilePath $dscFilePath.FullName
+              $dscMissingModules = ${{ env.scriptsFolder }}/Get-MissingDscModules.ps1 -dscFilePath "$($dscFilePath.FullName)"
               Write-Host "Found $($dscMissingModules.Count) missing DSC module(s) for '$dscFilePath'."
               foreach ($dscMissingModule in $dscMissingModules) {
                 Write-Host "Installing module '$($dscMissingModule.Name)' version '$($dscMissingModule.Version)'..."
@@ -51,7 +51,7 @@ jobs:
         env:
           scriptsFolder: "${{ github.workspace }}/scripts"
         run: |
-          $dscFilesPath = Get-ChildItem ${{ env.dsc_folder }} -File -Filter "dsc-*.ps1"
+          $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
               Write-Host "Creating DSC archive for '$($dscFilePath.BaseName)'."
               ${{ env.scriptsFolder }}/New-DscArchive.ps1 -vmName "$($dscFilePath.BaseName)" -dscFolderPath "${{ env.dsc_folder }}"
