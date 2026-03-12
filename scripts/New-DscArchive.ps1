@@ -1,4 +1,4 @@
-#Requires -PSEdition Desktop #reason: https://github.com/dsccommunity/DnsServerDsc/issues/264
+#Requires -PSEdition Desktop #reason: https://github.com/dsccommunity/DnsServerDsc/issues/264 / https://github.com/dsccommunity/DnsServerDsc/issues/268
 #Requires -Module Az.Compute
 
 param(

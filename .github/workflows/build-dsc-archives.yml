@@ -49,7 +49,7 @@ jobs:
       - name: Replace customized modules
         shell: powershell
         env:
-          customModulesFolder: "${{ github.workspace }}/scripts"
+          customModulesFolder: "${{ github.workspace }}/customized-modules"
         run: |
           $modulesLocation = "$($Env:ProgramFiles)\WindowsPowerShell\Modules"
           $customModulesPath = Get-ChildItem "${{ env.customModulesFolder }}" -Directory
