@@ -4,16 +4,26 @@ permissions:
 
 on:
   workflow_dispatch:
-  # push: 
-    # branches: [main]
+    # inputs:
+    #   dsc_infra_folder:
+    #     description: 'Name of the folder containing the DSC files to build archives for. The folder must be located at the root of the repository.'
+    #     required: true
+    #     default: 'sharepoint-adfs-full'
+  push: 
+    branches: [main]
+
+env:
+  #dsc_folder: "${{ github.workspace }}/${{ inputs.dsc_infra_folder }}"
+  dsc_folder: "sharepoint-adfs-full"
 
 jobs:
   # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
-  install-dependencies:
-    name: Install dependencies
+  build-dsc-archives:
+    name: Build DSC archives
     runs-on: windows-latest
-    env:
-      dsc_folder: "${{ github.workspace }}/sharepoint-adfs-full"
+    # env:
+      # dsc_folder: "${{ github.workspace }}/sharepoint-adfs-full"
+      # dsc_folder: "sharepoint-adfs-full"
     steps:
       - uses: actions/checkout@v6
       
@@ -35,7 +45,7 @@ jobs:
       - name: Install dsc modules
         shell: powershell
         env:
-          scriptsFolder: "${{ github.workspace }}/scripts"
+          scriptsFolder: "scripts"
         run: |
           Write-Host "Get DSC files in folder '${{ env.dsc_folder }}'"
           $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-*.ps1"
@@ -51,7 +61,7 @@ jobs:
       - name: Replace customized modules
         shell: powershell
         env:
-          customModulesFolder: "${{ github.workspace }}/customized-modules"
+          customModulesFolder: "customized-modules"
         run: |
           $modulesLocation = "$($Env:ProgramFiles)\WindowsPowerShell\Modules"
           $customModulesPath = Get-ChildItem "${{ env.customModulesFolder }}" -Directory
@@ -63,7 +73,7 @@ jobs:
       - name: Build DSC archives
         shell: powershell
         env:
-          scriptsFolder: "${{ github.workspace }}/scripts"
+          scriptsFolder: "scripts"
         run: |
           $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
@@ -75,3 +85,26 @@ jobs:
         with:
           name: dsc-archives
           path: ${{ env.dsc_folder }}/*
+
+  create-github-release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: build-dsc-archives
+    # env:
+    #   #dsc_folder: "${{ github.workspace }}/${{ inputs.dsc_infra_folder }}"
+    #   dsc_folder: "sharepoint-adfs-full"
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: dsc-archives
+
+      - run: ls -alh ${{ env.dsc_folder }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        #if: startsWith(github.ref, 'refs/tags/spfx-v')
+        with:
+          name: '${{ env.dsc_folder }}'
+          files: '${{ env.dsc_folder }}/*'
+          draft: true
+          make_latest: true
