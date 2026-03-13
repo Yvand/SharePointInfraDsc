@@ -8,23 +8,25 @@ on:
     #   dsc_infra_folder:
     #     description: 'Name of the folder containing the DSC files to build archives for. The folder must be located at the root of the repository.'
     #     required: true
-    #     default: 'sharepoint-adfs-full'
+    #     default: 'SharePoint.Full'
   push: 
-    branches: [main]
+    #branches: [main]
+    tags:
+      - "releases/*"
 
 env:
-  dsc_folder: "sharepoint-adfs-full"
+  dsc_folder: "SharePoint.Full"
   artifact_name: "dsc-archives"
-  vm_name: "XX"
+  vm_name: ""
 
 jobs:
-  # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
   build-dsc-archives:
     name: Build DSC archives
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
-      
+     
+      # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
       # - name: Setup PowerShell module cache
       #   if: false
       #   id: cacher
@@ -88,18 +90,26 @@ jobs:
     name: Create release
     runs-on: ubuntu-latest
     needs: build-dsc-archives
+    if: startsWith(github.ref, 'refs/tags/releases/')
     steps:
       - uses: actions/download-artifact@v7
         with:
           name: ${{ env.artifact_name }}
 
-      - run: ls -alh .
+      - name: Extract version number from git tag name
+        env:
+          TAG: ${{ github.ref_name }} # expected tag value: "releases/SharePoint.Full-v1.0"
+        id: splittag
+        run: echo "productWithVersion=`echo ${TAG:9}`" >> $GITHUB_OUTPUT
+
+      - run: |
+          echo "${{ steps.splittag.outputs.productWithVersion }}" 
+          ls -alh .
 
       - name: Release
         uses: softprops/action-gh-release@v2
-        #if: startsWith(github.ref, 'refs/tags/spfx-v')
         with:
-          name: '${{ env.dsc_folder }}'
+          name: '${{ steps.splittag.outputs.productWithVersion }}'
           files: |
             *.ps1
             *.zip
