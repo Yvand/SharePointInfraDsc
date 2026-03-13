@@ -63,4 +63,10 @@ properties:
       settings:
         id: Microsoft.SQLServerManagementStudio.22
         source: winget
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      directives:
+        description: Install Sysinternals Suite
+      settings:
+        id: Microsoft.Sysinternals.Suite
+        source: winget
   configurationVersion: 0.2.0

@@ -5,7 +5,7 @@ permissions:
 on:
   workflow_dispatch:
   push: 
-    branches: [main]
+    # branches: [main]
 
 jobs:
   # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
@@ -16,13 +16,15 @@ jobs:
       dsc_folder: "${{ github.workspace }}/sharepoint-adfs-full"
     steps:
       - uses: actions/checkout@v6
-      - name: Setup PowerShell module cache
-        if: false
-        id: cacher
-        uses: actions/cache@v5
-        with:
-          path: "~/.local/share/powershell/Modules"
-          key: ${{ runner.os }}-mandatory-modules
+      
+      # - name: Setup PowerShell module cache
+      #   if: false
+      #   id: cacher
+      #   uses: actions/cache@v5
+      #   with:
+      #     path: "~/.local/share/powershell/Modules"
+      #     key: ${{ runner.os }}-mandatory-modules
+      
       - name: Install mandatory modules
         #if: steps.cacher.outputs.cache-hit != 'true'
         shell: powershell
