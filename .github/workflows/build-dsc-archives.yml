@@ -1,6 +1,6 @@
 name: Build DSC archives
 permissions:
-  contents: read
+  contents: write
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ on:
 env:
   dsc_folder: "sharepoint-adfs-full"
   artifact_name: "dsc-archives"
-  vm_name: "SQL"
+  vm_name: "XX"
 
 jobs:
   # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
@@ -100,6 +100,8 @@ jobs:
         #if: startsWith(github.ref, 'refs/tags/spfx-v')
         with:
           name: '${{ env.dsc_folder }}'
-          files: '${{ env.dsc_folder }}/*'
+          files: |
+            *.ps1
+            *.zip
           draft: true
           make_latest: true
