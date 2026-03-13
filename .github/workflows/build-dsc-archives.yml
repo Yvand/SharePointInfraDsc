@@ -15,7 +15,7 @@ on:
 env:
   dsc_folder: "sharepoint-adfs-full"
   artifact_name: "dsc-archives"
-  vm_name: "DC"
+  vm_name: "SQL"
 
 jobs:
   # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
@@ -73,7 +73,7 @@ jobs:
         env:
           scripts_folder: "scripts"
         run: |
-          $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-*.ps1"
+          $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-${{ env.vm_name }}*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
               Write-Host "Creating DSC archive for '$($dscFilePath.BaseName)'."
               ${{ env.scripts_folder }}/New-DscArchive.ps1 -vmName "$($dscFilePath.BaseName)" -dscFolderPath "${{ env.dsc_folder }}"
