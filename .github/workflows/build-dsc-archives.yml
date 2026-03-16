@@ -83,7 +83,9 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.artifact_name }}
-          path: ${{ env.dsc_folder }}/*
+          path: |
+            ${{ env.dsc_folder }}/*.ps1
+            ${{ env.dsc_folder }}/*.zip
 
   create-github-release:
     name: Create release
@@ -95,20 +97,22 @@ jobs:
         with:
           name: ${{ env.artifact_name }}
 
+      # example input (github.ref_name):          "releases/SharePoint.Full-v1.0"
+      # example output (config_name_and_version): "SharePoint.Full-v1.0"
       - name: Extract version number from git tag name
-        env:
-          TAG: ${{ github.ref_name }} # expected tag value: "releases/SharePoint.Full-v1.0"
         id: splittag
-        run: echo "productWithVersion=`echo ${TAG:9}`" >> $GITHUB_OUTPUT
+        env:
+          git_tag: ${{ github.ref_name }}
+        run: echo "config_name_and_version=`echo ${git_tag:9}`" >> $GITHUB_OUTPUT
 
       - run: |
-          echo "${{ steps.splittag.outputs.productWithVersion }}" 
+          echo "${{ steps.splittag.outputs.config_name_and_version }}" 
           ls -alh .
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          name: '${{ steps.splittag.outputs.productWithVersion }}'
+          name: '${{ steps.splittag.outputs.config_name_and_version }}'
           files: |
             *.ps1
             *.zip
