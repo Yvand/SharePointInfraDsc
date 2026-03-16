@@ -1,4 +1,4 @@
-﻿configuration ConfigureDCVM
+﻿configuration ConfigDc
 {
     param
     (
@@ -735,7 +735,7 @@ Install-Module -Name xWebAdministration
 Install-Module -Name xDisk
 Install-Module -Name xNetworking
 
-help ConfigureDCVM
+help ConfigDc
 
 $password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -Force
 $Admincreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
@@ -746,8 +746,8 @@ $SPServerName = "SP"
 $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
-ConfigureDCVM -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -SPServerName $SPServerName -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigDc.0\ConfigDc"
+ConfigDc -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -SPServerName $SPServerName -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 

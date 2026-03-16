@@ -1,4 +1,4 @@
-configuration ConfigureSQLVM
+configuration ConfigSql
 {
     param
     (
@@ -499,8 +499,8 @@ $SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -
 $DNSServerIP = "10.1.1.4"
 $DomainFQDN = "contoso.local"
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureSQLVM.0\ConfigureSQLVM"
-ConfigureSQLVM -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigSql.0\ConfigSql"
+ConfigSql -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
 #>

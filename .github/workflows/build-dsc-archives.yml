@@ -1,12 +1,11 @@
 name: Build DSC archives
 permissions:
   contents: write
-
 on:
   workflow_dispatch:
     # inputs:
-    #   dsc_infra_folder:
-    #     description: 'Name of the folder containing the DSC files to build archives for. The folder must be located at the root of the repository.'
+    #   dsc_folder:
+    #     description: 'Name of the folder containing the DSC files to build archives for.'
     #     required: true
     #     default: 'SharePoint.Full'
   push: 
