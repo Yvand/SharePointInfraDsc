@@ -94,30 +94,19 @@ configuration ConfigSpMain
     $ProvisionAddins = $false
     $ProvisionHnscSites = $false
     #$ProvisionExtendedZone = $false
-    switch ($ConfigurationLevel) {
-        "Minimum" { continue }
-        "Light" {
-            $ConfigurationLevel = [ConfigurationLevel]::"Minimum"
-            $ProvisionStateServiceApplication = $true
-            $ProvisionTrustedAuthentication = $true
-            continue
-        }
-        "Medium" { 
-            $ConfigurationLevel = [ConfigurationLevel]::"Light"
-            # $ProvisionStateServiceApplication = $true
-            # $ProvisionTrustedAuthentication = $true
-            $ProvisionUserProfilesService = $true
-            continue
-        }
-        "Full" { 
-             $ConfigurationLevel = [ConfigurationLevel]::"Medium"
-            # $ProvisionStateServiceApplication = $true
-            # $ProvisionTrustedAuthentication = $true
-            # $ProvisionUserProfilesService = $true
-            $ProvisionAddins = $true
-            $ProvisionHnscSites = $true
-            continue
-        }
+
+    # Set provisioning properties based on the configuration level (hierarchical)
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
+        $ProvisionStateServiceApplication = $true
+        $ProvisionTrustedAuthentication = $true
+    }
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
+        $ProvisionUserProfilesService = $true
+    }
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
+        $ProvisionAddins = $true
+        $ProvisionHnscSites = $true
     }
     
     Node localhost
