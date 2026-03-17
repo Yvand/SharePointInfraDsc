@@ -21,7 +21,8 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperUserCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperReaderCreds,
-        [Parameter(Mandatory=$false)] [Boolean] $DefaultZoneIsHttps = $false
+        [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneIsHttps = $false,
+        [Parameter(Mandatory = $false)] [ConfigurationLevel] $ConfigurationLevel = [ConfigurationLevel]::Full
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0 # Custom
@@ -36,6 +37,13 @@ configuration ConfigSpMain
     Import-DscResource -ModuleName cChoco -ModuleVersion 2.6.0.0    # With custom changes to implement retry on package downloads
     Import-DscResource -ModuleName StorageDsc -ModuleVersion 6.0.1
     Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
+
+    enum ConfigurationLevel {
+        Minimum
+        Light
+        # Medium
+        Full
+    }
     
     # Init
     [String] $InterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
@@ -79,6 +87,27 @@ configuration ConfigSpMain
     [String] $TrustedIdChar = "e"
     [String] $SPTeamSiteTemplate = "STS#3"
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
+
+    $ProvisionTrustedAuthentication = $false
+    $ProvisionNonRootSites = $false
+    $ProvisionUserProfilesService = $false
+    $ProvisionAddins = $false
+    #$ProvisionExtendedZone = $false
+    switch ($ConfigurationLevel) {
+        "Minimum" { continue }
+        "Light" { 
+            $ProvisionTrustedAuthentication = $true
+            $ProvisionNonRootSites = $true
+            continue
+        }
+        "Light" { 
+            $ProvisionTrustedAuthentication = $true
+            $ProvisionNonRootSites = $true
+            $ProvisionUserProfilesService = $true
+            $ProvisionAddins = $true
+            continue
+        }
+    }
     
     Node localhost
     {
@@ -99,6 +128,9 @@ configuration ConfigSpMain
             GetScript  = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
+
+        if ($ConfigurationLevel -ne [ConfigurationLevel]::Minimum) {
+
 
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
@@ -1964,6 +1996,7 @@ configuration ConfigSpMain
             TestScript = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
     }
+        }
 }
 
 function Get-LatestGitHubRelease {
