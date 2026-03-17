@@ -39,7 +39,7 @@ jobs:
       - name: Install dsc modules
         shell: powershell
         env:
-          scripts_folder: "scripts"
+          scripts_folder: "setup"
         run: |
           Write-Host "Get DSC files in folder '${{ env.dsc_folder }}'"
           $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-${{ env.vm_name }}*.ps1"
@@ -67,7 +67,7 @@ jobs:
       - name: Build DSC archives
         shell: powershell
         env:
-          scripts_folder: "scripts"
+          scripts_folder: "setup"
         run: |
           $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-${{ env.vm_name }}*.ps1"
           foreach ($dscFilePath in $dscFilesPath) {
