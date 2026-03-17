@@ -88,6 +88,7 @@ configuration ConfigSpMain
     [String] $SPTeamSiteTemplate = "STS#3"
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
 
+    $ProvisionStateServiceApplication = $false
     $ProvisionTrustedAuthentication = $false
     $ProvisionUserProfilesService = $false
     $ProvisionAddins = $false
@@ -95,18 +96,24 @@ configuration ConfigSpMain
     #$ProvisionExtendedZone = $false
     switch ($ConfigurationLevel) {
         "Minimum" { continue }
-        "Light" { 
+        "Light" {
+            $ConfigurationLevel = [ConfigurationLevel]::"Minimum"
+            $ProvisionStateServiceApplication = $true
             $ProvisionTrustedAuthentication = $true
             continue
         }
         "Medium" { 
-            $ProvisionTrustedAuthentication = $true
+            $ConfigurationLevel = [ConfigurationLevel]::"Light"
+            # $ProvisionStateServiceApplication = $true
+            # $ProvisionTrustedAuthentication = $true
             $ProvisionUserProfilesService = $true
             continue
         }
         "Full" { 
-            $ProvisionTrustedAuthentication = $true
-            $ProvisionUserProfilesService = $true
+             $ConfigurationLevel = [ConfigurationLevel]::"Medium"
+            # $ProvisionStateServiceApplication = $true
+            # $ProvisionTrustedAuthentication = $true
+            # $ProvisionUserProfilesService = $true
             $ProvisionAddins = $true
             $ProvisionHnscSites = $true
             continue
@@ -127,7 +134,7 @@ configuration ConfigSpMain
                 if (!(Test-Path $destinationFolder -PathType Container)) {
                     New-Item -ItemType Directory -Force -Path $destinationFolder
                 }
-                "$(Get-Date -Format u)`t$($using:ComputerName)`tDSC Configuration starting..." | Out-File -FilePath $using:DscStatusFilePath -Append
+                "$(Get-Date -Format u)`t$($using:ComputerName)`tDSC Configuration starting. Provisioning options: ProvisionStateServiceApplication: $($using:ProvisionStateServiceApplication), ProvisionTrustedAuthentication: $($using:ProvisionTrustedAuthentication), ProvisionUserProfilesService: $($using:ProvisionUserProfilesService), ProvisionAddins: $($using:ProvisionAddins), ProvisionHnscSites: $($using:ProvisionHnscSites)" | Out-File -FilePath $using:DscStatusFilePath -Append
             }
             GetScript  = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
@@ -928,11 +935,13 @@ configuration ConfigSpMain
             DependsOn            = "[Script]RestartSPTimerAfterCreateSPFarm"
         }
 
-        SPStateServiceApp StateServiceApp {
-            Name                 = "State Service Application"
-            DatabaseName         = $SPDBPrefix + "StateService"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[Script]RestartSPTimerAfterCreateSPFarm"
+        if ($ProvisionStateServiceApplication) {
+            SPStateServiceApp StateServiceApp {
+                Name                 = "State Service Application"
+                DatabaseName         = $SPDBPrefix + "StateService"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[Script]RestartSPTimerAfterCreateSPFarm"
+            }
         }
 
         # Distributed Cache is now enabled directly by the SPFarm resource
@@ -1339,7 +1348,7 @@ configuration ConfigSpMain
         SPSite CreateRootSite {
             Url                  = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
             OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"} else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
             Name                 = "root site"
             Template             = $SPTeamSiteTemplate
             CreateDefaultGroups  = $true
@@ -1352,7 +1361,7 @@ configuration ConfigSpMain
             SPSite CreateAppCatalog {
                 Url                  = if ($DefaultZoneIsHttps) { "https://$SharePointSitesAuthority.$DomainFQDN/sites/AppCatalog" } else { "http://$SharePointSitesAuthority/sites/AppCatalog" }
                 OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"} else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
                 Name                 = "AppCatalog"
                 Template             = "APPCATALOG#0"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -1368,7 +1377,7 @@ configuration ConfigSpMain
                 Url                      = if ($DefaultZoneIsHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
                 HostHeaderWebApplication = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
                 OwnerAlias               = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"} else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
                 Name                     = "MySite host"
                 Template                 = "SPSMSITEHOST#0"
                 PsDscRunAsCredential     = $DomainAdminCredsQualified
@@ -1421,7 +1430,7 @@ configuration ConfigSpMain
                 Url                      = if ($DefaultZoneIsHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
                 HostHeaderWebApplication = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
                 OwnerAlias               = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"} else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
                 Name                     = "$HNSC1Alias site"
                 Template                 = $SPTeamSiteTemplate
                 CreateDefaultGroups      = $true
@@ -1646,7 +1655,7 @@ configuration ConfigSpMain
         SPSite CreateTeamSite {
             Url                  = if ($DefaultZoneIsHttps) { "https://$SharePointSitesAuthority.$DomainFQDN/sites/team" } else { "http://$SharePointSitesAuthority/sites/team" }
             OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"} else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
             Name                 = "Team site"
             Template             = $SPTeamSiteTemplate
             CreateDefaultGroups  = $true
