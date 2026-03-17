@@ -41,7 +41,7 @@ configuration ConfigSpMain
     enum ConfigurationLevel {
         Minimum
         Light
-        # Medium
+        Medium
         Full
     }
     
@@ -89,22 +89,26 @@ configuration ConfigSpMain
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
 
     $ProvisionTrustedAuthentication = $false
-    $ProvisionNonRootSites = $false
     $ProvisionUserProfilesService = $false
     $ProvisionAddins = $false
+    $ProvisionHnscSites = $false
     #$ProvisionExtendedZone = $false
     switch ($ConfigurationLevel) {
         "Minimum" { continue }
         "Light" { 
             $ProvisionTrustedAuthentication = $true
-            $ProvisionNonRootSites = $true
             continue
         }
-        "Light" { 
+        "Medium" { 
             $ProvisionTrustedAuthentication = $true
-            $ProvisionNonRootSites = $true
+            $ProvisionUserProfilesService = $true
+            continue
+        }
+        "Full" { 
+            $ProvisionTrustedAuthentication = $true
             $ProvisionUserProfilesService = $true
             $ProvisionAddins = $true
+            $ProvisionHnscSites = $true
             continue
         }
     }
@@ -1203,6 +1207,8 @@ configuration ConfigSpMain
             }
         }
 
+        $configureMainWebAppAuthenticationDeps = @( "[SPWebApplicationExtension]ExtendMainWebApp" )
+        if ($ProvisionTrustedAuthentication) { $configureMainWebAppAuthenticationDeps += "[SPTrustedIdentityTokenIssuer]CreateSPTrust" }
         SPWebAppAuthentication ConfigureMainWebAppAuthentication {
             WebAppUrl            = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
             Default              = if ($DefaultZoneIsHttps) {
@@ -1253,7 +1259,7 @@ configuration ConfigSpMain
                 )
             }
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SPWebApplicationExtension]ExtendMainWebApp", "[SPTrustedIdentityTokenIssuer]CreateSPTrust"
+            DependsOn            = $configureMainWebAppAuthenticationDeps
         }
 
         # Use SharePoint SE to generate the CSR and give the private key so it can manage it
@@ -1410,7 +1416,7 @@ configuration ConfigSpMain
         #     DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
         # }
 
-        if ($ProvisionNonRootSites) {
+        if ($ProvisionHnscSites) {
             SPSite CreateHNSC1 {
                 Url                      = if ($DefaultZoneIsHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
                 HostHeaderWebApplication = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
@@ -1635,6 +1641,8 @@ configuration ConfigSpMain
         
         # This team site is tested by VM FE to wait before joining the farm, so it acts as a milestone and it should be created only when all SharePoint services are created
         # If VM FE joins the farm while a SharePoint service is creating here, it may block its creation forever.
+        $teamsiteDeps = @( "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication" )
+        if ($ProvisionAddins) { $teamsiteDeps += "[SPWebApplicationAppDomain]ConfigureAppDomainDefaultZone", "[SPWebApplicationAppDomain]ConfigureAppDomainIntranetZone", "[SPAppCatalog]SetAppCatalogUrl" }
         SPSite CreateTeamSite {
             Url                  = if ($DefaultZoneIsHttps) { "https://$SharePointSitesAuthority.$DomainFQDN/sites/team" } else { "http://$SharePointSitesAuthority/sites/team" }
             OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
@@ -1643,7 +1651,7 @@ configuration ConfigSpMain
             Template             = $SPTeamSiteTemplate
             CreateDefaultGroups  = $true
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication", "[SPWebApplicationAppDomain]ConfigureAppDomainDefaultZone", "[SPWebApplicationAppDomain]ConfigureAppDomainIntranetZone", "[SPAppCatalog]SetAppCatalogUrl"
+            DependsOn            = $teamsiteDeps
         }
 
         if ($ProvisionAddins) {
