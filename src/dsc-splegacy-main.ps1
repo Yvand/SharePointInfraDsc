@@ -1445,25 +1445,25 @@ configuration ConfigSpMain
                     }
 
                     foreach ($accountName in $accounts) {
-                        $profile = $null
+                        $userProfile = $null
                         try {
-                            $profile = $upm.GetUserProfile($accountName)
+                            $userProfile = $upm.GetUserProfile($accountName)
                             Write-Verbose -Verbose -Message "Got existing user profile for '$accountName'"
                         }
                         catch {
-                            $profile = $upm.CreateUserProfile($accountName);
+                            $userProfile = $upm.CreateUserProfile($accountName);
                             Write-Verbose -Verbose -Message "Successfully created user profile for '$accountName'"
                         }
                     
-                        if ($null -eq $profile) {
+                        if ($null -eq $userProfile) {
                             Write-Verbose -Verbose -Message "Unable to get/create the profile for '$accountName', give up"
                             continue
                         }
                         
-                        if ($null -eq $profile.PersonalSite) {
+                        if ($null -eq $userProfile.PersonalSite) {
                             Write-Verbose -Verbose -Message "Adding creation of personal site for '$accountName' to the queue..."
                             try {
-                                $profile.CreatePersonalSiteEnque($false)
+                                $userProfile.CreatePersonalSiteEnque($false)
                                 Write-Verbose -Verbose -Message "Successfully enqueued the creation of personal site for '$accountName'"
                             }
                             catch {
