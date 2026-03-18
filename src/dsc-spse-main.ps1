@@ -1212,8 +1212,8 @@ configuration ConfigSpMain
             }
         }
 
-        $configureMainWebAppAuthenticationDeps = if ($ProvisionExtendedZone) { @( "[SPWebApplicationExtension]ExtendMainWebApp" ) } else { @() }
-        if ($ProvisionTrustedAuthentication) { $configureMainWebAppAuthenticationDeps += "[SPTrustedIdentityTokenIssuer]CreateSPTrust" }
+        $configureMainWebAppAuthenticationDependsOn = if ($ProvisionExtendedZone) { @( "[SPWebApplicationExtension]ExtendMainWebApp" ) } else { @() }
+        if ($ProvisionTrustedAuthentication) { $configureMainWebAppAuthenticationDependsOn += "[SPTrustedIdentityTokenIssuer]CreateSPTrust" }
 
         # if ($ProvisionExtendedZone) {
         #         $IntranetArgs             =
@@ -1263,7 +1263,7 @@ configuration ConfigSpMain
             
             
         #     PsDscRunAsCredential = $DomainAdminCredsQualified
-        #     DependsOn            = $configureMainWebAppAuthenticationDeps
+        #     DependsOn            = $configureMainWebAppAuthenticationDependsOn
         # }
 
         SPWebAppAuthentication ConfigureMainWebAppAuthentication {
@@ -1321,7 +1321,7 @@ configuration ConfigSpMain
                 @($null)
             }
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = $configureMainWebAppAuthenticationDeps
+            DependsOn            = $configureMainWebAppAuthenticationDependsOn
         }
 
         # Use SharePoint SE to generate the CSR and give the private key so it can manage it
@@ -1714,8 +1714,8 @@ configuration ConfigSpMain
         
         # This team site is tested by VM FE to wait before joining the farm, so it acts as a milestone and it should be created only when all SharePoint services are created
         # If VM FE joins the farm while a SharePoint service is creating here, it may block its creation forever.
-        $teamsiteDeps = @( "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication" )
-        if ($ProvisionAddins) { $teamsiteDeps += "[SPWebApplicationAppDomain]ConfigureAppDomainDefaultZone", "[SPWebApplicationAppDomain]ConfigureAppDomainIntranetZone", "[SPAppCatalog]SetAppCatalogUrl" }
+        $createTeamSiteDependsOn = @( "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication" )
+        if ($ProvisionAddins) { $createTeamSiteDependsOn += "[SPWebApplicationAppDomain]ConfigureAppDomainDefaultZone", "[SPWebApplicationAppDomain]ConfigureAppDomainIntranetZone", "[SPAppCatalog]SetAppCatalogUrl" }
         SPSite CreateTeamSite {
             Url                  = if ($DefaultZoneIsHttps) { "https://$SharePointSitesAuthority.$DomainFQDN/sites/team" } else { "http://$SharePointSitesAuthority/sites/team" }
             OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
@@ -1724,7 +1724,7 @@ configuration ConfigSpMain
             Template             = $SPTeamSiteTemplate
             CreateDefaultGroups  = $true
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = $teamsiteDeps
+            DependsOn            = $createTeamSiteDependsOn
         }
 
         if ($ProvisionAddins) {
