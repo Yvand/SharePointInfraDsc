@@ -1214,6 +1214,58 @@ configuration ConfigSpMain
 
         $configureMainWebAppAuthenticationDeps = if ($ProvisionExtendedZone) { @( "[SPWebApplicationExtension]ExtendMainWebApp" ) } else { @() }
         if ($ProvisionTrustedAuthentication) { $configureMainWebAppAuthenticationDeps += "[SPTrustedIdentityTokenIssuer]CreateSPTrust" }
+
+        # if ($ProvisionExtendedZone) {
+        #         $IntranetArgs             =
+        #         if ($DefaultZoneIsHttps -or $false -eq $ProvisionTrustedAuthentication) {
+        #             @(
+        #                 MSFT_SPWebAppAuthenticationMode {
+        #                     AuthenticationMethod = "WindowsAuthentication"
+        #                     WindowsAuthMethod    = "NTLM"
+        #                 }
+        #             )
+        #         }
+        #     }
+
+        # SPWebAppAuthentication ConfigureMainWebAppAuthentication {
+        #     WebAppUrl            = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
+        #     Default              = if ($DefaultZoneIsHttps) {
+        #         if ($ProvisionTrustedAuthentication) {
+        #             @(
+        #                 MSFT_SPWebAppAuthenticationMode {
+        #                     AuthenticationMethod   = "Federated"
+        #                     AuthenticationProvider = $DomainFQDN
+        #                 }
+        #                 MSFT_SPWebAppAuthenticationMode {
+        #                     AuthenticationMethod = "WindowsAuthentication"
+        #                     WindowsAuthMethod    = "NTLM"
+        #                 }
+        #             )
+        #         }
+        #         else {
+        #             @(
+        #                 MSFT_SPWebAppAuthenticationMode {
+        #                     AuthenticationMethod = "WindowsAuthentication"
+        #                     WindowsAuthMethod    = "NTLM"
+        #                 }
+        #             )
+        #         }
+        #     }
+        #     else {
+        #         @(
+        #             MSFT_SPWebAppAuthenticationMode {
+        #                 AuthenticationMethod = "WindowsAuthentication"
+        #                 WindowsAuthMethod    = "NTLM"
+        #             }
+        #         )
+        #     }
+        #     Intranet = $IntranetArgs
+            
+            
+        #     PsDscRunAsCredential = $DomainAdminCredsQualified
+        #     DependsOn            = $configureMainWebAppAuthenticationDeps
+        # }
+
         SPWebAppAuthentication ConfigureMainWebAppAuthentication {
             WebAppUrl            = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
             Default              = if ($DefaultZoneIsHttps) {
@@ -1266,7 +1318,7 @@ configuration ConfigSpMain
                 }
             }
             else {
-                @() 
+                @($null)
             }
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = $configureMainWebAppAuthenticationDeps
@@ -1395,7 +1447,7 @@ configuration ConfigSpMain
                     if ($DefaultZoneIsHttps) { "http://$MySiteHostAlias/" } else { "https://$MySiteHostAlias.$DomainFQDN/" }
                 }
                 else { 
-                    "" 
+                    [string]::Empty
                 }
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPSite]CreateMySiteHost"
@@ -2137,6 +2189,8 @@ $SharePointVersion = "Subscription-RTM"
 $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
+$DefaultZoneIsHttps = $false
+$ConfigurationLevel = "Minimum"
 $SharePointBits = @(
     @{
         Label = "RTM"; 
@@ -2167,7 +2221,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureSPSE.0\ConfigSpMain"
-ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneIsHttps $DefaultZoneIsHttps -ConfigurationLevel $ConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
