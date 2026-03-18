@@ -1395,7 +1395,7 @@ configuration ConfigSpMain
                     if ($DefaultZoneIsHttps) { "http://$MySiteHostAlias/" } else { "https://$MySiteHostAlias.$DomainFQDN/" }
                 }
                 else { 
-                    $null 
+                    "" 
                 }
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPSite]CreateMySiteHost"
