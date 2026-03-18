@@ -7,11 +7,11 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [String]$DCServerName,
         [Parameter(Mandatory)] [String]$SQLServerName,
         [Parameter(Mandatory)] [String]$SQLAlias,
-        [Parameter(Mandatory)] [String]$SharePointVersion,
+        [Parameter(Mandatory)] [SharePointBuild] $SharePointVersion,
         [Parameter(Mandatory)] [String]$SharePointSitesAuthority,
         [Parameter(Mandatory)] [String]$SharePointCentralAdminPort,
         [Parameter(Mandatory)] [Boolean]$EnableAnalysis,
-        [Parameter(Mandatory)] [System.Object[]] $SharePointBits,
+        [Parameter(Mandatory)] [SharePointBuildInfo[]] $SharePointBits,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
@@ -37,13 +37,6 @@ configuration ConfigSpMain
     Import-DscResource -ModuleName cChoco -ModuleVersion 2.6.0.0    # With custom changes to implement retry on package downloads
     Import-DscResource -ModuleName StorageDsc -ModuleVersion 6.0.1
     Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
-
-    enum ConfigurationLevel {
-        Minimum
-        Light
-        Medium
-        Full
-    }
     
     # Init
     [String] $InterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
@@ -2167,6 +2160,39 @@ function Get-WebAppUrl {
     return $ret
 }
 
+enum ConfigurationLevel {
+    Minimum
+    Light
+    Medium
+    Full
+}
+
+# enum values cannot start with a digit - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_enum?view=powershell-5.1#syntax
+enum SharePointBuild {
+    SPRTM
+    SP22H2
+    SP23H1
+    SP23H2
+    SP24H1
+    SP24H2
+    SP25H1
+    SP25H2
+    SPLatest
+}
+
+class SharePointBuildInfo
+{
+    [ValidateNotNullOrEmpty()][SharePointBuild] $Label
+    [SharePointPackageInfo[]] $Packages
+}
+
+class SharePointPackageInfo
+{
+    [ValidateNotNullOrEmpty()][string] $DownloadUrl
+    [Parameter(Mandatory = $false)] [string] $ChecksumType
+    [Parameter(Mandatory = $false)] [string] $Checksum
+}
+
 <#
 help ConfigSpMain
 
@@ -2185,34 +2211,34 @@ $DomainFQDN = "contoso.local"
 $DCServerName = "DC"
 $SQLServerName = "SQL"
 $SQLAlias = "SQLAlias"
-$SharePointVersion = "Subscription-RTM"
+$SharePointVersion = "SPRTM"
 $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
 $DefaultZoneIsHttps = $false
-$ConfigurationLevel = "Minimum"
+$ConfigurationLevel = "Light"
 $SharePointBits = @(
     @{
-        Label = "RTM"; 
+        Label = "SPRTM"; 
         Packages = @(
             @{ DownloadUrl = "https://go.microsoft.com/fwlink/?linkid=2171943"; ChecksumType = "SHA256"; Checksum = "C576B847C573234B68FC602A0318F5794D7A61D8149EB6AE537AF04470B7FC05" }
         )
     },
     @{
-        Label = "22H2"; 
+        Label = "SP22H2"; 
         Packages = @(
             @{ DownloadUrl = "https://download.microsoft.com/download/8/d/f/8dfcb515-6e49-42e5-b20f-5ebdfd19d8e7/wssloc-subscription-kb5002270-fullfile-x64-glb.exe"; ChecksumType = "SHA256"; Checksum = "7E496530EB873146650A9E0653DE835CB2CAD9AF8D154CBD7387BB0F2297C9FC" },
             @{ DownloadUrl = "https://download.microsoft.com/download/3/f/5/3f5b1ee0-3336-45d7-b2f4-1e6af977d574/sts-subscription-kb5002271-fullfile-x64-glb.exe"; ChecksumType = "SHA256"; Checksum = "247011443AC573D4F03B1622065A7350B8B3DAE04D6A5A6DC64C8270A3BE7636" }
         )
     },
-    {
-        Label = "23H1",
+    @{
+        Label = "SP23H1";
         Packages = @(
             @{ DownloadUrl = "https://download.microsoft.com/download/c/6/a/c6a17105-3d86-42ad-888d-49b22383bfa1/uber-subscription-kb5002355-fullfile-x64-glb.exe" }
         )
     },
     @{
-        Label = "Latest"; 
+        Label = "SPLatest"; 
         Packages = @(
             @{ DownloadUrl = "https://download.microsoft.com/download/d/6/d/d6dcc9e7-744e-43e1-b4be-206a6acd4f88/sts-subscription-kb5002331-fullfile-x64-glb.exe" },
             @{ DownloadUrl = "https://download.microsoft.com/download/d/3/5/d354b6e2-fa16-48e0-b3f8-423f7ca279a0/wssloc-subscription-kb5002326-fullfile-x64-glb.exe" }
