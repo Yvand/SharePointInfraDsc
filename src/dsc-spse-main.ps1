@@ -93,7 +93,7 @@ configuration ConfigSpMain
     $ProvisionUserProfilesService = $false
     $ProvisionAddins = $false
     $ProvisionHnscSites = $false
-    #$ProvisionExtendedZone = $false
+    $ProvisionExtendedZone = $false
 
     # Set provisioning properties based on the configuration level (hierarchical)
     if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
@@ -103,10 +103,15 @@ configuration ConfigSpMain
     }
     if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
         $ProvisionUserProfilesService = $true
+        $ProvisionExtendedZone = $true
     }
     if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
         $ProvisionAddins = $true
         $ProvisionHnscSites = $true
+    }
+
+    if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
+        $DefaultZoneIsHttps = $true
     }
     
     Node localhost
@@ -1151,18 +1156,20 @@ configuration ConfigSpMain
         }
 
 
-        # ExtendMainWebApp might fail with error: "The web.config could not be saved on this IIS Web Site: C:\\inetpub\\wwwroot\\wss\\VirtualDirectories\\80\\web.config.\r\nThe process cannot access the file 'C:\\inetpub\\wwwroot\\wss\\VirtualDirectories\\80\\web.config' because it is being used by another process."
-        # So I added resources between it and CreateMainWebApp to avoid it
-        SPWebApplicationExtension ExtendMainWebApp {
-            WebAppUrl            = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
-            Zone                 = "Intranet"
-            Name                 = if ($DefaultZoneIsHttps) { "SharePoint -  main - Intranet HTTP" } else { "SharePoint - main - Intranet HTTPS" }
-            Url                  = if ($DefaultZoneIsHttps) { "http://$SharePointSitesAuthority/" } else { "https://$SharePointSitesAuthority.$DomainFQDN/" }
-            Port                 = if ($DefaultZoneIsHttps) { 80 } else { 443 }
-            AllowAnonymous       = $false
-            Ensure               = "Present"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SPWebApplication]CreateMainWebApp"
+        if ($ProvisionExtendedZone) {
+            # ExtendMainWebApp might fail with error: "The web.config could not be saved on this IIS Web Site: C:\\inetpub\\wwwroot\\wss\\VirtualDirectories\\80\\web.config.\r\nThe process cannot access the file 'C:\\inetpub\\wwwroot\\wss\\VirtualDirectories\\80\\web.config' because it is being used by another process."
+            # So I added resources between it and CreateMainWebApp to avoid it
+            SPWebApplicationExtension ExtendMainWebApp {
+                WebAppUrl            = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
+                Zone                 = "Intranet"
+                Name                 = if ($DefaultZoneIsHttps) { "SharePoint -  main - Intranet HTTP" } else { "SharePoint - main - Intranet HTTPS" }
+                Url                  = if ($DefaultZoneIsHttps) { "http://$SharePointSitesAuthority/" } else { "https://$SharePointSitesAuthority.$DomainFQDN/" }
+                Port                 = if ($DefaultZoneIsHttps) { 80 } else { 443 }
+                AllowAnonymous       = $false
+                Ensure               = "Present"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[SPWebApplication]CreateMainWebApp"
+            }
         }
 
         if ($ProvisionTrustedAuthentication) {
@@ -1205,7 +1212,7 @@ configuration ConfigSpMain
             }
         }
 
-        $configureMainWebAppAuthenticationDeps = @( "[SPWebApplicationExtension]ExtendMainWebApp" )
+        $configureMainWebAppAuthenticationDeps = if ($ProvisionExtendedZone) { @( "[SPWebApplicationExtension]ExtendMainWebApp" ) } else { @() }
         if ($ProvisionTrustedAuthentication) { $configureMainWebAppAuthenticationDeps += "[SPTrustedIdentityTokenIssuer]CreateSPTrust" }
         SPWebAppAuthentication ConfigureMainWebAppAuthentication {
             WebAppUrl            = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
@@ -1240,21 +1247,26 @@ configuration ConfigSpMain
                 )
             }
 
-            Intranet             = if ($DefaultZoneIsHttps -or $false -eq $ProvisionTrustedAuthentication) {
-                @(
-                    MSFT_SPWebAppAuthenticationMode {
-                        AuthenticationMethod = "WindowsAuthentication"
-                        WindowsAuthMethod    = "NTLM"
-                    }
-                )
+            Intranet             = if ($ProvisionExtendedZone) {
+                if ($DefaultZoneIsHttps -or $false -eq $ProvisionTrustedAuthentication) {
+                    @(
+                        MSFT_SPWebAppAuthenticationMode {
+                            AuthenticationMethod = "WindowsAuthentication"
+                            WindowsAuthMethod    = "NTLM"
+                        }
+                    )
+                }
+                else {
+                    @(
+                        MSFT_SPWebAppAuthenticationMode {
+                            AuthenticationMethod   = "Federated"
+                            AuthenticationProvider = $DomainFQDN
+                        }
+                    )
+                }
             }
             else {
-                @(
-                    MSFT_SPWebAppAuthenticationMode {
-                        AuthenticationMethod   = "Federated"
-                        AuthenticationProvider = $DomainFQDN
-                    }
-                )
+                @() 
             }
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = $configureMainWebAppAuthenticationDeps
@@ -1271,6 +1283,8 @@ configuration ConfigSpMain
                 $appDomainIntranetFQDN = $using:AppDomainIntranetFQDN
                 $setupPath = Join-Path -Path $using:SetupPath -ChildPath "Certificates"
                 $defaultZoneIsHttps = $using:DefaultZoneIsHttps
+                $provisionExtendedZone = $using:ProvisionExtendedZone
+
                 if (!(Test-Path $setupPath -PathType Container)) {
                     New-Item -ItemType Directory -Force -Path $setupPath
                 }
@@ -1297,13 +1311,15 @@ configuration ConfigSpMain
                 Write-Verbose -Verbose -Message "Adding certificate 'CN=$sharePointSitesAuthority.$domainFQDN' to SharePoint store EndEntity..."
                 $spCert = Import-SPCertificate -Path "$setupPath\$sharePointSitesAuthority.cer" -Exportable -Store EndEntity
 
-                $webAppUrl = if ($defaultZoneIsHttps) { "https://$sharePointSitesAuthority.$domainFQDN/" } else { "http://$sharePointSitesAuthority/" }
-                $httpsUrl = "https://$sharePointSitesAuthority.$domainFQDN/"
-                $httpsZoneName = if ($defaultZoneIsHttps) { "Default" } else { "Intranet" }
-                Write-Verbose -Verbose -Message "Setting zone '$httpsZoneName' in web application '$webAppUrl' to HTTPS with certificate '$($spCert.Name)'..."
-                Set-SPWebApplication -Identity $webAppUrl -Zone $httpsZoneName -Port 443 -Certificate $spCert `
-                    -SecureSocketsLayer:$true -AllowLegacyEncryption:$false -Url $httpsUrl
-                
+                if ($provisionExtendedZone -or $defaultZoneIsHttps) {
+                    $webAppUrl = if ($defaultZoneIsHttps) { "https://$sharePointSitesAuthority.$domainFQDN/" } else { "http://$sharePointSitesAuthority/" }
+                    $httpsUrl = "https://$sharePointSitesAuthority.$domainFQDN/"
+                    $httpsZoneName = if ($defaultZoneIsHttps) { "Default" } else { "Intranet" }
+                    Write-Verbose -Verbose -Message "Setting zone '$httpsZoneName' in web application '$webAppUrl' to HTTPS with certificate '$($spCert.Name)'..."
+                    Set-SPWebApplication -Identity $webAppUrl -Zone $httpsZoneName -Port 443 -Certificate $spCert `
+                        -SecureSocketsLayer:$true -AllowLegacyEncryption:$false -Url $httpsUrl
+                }
+
                 Write-Verbose -Verbose -Message "Finished."
             }
             GetScript            = { }
@@ -1375,7 +1391,12 @@ configuration ConfigSpMain
 
             SPSiteUrl SetMySiteHostIntranetUrl {
                 Url                  = if ($DefaultZoneIsHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
-                Intranet             = if ($DefaultZoneIsHttps) { "http://$MySiteHostAlias/" } else { "https://$MySiteHostAlias.$DomainFQDN/" }
+                Intranet             = if ($ProvisionExtendedZone) {
+                    if ($DefaultZoneIsHttps) { "http://$MySiteHostAlias/" } else { "https://$MySiteHostAlias.$DomainFQDN/" }
+                }
+                else { 
+                    $null 
+                }
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPSite]CreateMySiteHost"
             }
@@ -1604,14 +1625,16 @@ configuration ConfigSpMain
                 DependsOn            = "[SPAppDomain]ConfigureLocalFarmAppUrls"
             }
 
-            SPWebApplicationAppDomain ConfigureAppDomainIntranetZone {
-                WebAppUrl            = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
-                AppDomain            = $AppDomainIntranetFQDN
-                Zone                 = "Intranet"
-                Port                 = if ($DefaultZoneIsHttps) { 80 } else { 443 }
-                SSL                  = if ($DefaultZoneIsHttps) { $false } else { $true }
-                PsDscRunAsCredential = $DomainAdminCredsQualified
-                DependsOn            = "[SPAppDomain]ConfigureLocalFarmAppUrls"
+            if ($ProvisionExtendedZone) {
+                SPWebApplicationAppDomain ConfigureAppDomainIntranetZone {
+                    WebAppUrl            = Get-WebAppUrl -DefaultZoneIsHttps $DefaultZoneIsHttps -SharePointSitesAuthority $SharePointSitesAuthority -DomainFQDN $DomainFQDN
+                    AppDomain            = $AppDomainIntranetFQDN
+                    Zone                 = "Intranet"
+                    Port                 = if ($DefaultZoneIsHttps) { 80 } else { 443 }
+                    SSL                  = if ($DefaultZoneIsHttps) { $false } else { $true }
+                    PsDscRunAsCredential = $DomainAdminCredsQualified
+                    DependsOn            = "[SPAppDomain]ConfigureLocalFarmAppUrls"
+                }
             }
 
             SPAppCatalog SetAppCatalogUrl {
