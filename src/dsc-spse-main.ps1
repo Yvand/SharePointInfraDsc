@@ -128,7 +128,7 @@ configuration ConfigSpMain
                 if (!(Test-Path $destinationFolder -PathType Container)) {
                     New-Item -ItemType Directory -Force -Path $destinationFolder
                 }
-                "$(Get-Date -Format u)`t$($using:ComputerName)`tDSC Configuration starting. Provisioning options: ProvisionStateServiceApplication: $($using:ProvisionStateServiceApplication), ProvisionTrustedAuthentication: $($using:ProvisionTrustedAuthentication), ProvisionUserProfilesService: $($using:ProvisionUserProfilesService), ProvisionAddins: $($using:ProvisionAddins), ProvisionHnscSites: $($using:ProvisionHnscSites)" | Out-File -FilePath $using:DscStatusFilePath -Append
+                "$(Get-Date -Format u)`t$($using:ComputerName)`tDSC Configuration starting. DefaultZoneIsHttps: $($using:DefaultZoneIsHttps); Provisioning options: ProvisionStateServiceApplication: $($using:ProvisionStateServiceApplication), ProvisionTrustedAuthentication: $($using:ProvisionTrustedAuthentication), ProvisionUserProfilesService: $($using:ProvisionUserProfilesService), ProvisionAddins: $($using:ProvisionAddins), ProvisionHnscSites: $($using:ProvisionHnscSites), ProvisionExtendedZone: $($using:ProvisionExtendedZone)" | Out-File -FilePath $using:DscStatusFilePath -Append
             }
             GetScript  = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
@@ -1318,7 +1318,7 @@ configuration ConfigSpMain
                 }
             }
             else {
-                @($null)
+                @($null) # This forces PowerShell to render an empty array, instead of $null
             }
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = $configureMainWebAppAuthenticationDependsOn
