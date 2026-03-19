@@ -57,7 +57,6 @@ configuration ConfigSpMain
     [String] $SetupPath = "C:\DSC Data"
     [String] $DCSetupPath = "\\$DCServerName\C$\DSC Data"
     [String] $DscStatusFilePath = "$SetupPath\dsc-status-$ComputerName.log"
-    [String] $SharePointBuildLabel = $SharePointVersion.Split("-")[1]
     [String] $SharePointBitsPath = Join-Path -Path $SetupPath -ChildPath "Binaries" #[environment]::GetEnvironmentVariable("temp","machine")
     [String] $SharePointIsoFullPath = Join-Path -Path $SharePointBitsPath -ChildPath "OfficeServer.iso"
     [String] $SharePointIsoDriveLetter = "S"
@@ -350,13 +349,13 @@ configuration ConfigSpMain
             DependsOn        = "[SPInstallPrereqs]InstallPrerequisites"
         }
 
-        if ($SharePointBuildLabel -ne "RTM") {
-            foreach ($package in ($SharePointBits | Where-Object { $_.Label -eq $SharePointBuildLabel }).Packages) {
+        if ($SharePointVersion -ne "SPRTM") {
+            foreach ($package in ($SharePointBits | Where-Object { $_.Label -eq $SharePointVersion }).Packages) {
                 $packageUrl = [uri] $package.DownloadUrl
                 $packageFilename = $packageUrl.Segments[$packageUrl.Segments.Count - 1]
                 $packageFilePath = Join-Path -Path $SharePointBitsPath -ChildPath $packageFilename
                 
-                xRemoteFile "DownloadSharePointUpdate_$($SharePointBuildLabel)_$packageFilename" {
+                xRemoteFile "DownloadSharePointUpdate_$($SharePointVersion)_$packageFilename" {
                     DestinationPath      = $packageFilePath
                     Uri                  = $packageUrl
                     ChecksumType         = if ($null -ne $package.ChecksumType) { $package.ChecksumType } else { "None" }
@@ -366,40 +365,40 @@ configuration ConfigSpMain
                     PsDscRunAsCredential = $DomainAdminCredsQualified;
                 }
 
-                Script "InstallSharePointUpdate_$($SharePointBuildLabel)_$packageFilename" {
+                Script "InstallSharePointUpdate_$($SharePointVersion)_$packageFilename" {
                     SetScript            = {
-                        $SharePointBuildLabel = $using:SharePointBuildLabel
+                        $SharePointVersion = $using:SharePointVersion
                         $packageFilePath = $using:packageFilePath
                         $packageFile = Get-ChildItem -Path $packageFilePath
                         
                         $exitRebootCodes = @(3010, 17022)
                         $needReboot = $false
-                        Write-Verbose -Verbose -Message "Starting installation of SharePoint update '$SharePointBuildLabel', file '$($packageFile.Name)'..."
+                        Write-Verbose -Verbose -Message "Starting installation of SharePoint update '$SharePointVersion', file '$($packageFile.Name)'..."
                         Unblock-File -Path $packageFile -Confirm:$false
                         $process = Start-Process $packageFile.FullName -ArgumentList '/passive /quiet /norestart' -PassThru -Wait
                         if ($exitRebootCodes.Contains($process.ExitCode)) {
                             $needReboot = $true
                         }
                         Write-Verbose -Verbose -Message "Finished installation of SharePoint update '$($packageFile.Name)'. Exit code: $($process.ExitCode); needReboot: $needReboot"
-                        New-Item -Path "HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($SharePointBuildLabel)_$($packageFile.Name)" -Force
-                        Write-Verbose -Verbose -Message "Finished installation of SharePoint build '$SharePointBuildLabel'. needReboot: $needReboot"
+                        New-Item -Path "HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($SharePointVersion)_$($packageFile.Name)" -Force
+                        Write-Verbose -Verbose -Message "Finished installation of SharePoint build '$SharePointVersion'. needReboot: $needReboot"
 
                         if ($true -eq $needReboot) {
                             $global:DSCMachineStatus = 1
                         }
                     }
                     TestScript           = {
-                        $SharePointBuildLabel = $using:SharePointBuildLabel
+                        $SharePointVersion = $using:SharePointVersion
                         $packageFilePath = $using:packageFilePath
                         $packageFile = Get-ChildItem -Path $packageFilePath
-                        return (Test-Path "HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($SharePointBuildLabel)_$($packageFile.Name)")
+                        return (Test-Path "HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($SharePointVersion)_$($packageFile.Name)")
                     }
                     GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
                     DependsOn            = "[SPInstall]InstallBinaries"
                     PsDscRunAsCredential = $DomainAdminCredsQualified;
                 }
 
-                # SPProductUpdate "InstallSharePointUpdate_$($SharePointBuildLabel)_$packageFilename"
+                # SPProductUpdate "InstallSharePointUpdate_$($SharePointVersion)_$packageFilename"
                 # {
                 #     SetupFile            = $packageFilePath
                 #     Ensure               = "Present"
@@ -407,10 +406,10 @@ configuration ConfigSpMain
                 #     # PsDscRunAsCredential = $SetupAccount
                 # }
 
-                PendingReboot "RebootOnSignalFromInstallSharePointUpdate_$($SharePointBuildLabel)_$packageFilename" {
-                    Name             = "RebootOnSignalFromInstallSharePointUpdate_$($SharePointBuildLabel)_$packageFilename"
+                PendingReboot "RebootOnSignalFromInstallSharePointUpdate_$($SharePointVersion)_$packageFilename" {
+                    Name             = "RebootOnSignalFromInstallSharePointUpdate_$($SharePointVersion)_$packageFilename"
                     SkipCcmClientSDK = $true
-                    DependsOn        = "[Script]InstallSharePointUpdate_$($SharePointBuildLabel)_$packageFilename"
+                    DependsOn        = "[Script]InstallSharePointUpdate_$($SharePointVersion)_$packageFilename"
                 }
             }
         }
