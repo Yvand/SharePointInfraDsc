@@ -15,7 +15,7 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds,
-        [Parameter(Mandatory=$false)] [Boolean] $DefaultZoneIsHttps = $false #not used, but present to allow parameter to be passed
+        [Parameter(Mandatory=$false)] [Boolean] $DefaultZoneMustBeHttps = $false #not used, but present to allow parameter to be passed
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0 # Custom

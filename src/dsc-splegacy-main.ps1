@@ -21,7 +21,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperUserCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperReaderCreds,
-        [Parameter(Mandatory=$false)] [Boolean] $DefaultZoneIsHttps = $false, #not used, but present to allow parameter to be passed
+        [Parameter(Mandatory=$false)] [Boolean] $DefaultZoneMustBeHttps = $false, #not used, but present to allow parameter to be passed
         [Parameter(Mandatory = $false)] [String] $ConfigurationLevel = [ConfigurationLevel]::Full #not used, but present to allow parameter to be passed
     )
 

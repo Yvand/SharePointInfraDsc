@@ -15,7 +15,7 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds,
-        [Parameter(Mandatory=$false)] [Boolean] $DefaultZoneIsHttps = $false
+        [Parameter(Mandatory=$false)] [Boolean] $DefaultZoneMustBeHttps = $false
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0 # Custom
@@ -54,6 +54,7 @@ configuration ConfigSpFrontend
     [String] $SPDBPrefix = "SPDSC_"
     [String] $MySiteHostAlias = "OhMy"
     [String] $HNSC1Alias = "HNSC1"
+    [String] $WebApplicationUrl = if ($DefaultZoneMustBeHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
 
     Node localhost
     {
@@ -539,7 +540,7 @@ configuration ConfigSpFrontend
         Script WaitForSPFarmReadyToJoin {
             SetScript            =
             {
-                $uri = if ($using:DefaultZoneIsHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/sites/team/" } else { "http://$($using:SharePointSitesAuthority)/sites/team/" }
+                $uri = $using:WebApplicationUrl
                 $sleepTime = 30
                 $currentStatusCode = 0
                 $expectedStatusCode = 200
@@ -713,7 +714,7 @@ configuration ConfigSpFrontend
                     }
                 }
                 [System.Management.Automation.Job[]] $jobs = @()
-                $uri = if ($using:DefaultZoneIsHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/" } else { "http://$($using:SharePointSitesAuthority)/" }
+                $uri = $using:WebApplicationUrl
                 Write-Verbose -Verbose -Message "Warming up '$uri'..."
                 $jobs += Start-Job -ScriptBlock $jobBlock -ArgumentList @($uri)
 
@@ -739,7 +740,7 @@ configuration ConfigSpFrontend
                 $cert = Import-PfxCertificate -FilePath $cookieCertificateFilePath -CertStoreLocation Cert:\localMachine\My -Exportable
 
                 # Grant the application pool access to the private key of the cookie certificate
-                $uri = if ($using:DefaultZoneIsHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/" } else { "http://$($using:SharePointSitesAuthority)/" }
+                $uri = $using:WebApplicationUrl
                 $wa = Get-SPWebApplication $uri
                 $apppoolUserName = $wa.ApplicationPool.Username
                 $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
