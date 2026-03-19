@@ -316,9 +316,9 @@ configuration ConfigSpMain
 
         xRemoteFile DownloadSharePoint {
             DestinationPath = $SharePointIsoFullPath
-            Uri             = ($SharePointBits | Where-Object { $_.Label -eq "RTM" }).Packages[0].DownloadUrl
-            ChecksumType    = ($SharePointBits | Where-Object { $_.Label -eq "RTM" }).Packages[0].ChecksumType
-            Checksum        = ($SharePointBits | Where-Object { $_.Label -eq "RTM" }).Packages[0].Checksum
+            Uri             = ($SharePointBits | Where-Object { $_.Label -eq [SharePointBuild]::SPRTM }).Packages[0].DownloadUrl
+            ChecksumType    = ($SharePointBits | Where-Object { $_.Label -eq [SharePointBuild]::SPRTM }).Packages[0].ChecksumType
+            Checksum        = ($SharePointBits | Where-Object { $_.Label -eq [SharePointBuild]::SPRTM }).Packages[0].Checksum
             MatchSource     = $false
         }
         
@@ -349,7 +349,7 @@ configuration ConfigSpMain
             DependsOn        = "[SPInstallPrereqs]InstallPrerequisites"
         }
 
-        if ($SharePointVersion -ne "SPRTM") {
+        if ($SharePointVersion -ne [SharePointBuild]::SPRTM) {
             foreach ($package in ($SharePointBits | Where-Object { $_.Label -eq $SharePointVersion }).Packages) {
                 $packageUrl = [uri] $package.DownloadUrl
                 $packageFilename = $packageUrl.Segments[$packageUrl.Segments.Count - 1]
