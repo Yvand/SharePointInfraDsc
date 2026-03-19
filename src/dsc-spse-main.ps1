@@ -21,7 +21,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperUserCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperReaderCreds,
-        [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneIsHttps = $false,
+        [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
         [Parameter(Mandatory = $false)] [ConfigurationLevel] $ConfigurationLevel = [ConfigurationLevel]::Full
     )
 
@@ -60,7 +60,6 @@ configuration ConfigSpMain
     [Boolean] $ProvisionAddins = $false
     [Boolean] $ProvisionHnscSites = $false
     [Boolean] $ProvisionExtendedZone = $false
-    
     if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
     if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
         $ProvisionStateServiceApplication = $true
@@ -75,8 +74,9 @@ configuration ConfigSpMain
         $ProvisionHnscSites = $true
     }
 
+    # Final value for $DefaultZoneMustBeHttps must be set before setting $WebApplicationUrl
     if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
-        $DefaultZoneIsHttps = $true
+        $DefaultZoneMustBeHttps = $true
     }
 
     # Setup settings
@@ -105,7 +105,7 @@ configuration ConfigSpMain
     [String] $TrustedIdChar = "e"
     [String] $SPTeamSiteTemplate = "STS#3"
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
-    [String] $WebApplicationUrl = if ($DefaultZoneIsHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
+    [String] $WebApplicationUrl = if ($DefaultZoneMustBeHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
 
     Node localhost
     {
@@ -121,7 +121,7 @@ configuration ConfigSpMain
                 if (!(Test-Path $destinationFolder -PathType Container)) {
                     New-Item -ItemType Directory -Force -Path $destinationFolder
                 }
-                "$(Get-Date -Format u)`t$($using:ComputerName)`tDSC Configuration starting. DefaultZoneIsHttps: $($using:DefaultZoneIsHttps); Provisioning options: ProvisionStateServiceApplication: $($using:ProvisionStateServiceApplication), ProvisionTrustedAuthentication: $($using:ProvisionTrustedAuthentication), ProvisionUserProfilesService: $($using:ProvisionUserProfilesService), ProvisionAddins: $($using:ProvisionAddins), ProvisionHnscSites: $($using:ProvisionHnscSites), ProvisionExtendedZone: $($using:ProvisionExtendedZone)" | Out-File -FilePath $using:DscStatusFilePath -Append
+                "$(Get-Date -Format u)`t$($using:ComputerName)`tDSC Configuration starting. DefaultZoneMustBeHttps: $($using:DefaultZoneMustBeHttps); Provisioning options: ProvisionStateServiceApplication: $($using:ProvisionStateServiceApplication), ProvisionTrustedAuthentication: $($using:ProvisionTrustedAuthentication), ProvisionUserProfilesService: $($using:ProvisionUserProfilesService), ProvisionAddins: $($using:ProvisionAddins), ProvisionHnscSites: $($using:ProvisionHnscSites), ProvisionExtendedZone: $($using:ProvisionExtendedZone)" | Out-File -FilePath $using:DscStatusFilePath -Append
             }
             GetScript  = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
@@ -986,7 +986,7 @@ configuration ConfigSpMain
             AllowAnonymous         = $false
             DatabaseName           = $SPDBPrefix + "Content_main"
             WebAppUrl              = $WebApplicationUrl
-            Port                   = if ($DefaultZoneIsHttps) { 443 } else { 80 }
+            Port                   = if ($DefaultZoneMustBeHttps) { 443 } else { 80 }
             Ensure                 = "Present"
             PsDscRunAsCredential   = $DomainAdminCredsQualified
             DependsOn              = "[Script]RestartSPTimerAfterCreateSPFarm"
@@ -1155,9 +1155,9 @@ configuration ConfigSpMain
             SPWebApplicationExtension ExtendMainWebApp {
                 WebAppUrl            = $WebApplicationUrl
                 Zone                 = "Intranet"
-                Name                 = if ($DefaultZoneIsHttps) { "SharePoint -  main - Intranet HTTP" } else { "SharePoint - main - Intranet HTTPS" }
-                Url                  = if ($DefaultZoneIsHttps) { "http://$SharePointSitesAuthority/" } else { "https://$SharePointSitesAuthority.$DomainFQDN/" }
-                Port                 = if ($DefaultZoneIsHttps) { 80 } else { 443 }
+                Name                 = if ($DefaultZoneMustBeHttps) { "SharePoint -  main - Intranet HTTP" } else { "SharePoint - main - Intranet HTTPS" }
+                Url                  = if ($DefaultZoneMustBeHttps) { "http://$SharePointSitesAuthority/" } else { "https://$SharePointSitesAuthority.$DomainFQDN/" }
+                Port                 = if ($DefaultZoneMustBeHttps) { 80 } else { 443 }
                 AllowAnonymous       = $false
                 Ensure               = "Present"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -1210,7 +1210,7 @@ configuration ConfigSpMain
 
         # if ($ProvisionExtendedZone) {
         #         $IntranetArgs             =
-        #         if ($DefaultZoneIsHttps -or $false -eq $ProvisionTrustedAuthentication) {
+        #         if ($DefaultZoneMustBeHttps -or $false -eq $ProvisionTrustedAuthentication) {
         #             @(
         #                 MSFT_SPWebAppAuthenticationMode {
         #                     AuthenticationMethod = "WindowsAuthentication"
@@ -1222,7 +1222,7 @@ configuration ConfigSpMain
 
         # SPWebAppAuthentication ConfigureMainWebAppAuthentication {
         #     WebAppUrl            = $WebApplicationUrl
-        #     Default              = if ($DefaultZoneIsHttps) {
+        #     Default              = if ($DefaultZoneMustBeHttps) {
         #         if ($ProvisionTrustedAuthentication) {
         #             @(
         #                 MSFT_SPWebAppAuthenticationMode {
@@ -1261,7 +1261,7 @@ configuration ConfigSpMain
 
         SPWebAppAuthentication ConfigureMainWebAppAuthentication {
             WebAppUrl            = $WebApplicationUrl
-            Default              = if ($DefaultZoneIsHttps) {
+            Default              = if ($DefaultZoneMustBeHttps) {
                 if ($ProvisionTrustedAuthentication) {
                     @(
                         MSFT_SPWebAppAuthenticationMode {
@@ -1293,7 +1293,7 @@ configuration ConfigSpMain
             }
 
             Intranet             = if ($ProvisionExtendedZone) {
-                if ($DefaultZoneIsHttps -or $false -eq $ProvisionTrustedAuthentication) {
+                if ($DefaultZoneMustBeHttps -or $false -eq $ProvisionTrustedAuthentication) {
                     @(
                         MSFT_SPWebAppAuthenticationMode {
                             AuthenticationMethod = "WindowsAuthentication"
@@ -1327,7 +1327,7 @@ configuration ConfigSpMain
                 $sharePointSitesAuthority = $using:SharePointSitesAuthority
                 $appDomainIntranetFQDN = $using:AppDomainIntranetFQDN
                 $setupPath = Join-Path -Path $using:SetupPath -ChildPath "Certificates"
-                $defaultZoneIsHttps = $using:DefaultZoneIsHttps
+                $defaultZoneMustBeHttps = $using:DefaultZoneMustBeHttps
                 $provisionExtendedZone = $using:ProvisionExtendedZone
                 $webAppUrl = $using:WebApplicationUrl
 
@@ -1357,9 +1357,9 @@ configuration ConfigSpMain
                 Write-Verbose -Verbose -Message "Adding certificate 'CN=$sharePointSitesAuthority.$domainFQDN' to SharePoint store EndEntity..."
                 $spCert = Import-SPCertificate -Path "$setupPath\$sharePointSitesAuthority.cer" -Exportable -Store EndEntity
 
-                if ($provisionExtendedZone -or $defaultZoneIsHttps) {
+                if ($provisionExtendedZone -or $defaultZoneMustBeHttps) {
                     $httpsUrl = "https://$sharePointSitesAuthority.$domainFQDN/"
-                    $httpsZoneName = if ($defaultZoneIsHttps) { "Default" } else { "Intranet" }
+                    $httpsZoneName = if ($defaultZoneMustBeHttps) { "Default" } else { "Intranet" }
                     Write-Verbose -Verbose -Message "Setting zone '$httpsZoneName' in web application '$webAppUrl' to HTTPS with certificate '$($spCert.Name)'..."
                     Set-SPWebApplication -Identity $webAppUrl -Zone $httpsZoneName -Port 443 -Certificate $spCert `
                         -SecureSocketsLayer:$true -AllowLegacyEncryption:$false -Url $httpsUrl
@@ -1424,7 +1424,7 @@ configuration ConfigSpMain
         #**********************************************************
         if ($ProvisionUserProfilesService) {
             SPSite CreateMySiteHost {
-                Url                      = if ($DefaultZoneIsHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
+                Url                      = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
                 HostHeaderWebApplication = $WebApplicationUrl
                 OwnerAlias               = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
                 SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
@@ -1435,9 +1435,9 @@ configuration ConfigSpMain
             }
 
             SPSiteUrl SetMySiteHostIntranetUrl {
-                Url                  = if ($DefaultZoneIsHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
+                Url                  = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
                 Intranet             = if ($ProvisionExtendedZone) {
-                    if ($DefaultZoneIsHttps) { "http://$MySiteHostAlias/" } else { "https://$MySiteHostAlias.$DomainFQDN/" }
+                    if ($DefaultZoneMustBeHttps) { "http://$MySiteHostAlias/" } else { "https://$MySiteHostAlias.$DomainFQDN/" }
                 }
                 else { 
                     [string]::Empty
@@ -1458,7 +1458,7 @@ configuration ConfigSpMain
             SPUserProfileServiceApp CreateUserProfileServiceApp {
                 Name                 = $UpaServiceName
                 ApplicationPool      = $ServiceAppPoolName
-                MySiteHostLocation   = if ($DefaultZoneIsHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
+                MySiteHostLocation   = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
                 ProfileDBName        = $SPDBPrefix + "UPA_Profiles"
                 SocialDBName         = $SPDBPrefix + "UPA_Social"
                 SyncDBName           = $SPDBPrefix + "UPA_Sync"
@@ -1482,7 +1482,7 @@ configuration ConfigSpMain
 
         if ($ProvisionHnscSites) {
             SPSite CreateHNSC1 {
-                Url                      = if ($DefaultZoneIsHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
+                Url                      = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
                 HostHeaderWebApplication = $WebApplicationUrl
                 OwnerAlias               = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
                 SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
@@ -1494,8 +1494,8 @@ configuration ConfigSpMain
             }
 
             SPSiteUrl SetHNSC1IntranetUrl {
-                Url                  = if ($DefaultZoneIsHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
-                Intranet             = if ($DefaultZoneIsHttps) { "http://$HNSC1Alias/" } else { "https://$HNSC1Alias.$DomainFQDN/" }
+                Url                  = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
+                Intranet             = if ($DefaultZoneMustBeHttps) { "http://$HNSC1Alias/" } else { "https://$HNSC1Alias.$DomainFQDN/" }
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPSite]CreateHNSC1"
             }
@@ -1551,7 +1551,7 @@ configuration ConfigSpMain
                 {
                     try {
                         $spTrustName = $using:DomainFQDN
-                        $defaultZoneIsHttps = $using:DefaultZoneIsHttps
+                        $defaultZoneMustBeHttps = $using:DefaultZoneMustBeHttps
                         $webAppUrl = $using:WebApplicationUrl
                         Write-Verbose -Verbose -Message "Start configuration for ConfigureUPAClaimProvider using spTrustName '$($spTrustName)' and spSiteUrl '$($spSiteUrl)'"                
 
@@ -1664,8 +1664,8 @@ configuration ConfigSpMain
                 WebAppUrl            = $WebApplicationUrl
                 AppDomain            = $AppDomainFQDN
                 Zone                 = "Default"
-                Port                 = if ($DefaultZoneIsHttps) { 443 } else { 80 }
-                SSL                  = if ($DefaultZoneIsHttps) { $true } else { $false }
+                Port                 = if ($DefaultZoneMustBeHttps) { 443 } else { 80 }
+                SSL                  = if ($DefaultZoneMustBeHttps) { $true } else { $false }
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPAppDomain]ConfigureLocalFarmAppUrls"
             }
@@ -1675,8 +1675,8 @@ configuration ConfigSpMain
                     WebAppUrl            = $WebApplicationUrl
                     AppDomain            = $AppDomainIntranetFQDN
                     Zone                 = "Intranet"
-                    Port                 = if ($DefaultZoneIsHttps) { 80 } else { 443 }
-                    SSL                  = if ($DefaultZoneIsHttps) { $false } else { $true }
+                    Port                 = if ($DefaultZoneMustBeHttps) { 80 } else { 443 }
+                    SSL                  = if ($DefaultZoneMustBeHttps) { $false } else { $true }
                     PsDscRunAsCredential = $DomainAdminCredsQualified
                     DependsOn            = "[SPAppDomain]ConfigureLocalFarmAppUrls"
                 }
@@ -1887,7 +1887,7 @@ configuration ConfigSpMain
                 Write-Verbose -Verbose -Message "Warming up '$uri'..."
                 $jobs += Start-Job -ScriptBlock $jobBlock -ArgumentList @($uri)
                 
-                $uri = if ($using:DefaultZoneIsHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/" } else { "http://$($using:SharePointSitesAuthority)/" }
+                $uri = if ($using:DefaultZoneMustBeHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/" } else { "http://$($using:SharePointSitesAuthority)/" }
                 Write-Verbose -Verbose -Message "Warming up '$uri'..."
                 $jobs += Start-Job -ScriptBlock $jobBlock -ArgumentList @($uri)
 
@@ -2013,7 +2013,7 @@ configuration ConfigSpMain
                             Write-Verbose -Verbose -Message "Could not execute LanguageSynchronizationJob or update profile properties: $_"
                         }
                     }
-                    $webAppUrl = if ($using:DefaultZoneIsHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/" } else { "http://$($using:SharePointSitesAuthority)/" }
+                    $webAppUrl = if ($using:DefaultZoneMustBeHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/" } else { "http://$($using:SharePointSitesAuthority)/" }
                     $accountPattern_WinClaims = "i:0#.w|$($using:DomainNetbiosName)\{0}"
                     $accountPattern_Trusted = "i:0$($using:TrustedIdChar).t|$($using:DomainFQDN)|{0}@$($using:DomainFQDN)"
                     $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $accountPattern_WinClaims, $accountPattern_Trusted, $using:AdditionalUsersPath)
@@ -2204,7 +2204,7 @@ $SharePointVersion = "SPRTM"
 $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
-$DefaultZoneIsHttps = $false
+$DefaultZoneMustBeHttps = $false
 $ConfigurationLevel = "Light"
 $SharePointBits = @(
     @{
@@ -2236,7 +2236,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\dsc-spse-main.0\ConfigSpMain"
-ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneIsHttps $DefaultZoneIsHttps -ConfigurationLevel $ConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneIsHttps $DefaultZoneMustBeHttps -ConfigurationLevel $ConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
