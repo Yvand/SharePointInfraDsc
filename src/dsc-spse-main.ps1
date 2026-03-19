@@ -53,6 +53,32 @@ configuration ConfigSpMain
     [System.Management.Automation.PSCredential] $SPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPAppPoolCreds.UserName)", $SPAppPoolCreds.Password)
     [System.Management.Automation.PSCredential] $SPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPADDirSyncCreds.UserName)", $SPADDirSyncCreds.Password)
     
+    # Provisioning options - set to $true to provision, $false to skip provisioning of the corresponding component. These are set based on the selected configuration level, but can be overridden by setting them directly.
+    [Boolean] $ProvisionStateServiceApplication = $false
+    [Boolean] $ProvisionTrustedAuthentication = $false
+    [Boolean] $ProvisionUserProfilesService = $false
+    [Boolean] $ProvisionAddins = $false
+    [Boolean] $ProvisionHnscSites = $false
+    [Boolean] $ProvisionExtendedZone = $false
+    
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
+        $ProvisionStateServiceApplication = $true
+        $ProvisionTrustedAuthentication = $true
+    }
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
+        $ProvisionUserProfilesService = $true
+        $ProvisionExtendedZone = $true
+    }
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
+        $ProvisionAddins = $true
+        $ProvisionHnscSites = $true
+    }
+
+    if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
+        $DefaultZoneIsHttps = $true
+    }
+
     # Setup settings
     [String] $SetupPath = "C:\DSC Data"
     [String] $DCSetupPath = "\\$DCServerName\C$\DSC Data"
@@ -81,32 +107,6 @@ configuration ConfigSpMain
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
     [String] $WebApplicationUrl = if ($DefaultZoneIsHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
 
-    $ProvisionStateServiceApplication = $false
-    $ProvisionTrustedAuthentication = $false
-    $ProvisionUserProfilesService = $false
-    $ProvisionAddins = $false
-    $ProvisionHnscSites = $false
-    $ProvisionExtendedZone = $false
-
-    # Set provisioning properties based on the configuration level (hierarchical)
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
-        $ProvisionStateServiceApplication = $true
-        $ProvisionTrustedAuthentication = $true
-    }
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
-        $ProvisionUserProfilesService = $true
-        $ProvisionExtendedZone = $true
-    }
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
-        $ProvisionAddins = $true
-        $ProvisionHnscSites = $true
-    }
-
-    if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
-        $DefaultZoneIsHttps = $true
-    }
-    
     Node localhost
     {
         LocalConfigurationManager {
