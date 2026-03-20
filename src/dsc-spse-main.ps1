@@ -465,6 +465,7 @@ configuration ConfigSpMain
                     return $true
                 }
             }
+            DependsOn = "[SPInstall]InstallBinaries"
         }
 
         #**********************************************************
@@ -503,7 +504,7 @@ configuration ConfigSpMain
             }
             GetScript  = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript = { try { [Net.DNS]::GetHostEntry("$($using:AdfsDnsEntryName).$($using:DomainFQDN)"); return $true } catch { return $false } }
-            DependsOn  = "[DnsServerAddress]SetDNS"
+            DependsOn  = "[DnsServerAddress]SetDNS", "[SPInstall]InstallBinaries"
         }
 
         # # If WaitForADDomain does not find the domain whtin "WaitTimeout" secs, it will signal a restart to DSC engine "RestartCount" times
