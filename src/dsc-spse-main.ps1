@@ -53,6 +53,7 @@ configuration ConfigSpMain
     [System.Management.Automation.PSCredential] $SPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPAppPoolCreds.UserName)", $SPAppPoolCreds.Password)
     [System.Management.Automation.PSCredential] $SPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPADDirSyncCreds.UserName)", $SPADDirSyncCreds.Password)
     
+    #################### DUPLICATED ####################
     # Provisioning options - set to $true to provision, $false to skip provisioning of the corresponding component. These are set based on the selected configuration level, but can be overridden by setting them directly.
     [Boolean] $ProvisionStateServiceApplication = $false
     [Boolean] $ProvisionTrustedAuthentication = $false
@@ -78,6 +79,7 @@ configuration ConfigSpMain
     if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
         $DefaultZoneMustBeHttps = $true
     }
+    #################### DUPLICATED ####################
 
     # Setup settings
     [String] $SetupPath = "C:\DSC Data"
@@ -2126,6 +2128,7 @@ function Get-LatestGitHubRelease {
     return $assetUrl
 }
 
+#################### DUPLICATED ####################
 function Get-NetBIOSName {
     [OutputType([string])]
     param(
@@ -2181,6 +2184,7 @@ class SharePointPackageInfo
     [Parameter(Mandatory = $false)] [string] $ChecksumType
     [Parameter(Mandatory = $false)] [string] $Checksum
 }
+#################### DUPLICATED ####################
 
 <#
 help ConfigSpMain

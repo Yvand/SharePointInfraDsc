@@ -15,7 +15,8 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds,
-        [Parameter(Mandatory=$false)] [Boolean] $DefaultZoneMustBeHttps = $false
+        [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
+        [Parameter(Mandatory = $false)] [ConfigurationLevel] $ConfigurationLevel = [ConfigurationLevel]::Full
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0 # Custom
@@ -31,7 +32,7 @@ configuration ConfigSpFrontend
     Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
 
     # Init
-    [String] $InterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
+    [String] $InterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
     [String] $ComputerName = Get-Content env:computername
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
 
@@ -39,6 +40,34 @@ configuration ConfigSpFrontend
     [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($DomainAdminCreds.UserName)", $DomainAdminCreds.Password)
     [System.Management.Automation.PSCredential] $SPSetupCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPSetupCreds.UserName)", $SPSetupCreds.Password)
     [System.Management.Automation.PSCredential] $SPFarmCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPFarmCreds.UserName)", $SPFarmCreds.Password)
+
+    #################### DUPLICATED ####################
+    # Provisioning options - set to $true to provision, $false to skip provisioning of the corresponding component. These are set based on the selected configuration level, but can be overridden by setting them directly.
+    [Boolean] $ProvisionStateServiceApplication = $false
+    [Boolean] $ProvisionTrustedAuthentication = $false
+    [Boolean] $ProvisionUserProfilesService = $false
+    [Boolean] $ProvisionAddins = $false
+    [Boolean] $ProvisionHnscSites = $false
+    [Boolean] $ProvisionExtendedZone = $false
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
+        $ProvisionStateServiceApplication = $true
+        $ProvisionTrustedAuthentication = $true
+    }
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
+        $ProvisionUserProfilesService = $true
+        $ProvisionExtendedZone = $true
+    }
+    if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
+        $ProvisionAddins = $true
+        $ProvisionHnscSites = $true
+    }
+
+    # Final value for $DefaultZoneMustBeHttps must be set before setting $WebApplicationUrl
+    if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
+        $DefaultZoneMustBeHttps = $true
+    }
+    #################### DUPLICATED ####################
     
     # Setup settings
     [String] $SetupPath = "C:\DSC Data"
@@ -49,12 +78,14 @@ configuration ConfigSpFrontend
     [String] $SharePointIsoFullPath = Join-Path -Path $SharePointBitsPath -ChildPath "OfficeServer.iso"
     [String] $SharePointIsoDriveLetter = "S"
     [String] $AdfsDnsEntryName = "adfs"
+    [String] $NonceCookieCertificateFileName = "SharePoint OIDC nonce cert.pfx"
 
     # SharePoint settings
     [String] $SPDBPrefix = "SPDSC_"
     [String] $MySiteHostAlias = "OhMy"
     [String] $HNSC1Alias = "HNSC1"
     [String] $WebApplicationUrl = if ($DefaultZoneMustBeHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
+    [String] $FarmReadinessTestUrl = "$WebApplicationUrl/sites/team"
 
     Node localhost
     {
@@ -258,9 +289,9 @@ configuration ConfigSpFrontend
 
         xRemoteFile DownloadSharePoint {
             DestinationPath = $SharePointIsoFullPath
-            Uri             = ($SharePointBits | Where-Object { $_.Label -eq "RTM" }).Packages[0].DownloadUrl
-            ChecksumType    = ($SharePointBits | Where-Object { $_.Label -eq "RTM" }).Packages[0].ChecksumType
-            Checksum        = ($SharePointBits | Where-Object { $_.Label -eq "RTM" }).Packages[0].Checksum
+            Uri             = ($SharePointBits | Where-Object { $_.Label -eq [SharePointBuild]::SPRTM }).Packages[0].DownloadUrl
+            ChecksumType    = ($SharePointBits | Where-Object { $_.Label -eq [SharePointBuild]::SPRTM }).Packages[0].ChecksumType
+            Checksum        = ($SharePointBits | Where-Object { $_.Label -eq [SharePointBuild]::SPRTM }).Packages[0].Checksum
             MatchSource     = $false
         }
         
@@ -291,23 +322,23 @@ configuration ConfigSpFrontend
             DependsOn        = "[SPInstallPrereqs]InstallPrerequisites"
         }
 
-        if ($SharePointBuildLabel -ne "RTM") {
+        if ($SharePointBuildLabel -ne [SharePointBuild]::SPRTM) {
             foreach ($package in ($SharePointBits | Where-Object { $_.Label -eq $SharePointBuildLabel }).Packages) {
                 $packageUrl = [uri] $package.DownloadUrl
                 $packageFilename = $packageUrl.Segments[$packageUrl.Segments.Count - 1]
                 $packageFilePath = Join-Path -Path $SharePointBitsPath -ChildPath $packageFilename
                 
                 xRemoteFile "DownloadSharePointUpdate_$($SharePointBuildLabel)_$packageFilename" {
-                    DestinationPath = $packageFilePath
-                    Uri             = $packageUrl
-                    ChecksumType    = if ($null -ne $package.ChecksumType) { $package.ChecksumType } else { "None" }
-                    Checksum        = if ($null -ne $package.Checksum) { $package.Checksum } else { $null }
-                    MatchSource     = $false
+                    DestinationPath      = $packageFilePath
+                    Uri                  = $packageUrl
+                    ChecksumType         = if ($null -ne $package.ChecksumType) { $package.ChecksumType } else { "None" }
+                    Checksum             = if ($null -ne $package.Checksum) { $package.Checksum } else { $null }
+                    MatchSource          = $false
                     PsDscRunAsCredential = $DomainAdminCredsQualified;
                 }
 
                 Script "InstallSharePointUpdate_$($SharePointBuildLabel)_$packageFilename" {
-                    SetScript  = {
+                    SetScript            = {
                         $SharePointBuildLabel = $using:SharePointBuildLabel
                         $packageFilePath = $using:packageFilePath
                         $packageFile = Get-ChildItem -Path $packageFilePath
@@ -328,14 +359,14 @@ configuration ConfigSpFrontend
                             $global:DSCMachineStatus = 1
                         }
                     }
-                    TestScript = {
+                    TestScript           = {
                         $SharePointBuildLabel = $using:SharePointBuildLabel
                         $packageFilePath = $using:packageFilePath
                         $packageFile = Get-ChildItem -Path $packageFilePath
                         return (Test-Path "HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($SharePointBuildLabel)_$($packageFile.Name)")
                     }
-                    GetScript  = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                    DependsOn  = "[SPInstall]InstallBinaries"
+                    GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+                    DependsOn            = "[SPInstall]InstallBinaries"
                     PsDscRunAsCredential = $DomainAdminCredsQualified;
                 }
 
@@ -379,7 +410,8 @@ configuration ConfigSpFrontend
                 $shares = [WMICLASS]"WIN32_Share"
                 if ($shares.Create($foldername, $sharename, 0).ReturnValue -ne 0) {
                     Write-Verbose -Verbose -Message "Failed to create file share '$sharename' for folder '$foldername'"
-                } else {
+                }
+                else {
                     Write-Verbose -Verbose -Message "Created file share '$sharename' for folder '$foldername'"
                 }
                 # }
@@ -390,7 +422,8 @@ configuration ConfigSpFrontend
                 $shareName = "SPLOGS"
                 if (!(Get-WmiObject Win32_Share -Filter "name='$sharename'")) {
                     return $false
-                } else {
+                }
+                else {
                     return $true
                 }
             }
@@ -540,7 +573,7 @@ configuration ConfigSpFrontend
         Script WaitForSPFarmReadyToJoin {
             SetScript            =
             {
-                $uri = $using:WebApplicationUrl
+                $uri = $using:FarmReadinessTestUrl
                 $sleepTime = 30
                 $currentStatusCode = 0
                 $expectedStatusCode = 200
@@ -727,50 +760,51 @@ configuration ConfigSpFrontend
             DependsOn            = "[DnsRecordCname]UpdateDNSAliasSPSites"
         }
 
-        Script SetFarmPropertiesForOIDC {
-            SetScript            = 
-            {
-                # Import OIDC-specific cookie certificate and set required permissions
-                $spTrustedSitesName = $using:SharePointSitesAuthority
-                $DCSetupPath = Join-Path -Path $using:DCSetupPath -ChildPath "Certificates"
+        if ($ProvisionTrustedAuthentication) {
+            Script SetFarmPropertiesForOIDC {
+                SetScript            = 
+                {
+                    # Import OIDC-specific cookie certificate and set required permissions
+                    $DCSetupPath = Join-Path -Path $using:DCSetupPath -ChildPath "Certificates"
                 
-                # Import OIDC-specific cookie certificate created in 1st SharePoint Server of the farm
-                $cookieCertificateFileName = "SharePoint OIDC nonce cert.pfx"
-                $cookieCertificateFilePath = Join-Path -Path $DCSetupPath -ChildPath $cookieCertificateFileName
-                $cert = Import-PfxCertificate -FilePath $cookieCertificateFilePath -CertStoreLocation Cert:\localMachine\My -Exportable
+                    # Import OIDC-specific cookie certificate created in 1st SharePoint Server of the farm
+                    $cookieCertificateFileName = $using:NonceCookieCertificateFileName
+                    $cookieCertificateFilePath = Join-Path -Path $DCSetupPath -ChildPath $cookieCertificateFileName
+                    $cert = Import-PfxCertificate -FilePath $cookieCertificateFilePath -CertStoreLocation Cert:\localMachine\My -Exportable
 
-                # Grant the application pool access to the private key of the cookie certificate
-                $uri = $using:WebApplicationUrl
-                $wa = Get-SPWebApplication $uri
-                $apppoolUserName = $wa.ApplicationPool.Username
-                $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
-                $fileName = $rsaCert.key.UniqueName
-                $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
-                $permissions = Get-Acl -Path $path
-                $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
-                $permissions.AddAccessRule($access_rule)
-                Set-Acl -Path $path -AclObject $permissions
-            }
-            GetScript            =  
-            {
-                # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                return @{ "Result" = "false" }
-            }
-            TestScript           = 
-            {
-                # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-                # Import-Module SharePointServer | Out-Null
-                # $f = Get-SPFarm
-                # if ($f.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint') -eq $false) {
-                if ((Get-ChildItem -Path "cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq "CN=SharePoint Cookie Cert" }) -eq $null) {
-                    return $false
+                    # Grant the application pool access to the private key of the cookie certificate
+                    $uri = $using:WebApplicationUrl
+                    $wa = Get-SPWebApplication $uri
+                    $apppoolUserName = $wa.ApplicationPool.Username
+                    $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
+                    $fileName = $rsaCert.key.UniqueName
+                    $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
+                    $permissions = Get-Acl -Path $path
+                    $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
+                    $permissions.AddAccessRule($access_rule)
+                    Set-Acl -Path $path -AclObject $permissions
                 }
-                else {
-                    return $true
+                GetScript            =  
+                {
+                    # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+                    return @{ "Result" = "false" }
                 }
+                TestScript           = 
+                {
+                    # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+                    # Import-Module SharePointServer | Out-Null
+                    # $f = Get-SPFarm
+                    # if ($f.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint') -eq $false) {
+                    if ((Get-ChildItem -Path "cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq "CN=SharePoint Cookie Cert" }) -eq $null) {
+                        return $false
+                    }
+                    else {
+                        return $true
+                    }
+                }
+                DependsOn            = "[SPFarm]JoinSPFarm"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
             }
-            DependsOn            = "[SPFarm]JoinSPFarm"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
         Script CreateShortcuts {
@@ -856,6 +890,7 @@ configuration ConfigSpFrontend
     }
 }
 
+#################### DUPLICATED ####################
 function Get-NetBIOSName {
     [OutputType([string])]
     param(
@@ -879,6 +914,38 @@ function Get-NetBIOSName {
     }
 }
 
+enum ConfigurationLevel {
+    Minimum
+    Light
+    Medium
+    Full
+}
+
+# enum values cannot start with a digit - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_enum?view=powershell-5.1#syntax
+enum SharePointBuild {
+    SPRTM
+    SP22H2
+    SP23H1
+    SP23H2
+    SP24H1
+    SP24H2
+    SP25H1
+    SP25H2
+    SPLatest
+}
+
+class SharePointBuildInfo {
+    [ValidateNotNullOrEmpty()][SharePointBuild] $Label
+    [SharePointPackageInfo[]] $Packages
+}
+
+class SharePointPackageInfo {
+    [ValidateNotNullOrEmpty()][string] $DownloadUrl
+    [Parameter(Mandatory = $false)] [string] $ChecksumType
+    [Parameter(Mandatory = $false)] [string] $Checksum
+}
+#################### DUPLICATED ####################
+
 <#
 help ConfigSpFrontend
 
@@ -897,20 +964,20 @@ $SharePointSitesAuthority = "spsites"
 $EnableAnalysis = $true
 $SharePointBits = @(
     @{
-        Label = "RTM"; 
+        Label = "SPRTM"; 
         Packages = @(
             @{ DownloadUrl = "https://go.microsoft.com/fwlink/?linkid=2171943"; ChecksumType = "SHA256"; Checksum = "C576B847C573234B68FC602A0318F5794D7A61D8149EB6AE537AF04470B7FC05" }
         )
     },
     @{
-        Label = "22H2"; 
+        Label = "SP22H2"; 
         Packages = @(
             @{ DownloadUrl = "https://download.microsoft.com/download/8/d/f/8dfcb515-6e49-42e5-b20f-5ebdfd19d8e7/wssloc-subscription-kb5002270-fullfile-x64-glb.exe"; ChecksumType = "SHA256"; Checksum = "7E496530EB873146650A9E0653DE835CB2CAD9AF8D154CBD7387BB0F2297C9FC" },
             @{ DownloadUrl = "https://download.microsoft.com/download/3/f/5/3f5b1ee0-3336-45d7-b2f4-1e6af977d574/sts-subscription-kb5002271-fullfile-x64-glb.exe"; ChecksumType = "SHA256"; Checksum = "247011443AC573D4F03B1622065A7350B8B3DAE04D6A5A6DC64C8270A3BE7636" }
         )
     },
     @{
-        Label = "Latest"; 
+        Label = "SPLatest"; 
         Packages = @(
             @{ DownloadUrl = "https://download.microsoft.com/download/d/6/d/d6dcc9e7-744e-43e1-b4be-206a6acd4f88/sts-subscription-kb5002331-fullfile-x64-glb.exe" },
             @{ DownloadUrl = "https://download.microsoft.com/download/d/3/5/d354b6e2-fa16-48e0-b3f8-423f7ca279a0/wssloc-subscription-kb5002326-fullfile-x64-glb.exe" }
