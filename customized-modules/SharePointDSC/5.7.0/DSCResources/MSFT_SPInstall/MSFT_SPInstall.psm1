@@ -368,9 +368,11 @@ function Set-TargetResource
     <Setting Id=`"SETUPTYPE`" Value=`"CLEAN_INSTALL`"/>
 </Configuration>"
 
+    #YVAND
     # Somehow, Test-Path prevents error "Could not find a part of the path 'C:\Windows\system32\config\systemprofile\AppData\Local\Temp\SPInstallConfig.xml'"
-    # Always thrown by Out-File in FE-x (even if Test-Path always returns false)
+    # (Always thrown by Out-File in FE-x, even if Test-Path always returns false)
     Test-Path -PathType Container -Path $env:temp
+
     $configData | Out-File -FilePath $configPath
 
     Write-Verbose -Message "Beginning installation of SharePoint"
