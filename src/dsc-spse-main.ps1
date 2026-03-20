@@ -53,8 +53,6 @@ configuration ConfigSpMain
     [System.Management.Automation.PSCredential] $SPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPAppPoolCreds.UserName)", $SPAppPoolCreds.Password)
     [System.Management.Automation.PSCredential] $SPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPADDirSyncCreds.UserName)", $SPADDirSyncCreds.Password)
     
-    [System.Management.Automation.PSCredential] $LocalAdminCreds = New-Object System.Management.Automation.PSCredential ("l-yvand", $DomainAdminCreds.Password)
-
     #################### DUPLICATED ####################
     # Provisioning options - set to $true to provision, $false to skip provisioning of the corresponding component. These are set based on the selected configuration level, but can be overridden by setting them directly.
     [Boolean] $ProvisionStateServiceApplication = $false
@@ -146,6 +144,10 @@ configuration ConfigSpMain
         WindowsFeature AddADCSManagementTools {
             Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
         }
+        # Installs WebAdministration Module: https://learn.microsoft.com/en-us/powershell/module/webadministration/?view=windowsserver2025-ps
+        # WindowsFeature AddWebScriptingTools {
+        #     Name = "Web-Scripting-Tools"; Ensure = "Present"; 
+        # }
         DnsServerAddress SetDNS {
             Address = $DNSServerIP; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4' 
         }
@@ -344,7 +346,6 @@ configuration ConfigSpMain
             InstallerPath        = "$($SharePointIsoDriveLetter):\Prerequisiteinstaller.exe"
             OnlineMode           = $true
             DependsOn            = "[WaitForVolume]WaitForSharePointImage"
-            PsDscRunAsCredential = $LocalAdminCreds;
         }
 
         SPInstall InstallBinaries {
@@ -352,7 +353,6 @@ configuration ConfigSpMain
             BinaryDir            = "$($SharePointIsoDriveLetter):\"
             ProductKey           = "VW2FM-FN9FT-H22J4-WV9GT-H8VKF"
             DependsOn            = "[SPInstallPrereqs]InstallPrerequisites"
-            PsDscRunAsCredential = $LocalAdminCreds;
         }
 
         if ($SharePointVersion -ne [SharePointBuild]::SPRTM) {
@@ -368,7 +368,6 @@ configuration ConfigSpMain
                     Checksum             = if ($null -ne $package.Checksum) { $package.Checksum } else { $null }
                     MatchSource          = $false
                     DependsOn            = "[SPInstall]InstallBinaries"
-                    PsDscRunAsCredential = $LocalAdminCreds;
                 }
 
                 Script "InstallSharePointUpdate_$($SharePointVersion)_$packageFilename" {
@@ -401,7 +400,6 @@ configuration ConfigSpMain
                     }
                     GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
                     DependsOn            = "[SPInstall]InstallBinaries"
-                    PsDscRunAsCredential = $LocalAdminCreds;
                 }
 
                 # SPProductUpdate "InstallSharePointUpdate_$($SharePointVersion)_$packageFilename"
@@ -409,7 +407,6 @@ configuration ConfigSpMain
                 #     SetupFile            = $packageFilePath
                 #     Ensure               = "Present"
                 #     DependsOn            = "[SPInstall]InstallBinaries"
-                #     # PsDscRunAsCredential = $LocalAdminCreds
                 # }
 
                 PendingReboot "RebootOnSignalFromInstallSharePointUpdate_$($SharePointVersion)_$packageFilename" {
