@@ -338,17 +338,19 @@ configuration ConfigSpMain
         }
 
         SPInstallPrereqs InstallPrerequisites {
-            IsSingleInstance = "Yes"
-            InstallerPath    = "$($SharePointIsoDriveLetter):\Prerequisiteinstaller.exe"
-            OnlineMode       = $true
-            DependsOn        = "[WaitForVolume]WaitForSharePointImage"
+            IsSingleInstance     = "Yes"
+            InstallerPath        = "$($SharePointIsoDriveLetter):\Prerequisiteinstaller.exe"
+            OnlineMode           = $true
+            DependsOn            = "[WaitForVolume]WaitForSharePointImage"
+            PsDscRunAsCredential = $DomainAdminCreds;
         }
 
         SPInstall InstallBinaries {
-            IsSingleInstance = "Yes"
-            BinaryDir        = "$($SharePointIsoDriveLetter):\"
-            ProductKey       = "VW2FM-FN9FT-H22J4-WV9GT-H8VKF"
-            DependsOn        = "[SPInstallPrereqs]InstallPrerequisites"
+            IsSingleInstance     = "Yes"
+            BinaryDir            = "$($SharePointIsoDriveLetter):\"
+            ProductKey           = "VW2FM-FN9FT-H22J4-WV9GT-H8VKF"
+            DependsOn            = "[SPInstallPrereqs]InstallPrerequisites"
+            PsDscRunAsCredential = $DomainAdminCreds;
         }
 
         if ($SharePointVersion -ne [SharePointBuild]::SPRTM) {
@@ -364,7 +366,7 @@ configuration ConfigSpMain
                     Checksum             = if ($null -ne $package.Checksum) { $package.Checksum } else { $null }
                     MatchSource          = $false
                     DependsOn            = "[SPInstall]InstallBinaries"
-                    PsDscRunAsCredential = $DomainAdminCredsQualified;
+                    PsDscRunAsCredential = $DomainAdminCreds;
                 }
 
                 Script "InstallSharePointUpdate_$($SharePointVersion)_$packageFilename" {
@@ -397,7 +399,7 @@ configuration ConfigSpMain
                     }
                     GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
                     DependsOn            = "[SPInstall]InstallBinaries"
-                    PsDscRunAsCredential = $DomainAdminCredsQualified;
+                    PsDscRunAsCredential = $DomainAdminCreds;
                 }
 
                 # SPProductUpdate "InstallSharePointUpdate_$($SharePointVersion)_$packageFilename"
@@ -465,7 +467,7 @@ configuration ConfigSpMain
                     return $true
                 }
             }
-            DependsOn = "[SPInstall]InstallBinaries"
+            DependsOn  = "[SPInstall]InstallBinaries"
         }
 
         #**********************************************************
@@ -775,7 +777,7 @@ configuration ConfigSpMain
             Name                 = "ulsviewer"
             Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[cChocoInstaller]InstallChoco"
+            DependsOn            = "[cChocoInstaller]InstallChoco", "[PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
         Script DscStatus_WaitForSQL {
@@ -811,7 +813,7 @@ configuration ConfigSpMain
             GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SqlAlias]AddSqlAlias"
+            DependsOn            = "[SqlAlias]AddSqlAlias", "[SPInstall]InstallBinaries", "[PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
         #**********************************************************
@@ -2097,7 +2099,7 @@ configuration ConfigSpMain
         #         }
         #         GetScript = { }
         #         DependsOn            = "[cChocoPackageInstaller]InstallPython"
-        #         PsDscRunAsCredential = $DomainAdminCredsQualified
+        #         PsDscRunAsCredential = $DomainAdminCredsQualified, "[PendingReboot]RebootOnSignalFromJoinDomain"
         #     }
         # }
 
@@ -2173,14 +2175,12 @@ enum SharePointBuild {
     SPLatest
 }
 
-class SharePointBuildInfo
-{
+class SharePointBuildInfo {
     [ValidateNotNullOrEmpty()][SharePointBuild] $Label
     [SharePointPackageInfo[]] $Packages
 }
 
-class SharePointPackageInfo
-{
+class SharePointPackageInfo {
     [ValidateNotNullOrEmpty()][string] $DownloadUrl
     [Parameter(Mandatory = $false)] [string] $ChecksumType
     [Parameter(Mandatory = $false)] [string] $Checksum
