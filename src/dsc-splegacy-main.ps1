@@ -25,7 +25,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory = $false)] [String] $ConfigurationLevel = [ConfigurationLevel]::Full #not used, but present to allow parameter to be passed
     )
 
-    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0 # Custom
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.1.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.0
     Import-DscResource -ModuleName xCredSSP -ModuleVersion 1.4.0

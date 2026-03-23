@@ -9,7 +9,7 @@ configuration ConfigSql
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds
     )
 
-    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0 # Custom
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.1.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.0
     Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 17.1.0 # Custom workaround on SqlSecureConnection
