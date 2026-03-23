@@ -689,7 +689,6 @@ configuration ConfigSpMain
             GroupName            = "Administrators"
             Ensure               = "Present"
             MembersToInclude     = @("$($SPSetupCredsQualified.UserName)")
-            Credential           = $DomainAdminCredsQualified
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[ADUser]CreateSPSetupAccount"
         }

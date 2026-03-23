@@ -617,7 +617,6 @@ configuration ConfigSpFrontend
             GroupName            = "Administrators"
             Ensure               = "Present"
             MembersToInclude     = @("$($SPSetupCredsQualified.UserName)")
-            Credential           = $DomainAdminCredsQualified
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[Script]WaitForSPFarmReadyToJoin"
         }
