@@ -1891,7 +1891,7 @@ configuration ConfigSpMain
                 Write-Verbose -Verbose -Message "Warming up '$uri'..."
                 $jobs += Start-Job -ScriptBlock $jobBlock -ArgumentList @($uri)
                 
-                $uri = if ($using:DefaultZoneMustBeHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/" } else { "http://$($using:SharePointSitesAuthority)/" }
+                $uri = $using:WebApplicationUrl
                 Write-Verbose -Verbose -Message "Warming up '$uri'..."
                 $jobs += Start-Job -ScriptBlock $jobBlock -ArgumentList @($uri)
 
@@ -2017,7 +2017,7 @@ configuration ConfigSpMain
                             Write-Verbose -Verbose -Message "Could not execute LanguageSynchronizationJob or update profile properties: $_"
                         }
                     }
-                    $webAppUrl = if ($using:DefaultZoneMustBeHttps) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/" } else { "http://$($using:SharePointSitesAuthority)/" }
+                    $webAppUrl = $using:WebApplicationUrl
                     $accountPattern_WinClaims = "i:0#.w|$($using:DomainNetbiosName)\{0}"
                     $accountPattern_Trusted = "i:0$($using:TrustedIdChar).t|$($using:DomainFQDN)|{0}@$($using:DomainFQDN)"
                     $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $accountPattern_WinClaims, $accountPattern_Trusted, $using:AdditionalUsersPath)
@@ -2240,7 +2240,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\dsc-spse-main.0\ConfigSpMain"
-ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneIsHttps $DefaultZoneMustBeHttps -ConfigurationLevel $ConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -ConfigurationLevel $ConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
