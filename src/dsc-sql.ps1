@@ -108,7 +108,7 @@ configuration ConfigSql
         {
             Name       = $ComputerName
             DomainName = $DomainFQDN
-            Credential = $DomainAdminCredsQualified
+            Credential = $DomainAdminCreds
             # DependsOn  = "[PendingReboot]RebootOnSignalFromWaitForDCReady"
             DependsOn  = "[Script]WaitForADFSFarmReady"
         }
