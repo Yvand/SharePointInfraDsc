@@ -23,8 +23,8 @@ configuration ConfigSql
     # Format username as user@contoso.local to workaround issue https://github.com/dsccommunity/ComputerManagementDsc/issues/413
     [System.Management.Automation.PSCredential] $DomainAdminCredsToJoinDomain = New-Object System.Management.Automation.PSCredential ("$($DomainAdminCreds.UserName)@$($DomainFQDN)", $DomainAdminCreds.Password)
     # Format credentials to be qualified by domain name: "domain\username"
-    [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($DomainAdminCreds.UserName)", $DomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object PSCredential ("${DomainNetbiosName}\$($SqlSvcCreds.UserName)", $SqlSvcCreds.Password)
+    [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($DomainAdminCreds.UserName)", $DomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object PSCredential ("$($DomainNetbiosName)\$($SqlSvcCreds.UserName)", $SqlSvcCreds.Password)
     [String] $ComputerName = Get-Content env:computername
     [String] $AdfsDnsEntryName = "adfs"
 
