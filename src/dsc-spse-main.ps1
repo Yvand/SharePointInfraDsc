@@ -45,8 +45,9 @@ configuration ConfigSpMain
     [String] $DomainLDAPPath = "DC=$($DomainFQDN.Split(".")[0]),DC=$($DomainFQDN.Split(".")[1])"
     [String] $AdditionalUsersPath = "OU=AdditionalUsers,DC={0},DC={1}" -f $DomainFQDN.Split('.')[0], $DomainFQDN.Split('.')[1]
 
-    # Format credentials to be qualified by domain name: "domain\username"
+    # Format DomainAdminCredsQualified as user@contoso.local to workaround issue https://github.com/dsccommunity/ComputerManagementDsc/issues/413
     [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainAdminCreds.UserName)@$($DomainFQDN)", $DomainAdminCreds.Password)
+    # Format credentials to be qualified by domain name: "domain\username"
     [System.Management.Automation.PSCredential] $SPSetupCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPSetupCreds.UserName)", $SPSetupCreds.Password)
     [System.Management.Automation.PSCredential] $SPFarmCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPFarmCreds.UserName)", $SPFarmCreds.Password)
     [System.Management.Automation.PSCredential] $SPSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("$DomainNetbiosName\$($SPSvcCreds.UserName)", $SPSvcCreds.Password)
@@ -342,17 +343,17 @@ configuration ConfigSpMain
         }
 
         SPInstallPrereqs InstallPrerequisites {
-            IsSingleInstance     = "Yes"
-            InstallerPath        = "$($SharePointIsoDriveLetter):\Prerequisiteinstaller.exe"
-            OnlineMode           = $true
-            DependsOn            = "[WaitForVolume]WaitForSharePointImage"
+            IsSingleInstance = "Yes"
+            InstallerPath    = "$($SharePointIsoDriveLetter):\Prerequisiteinstaller.exe"
+            OnlineMode       = $true
+            DependsOn        = "[WaitForVolume]WaitForSharePointImage"
         }
 
         SPInstall InstallBinaries {
-            IsSingleInstance     = "Yes"
-            BinaryDir            = "$($SharePointIsoDriveLetter):\"
-            ProductKey           = "VW2FM-FN9FT-H22J4-WV9GT-H8VKF"
-            DependsOn            = "[SPInstallPrereqs]InstallPrerequisites"
+            IsSingleInstance = "Yes"
+            BinaryDir        = "$($SharePointIsoDriveLetter):\"
+            ProductKey       = "VW2FM-FN9FT-H22J4-WV9GT-H8VKF"
+            DependsOn        = "[SPInstallPrereqs]InstallPrerequisites"
         }
 
         if ($SharePointVersion -ne [SharePointBuild]::SPRTM) {
@@ -362,16 +363,16 @@ configuration ConfigSpMain
                 $packageFilePath = Join-Path -Path $SharePointBitsPath -ChildPath $packageFilename
                 
                 xRemoteFile "DownloadSharePointUpdate_$($SharePointVersion)_$packageFilename" {
-                    DestinationPath      = $packageFilePath
-                    Uri                  = $packageUrl
-                    ChecksumType         = if ($null -ne $package.ChecksumType) { $package.ChecksumType } else { "None" }
-                    Checksum             = if ($null -ne $package.Checksum) { $package.Checksum } else { $null }
-                    MatchSource          = $false
-                    DependsOn            = "[SPInstall]InstallBinaries"
+                    DestinationPath = $packageFilePath
+                    Uri             = $packageUrl
+                    ChecksumType    = if ($null -ne $package.ChecksumType) { $package.ChecksumType } else { "None" }
+                    Checksum        = if ($null -ne $package.Checksum) { $package.Checksum } else { $null }
+                    MatchSource     = $false
+                    DependsOn       = "[SPInstall]InstallBinaries"
                 }
 
                 Script "InstallSharePointUpdate_$($SharePointVersion)_$packageFilename" {
-                    SetScript            = {
+                    SetScript  = {
                         $SharePointVersion = $using:SharePointVersion
                         $packageFilePath = $using:packageFilePath
                         $packageFile = Get-ChildItem -Path $packageFilePath
@@ -392,14 +393,14 @@ configuration ConfigSpMain
                             $global:DSCMachineStatus = 1
                         }
                     }
-                    TestScript           = {
+                    TestScript = {
                         $SharePointVersion = $using:SharePointVersion
                         $packageFilePath = $using:packageFilePath
                         $packageFile = Get-ChildItem -Path $packageFilePath
                         return (Test-Path "HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($SharePointVersion)_$($packageFile.Name)")
                     }
-                    GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                    DependsOn            = "[SPInstall]InstallBinaries"
+                    GetScript  = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+                    DependsOn  = "[SPInstall]InstallBinaries"
                 }
 
                 # SPProductUpdate "InstallSharePointUpdate_$($SharePointVersion)_$packageFilename"
@@ -419,25 +420,25 @@ configuration ConfigSpMain
 
         # IIS cleanup cannot be executed earlier in SharePoint SE: It uses a base image of Windows Server without IIS (installed by SPInstallPrereqs)
         WebAppPool RemoveDotNet2Pool {
-            Name = ".NET v2.0"; Ensure = "Absent"; DependsOn  = "[SPInstallPrereqs]InstallPrerequisites"
+            Name = ".NET v2.0"; Ensure = "Absent"; DependsOn = "[SPInstallPrereqs]InstallPrerequisites"
         }
         WebAppPool RemoveDotNet2ClassicPool {
-            Name = ".NET v2.0 Classic"; Ensure = "Absent"; DependsOn  = "[SPInstallPrereqs]InstallPrerequisites"
+            Name = ".NET v2.0 Classic"; Ensure = "Absent"; DependsOn = "[SPInstallPrereqs]InstallPrerequisites"
         }
         WebAppPool RemoveDotNet45Pool {
-            Name = ".NET v4.5"; Ensure = "Absent"; DependsOn  = "[SPInstallPrereqs]InstallPrerequisites"
+            Name = ".NET v4.5"; Ensure = "Absent"; DependsOn = "[SPInstallPrereqs]InstallPrerequisites"
         }
         WebAppPool RemoveDotNet45ClassicPool {
-            Name = ".NET v4.5 Classic"; Ensure = "Absent"; DependsOn  = "[SPInstallPrereqs]InstallPrerequisites"
+            Name = ".NET v4.5 Classic"; Ensure = "Absent"; DependsOn = "[SPInstallPrereqs]InstallPrerequisites"
         }
         WebAppPool RemoveClassicDotNetPool {
-            Name = "Classic .NET AppPool"; Ensure = "Absent"; DependsOn  = "[SPInstallPrereqs]InstallPrerequisites"
+            Name = "Classic .NET AppPool"; Ensure = "Absent"; DependsOn = "[SPInstallPrereqs]InstallPrerequisites"
         }
         WebAppPool RemoveDefaultAppPool {
-            Name = "DefaultAppPool"; Ensure = "Absent"; DependsOn  = "[SPInstallPrereqs]InstallPrerequisites"
+            Name = "DefaultAppPool"; Ensure = "Absent"; DependsOn = "[SPInstallPrereqs]InstallPrerequisites"
         }
         WebSite    RemoveDefaultWebSite {
-            Name = "Default Web Site"; Ensure = "Absent"; PhysicalPath = "C:\inetpub\wwwroot"; DependsOn  = "[SPInstallPrereqs]InstallPrerequisites"
+            Name = "Default Web Site"; Ensure = "Absent"; PhysicalPath = "C:\inetpub\wwwroot"; DependsOn = "[SPInstallPrereqs]InstallPrerequisites"
         }
 
         Script CreateSPLOGSFileShare {
@@ -1208,7 +1209,7 @@ configuration ConfigSpMain
             }
         }
 
-        $configureMainWebAppAuthenticationDependsOn = if ($ProvisionExtendedZone) { @( "[SPWebApplicationExtension]ExtendMainWebApp" ) } else { @() }
+        [System.Array]$configureMainWebAppAuthenticationDependsOn = if ($ProvisionExtendedZone) { @( "[SPWebApplicationExtension]ExtendMainWebApp" ) } else { @() }
         if ($ProvisionTrustedAuthentication) { $configureMainWebAppAuthenticationDependsOn += "[SPTrustedIdentityTokenIssuer]CreateSPTrust" }
 
         # if ($ProvisionExtendedZone) {
