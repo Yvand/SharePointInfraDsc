@@ -148,7 +148,7 @@ configuration ConfigSql
             UserPrincipalName    = "$($SqlSvcCreds.UserName)@$DomainFQDN"
             Password             = $SQLCredsQualified
             PasswordNeverExpires = $true
-            ServicePrincipalNames = @("MSSQLSvc/$ComputerName.$($DomainFQDN):1433", "MSSQLSvc/$ComputerName.$DomainFQDN", "MSSQLSvc/$($ComputerName):1433", "MSSQLSvc/$ComputerName")
+            ServicePrincipalNames = @("MSSQLSvc/$($ComputerName).$($DomainFQDN):1433", "MSSQLSvc/$($ComputerName).$($DomainFQDN)", "MSSQLSvc/$($ComputerName):1433", "MSSQLSvc/$($ComputerName)")
             Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[Script]RemoveSQLSpnOnSQLMachine"
