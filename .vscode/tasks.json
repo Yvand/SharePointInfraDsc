@@ -39,6 +39,20 @@
                 "'${fileWorkspaceFolder}'"
             ],
             "problemMatcher": []
+        },
+        {
+            "label": "install missing modules locally",
+            "type": "shell",
+            "command": "${workspaceFolder}${/}setup${/}Install-Modules.ps1",
+            "args": [
+                "-repoPath",
+                "'${workspaceFolder}'",
+                "-vmName",
+                "*",
+                "-copyCustomizedModules",
+                "${input:copyCustomizedModules}"
+            ],
+            "problemMatcher": []
         }
     ],
     "inputs": [
@@ -47,6 +61,13 @@
             "id": "vmName",
             "description": "Name of the VM for which to generate the DSC archive.",
             "default": "spse-main"
+        },
+        {
+            "type": "pickString",
+            "id": "copyCustomizedModules",
+            "description": "Copy customized modules (0: No, 1: Yes).",
+            "options": ["1", "0"],
+            "default": "0"
         }
     ]
 }
