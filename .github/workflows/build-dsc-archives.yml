@@ -29,47 +29,18 @@ jobs:
       #     path: "~/.local/share/powershell/Modules"
       #     key: ${{ runner.os }}-mandatory-modules
       
-      - name: Install mandatory modules
+      - name: Setup PowerShell
         #if: steps.cacher.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module Az.Compute #, PSDesiredStateConfiguration
 
-      - name: Dump github context
-        run:   echo "$GITHUB_CONTEXT"
-        shell: bash
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-
-      - name: Install dsc modules
+      - name: Install DSC modules
         shell: powershell
         env:
           scripts_folder: "setup"
-        run: |
-          ${{ env.scripts_folder }}/Install-Modules.ps1 -repoPath "${{ github.workspace }}" -vmName "${{ env.vm_name }}" -copyCustomizedModules $true
-          # Write-Host "Get DSC files in folder '${{ env.dsc_folder }}'"
-          # $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-${{ env.vm_name }}*.ps1"
-          # foreach ($dscFilePath in $dscFilesPath) {
-          #     $dscMissingModules = ${{ env.scripts_folder }}/Get-MissingDscModules.ps1 -dscFilePath "$($dscFilePath.FullName)"
-          #     Write-Host "Found $($dscMissingModules.Count) missing DSC module(s) for '$dscFilePath'."
-          #     foreach ($dscMissingModule in $dscMissingModules) {
-          #       Write-Host "Installing module '$($dscMissingModule.Name)' version '$($dscMissingModule.Version)'..."
-          #       Install-Module -Name $dscMissingModule.Name -RequiredVersion $dscMissingModule.Version -Scope AllUsers
-          #     }
-          # }
-
-      # - name: Replace customized modules
-      #   shell: powershell
-      #   env:
-      #     customModulesFolder: "customized-modules"
-      #   run: |
-      #     $modulesLocation = "$($Env:ProgramFiles)\WindowsPowerShell\Modules"
-      #     $customModulesPath = Get-ChildItem "${{ env.customModulesFolder }}" -Directory
-      #     foreach ($customModulePath in $customModulesPath) {
-      #       Write-Host "Replacing module '$($customModulePath.BaseName)' with its customized version..."
-      #       Move-Item -Path $customModulePath.FullName -Destination $modulesLocation -Force
-      #     }
+        run: ${{ env.scripts_folder }}/Install-Modules.ps1 -repoPath "${{ github.workspace }}" -vmName "${{ env.vm_name }}" -copyCustomizedModules $true
 
       - name: Build DSC archives
         shell: powershell
@@ -106,12 +77,6 @@ jobs:
         env:
           git_tag: ${{ github.ref_name }}
         run: echo "release_version=`echo ${git_tag:9}`" >> $GITHUB_OUTPUT
-
-      - name: Dump github context
-        run:   echo "$GITHUB_CONTEXT"
-        shell: bash
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
       
       - run: echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
 
