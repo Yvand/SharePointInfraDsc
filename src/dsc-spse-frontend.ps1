@@ -7,10 +7,10 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [String]$DCServerName,
         [Parameter(Mandatory)] [String]$SQLServerName,
         [Parameter(Mandatory)] [String]$SQLAlias,
-        [Parameter(Mandatory)] [String]$SharePointVersion,
+        [Parameter(Mandatory)] [SharePointBuild] $SharePointVersion,
         [Parameter(Mandatory)] [String]$SharePointSitesAuthority,
         [Parameter(Mandatory)] [Boolean]$EnableAnalysis,
-        [Parameter(Mandatory)] [System.Object[]] $SharePointBits,
+        [Parameter(Mandatory)] [SharePointBuildInfo[]] $SharePointBits,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
@@ -965,9 +965,11 @@ $DomainFQDN = "contoso.local"
 $DCServerName = "DC"
 $SQLServerName = "SQL"
 $SQLAlias = "SQLAlias"
-$SharePointVersion = "Subscription-Latest"
+$SharePointVersion = "SPRTM"
 $SharePointSitesAuthority = "spsites"
 $EnableAnalysis = $true
+$DefaultZoneMustBeHttps = $false
+$ConfigurationLevel = "Light"
 $SharePointBits = @(
     @{
         Label = "SPRTM"; 
@@ -992,7 +994,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureFESE.0\ConfigSpFrontend"
-ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -ConfigurationLevel $ConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
