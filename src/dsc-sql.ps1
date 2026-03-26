@@ -38,9 +38,10 @@ configuration ConfigSql
 
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
-        #**********************************************************        
+        #**********************************************************
+        WindowsFeature AddADPowerShell { Name = "RSAT-AD-PowerShell"; Ensure = "Present"; } # Required for ADUser resource
         DnsServerAddress SetDNS { Address = $DNSServerIP; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
-        
+
         Script EnableFileSharing {
             GetScript  = { }
             TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq "Domain" }) }
@@ -148,7 +149,7 @@ configuration ConfigSql
             ServicePrincipalNames = @("MSSQLSvc/$($ComputerName).$($DomainFQDN):1433", "MSSQLSvc/$($ComputerName).$($DomainFQDN)", "MSSQLSvc/$($ComputerName):1433", "MSSQLSvc/$($ComputerName)")
             Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[Script]RemoveSQLSpnOnSQLMachine"
+            DependsOn            = "[Script]RemoveSQLSpnOnSQLMachine", "[WindowsFeature]AddADPowerShell"
         }
 
         Script EnsureSQLServiceStarted
