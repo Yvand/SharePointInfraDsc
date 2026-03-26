@@ -668,8 +668,8 @@ configuration ConfigSpFrontend
                 else {
                     $computerNumber = 0
                 }
-                $sleepTimeInSeconds = $computerNumber * 90  # Add a delay of 90 secs between each server
-                Write-Verbose -Verbose -Message "Computer $computerName is going to wait for $sleepTimeInSeconds seconds before joining the SharePoint farm, to avoid multiple servers joining it at the same time"
+                $sleepTimeInSeconds = $computerNumber * 120  # Add a delay of 120 secs between each server
+                Write-Verbose -Verbose -Message "Current machine '$computerName' now waiting for $sleepTimeInSeconds seconds before joining the SharePoint farm, to avoid conflicts due to multiple servers joining at the same time"
                 Start-Sleep -Seconds $sleepTimeInSeconds
                 New-Item -Path HKLM:\SOFTWARE\DscScriptExecution\Flag_WaitToAvoidServersJoiningFarmSimultaneously -Force
             }
