@@ -14,7 +14,6 @@ configuration ConfigSql
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.0
     Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 17.1.0 # Custom workaround on SqlSecureConnection
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 6.0.0
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
 
     WaitForSqlSetup
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
@@ -40,7 +39,7 @@ configuration ConfigSql
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
-        xWindowsFeature AddADPowerShell { Name = "RSAT-AD-PowerShell"; Ensure = "Present"; } # Required for ADUser resource
+        WindowsFeature AddADPowerShell { Name = "RSAT-AD-PowerShell"; Ensure = "Present"; } # Required for ADUser resource
         DnsServerAddress SetDNS { Address = $DNSServerIP; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
 
         Script EnableFileSharing {
@@ -150,7 +149,7 @@ configuration ConfigSql
             ServicePrincipalNames = @("MSSQLSvc/$($ComputerName).$($DomainFQDN):1433", "MSSQLSvc/$($ComputerName).$($DomainFQDN)", "MSSQLSvc/$($ComputerName):1433", "MSSQLSvc/$($ComputerName)")
             Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[Script]RemoveSQLSpnOnSQLMachine", "[xWindowsFeature]AddADPowerShell"
+            DependsOn            = "[Script]RemoveSQLSpnOnSQLMachine", "[WindowsFeature]AddADPowerShell"
         }
 
         Script EnsureSQLServiceStarted
