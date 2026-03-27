@@ -9,7 +9,9 @@
         [Parameter(Mandatory)] [String]$SharePointCentralAdminPort,
         [Parameter ()] [Boolean]$ApplyBrowserPolicies = $true,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$Admincreds,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$AdfsSvcCreds
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$AdfsSvcCreds,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SqlSvcCreds,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds
     )
 
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.0
@@ -29,6 +31,7 @@
     # Format credentials to be qualified by domain name: "domain\username"
     [System.Management.Automation.PSCredential] $DomainCredsNetbios = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
     [System.Management.Automation.PSCredential] $AdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($AdfsSvcCreds.UserName)", $AdfsSvcCreds.Password)
+    [System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object PSCredential ("$($DomainNetbiosName)\$($SqlSvcCreds.UserName)", $SqlSvcCreds.Password)
 
     [String] $SetupPath = "C:\DSC Data"
 
@@ -339,6 +342,30 @@
                     }
                 }
             }
+        }
+
+        ######
+        ADUser CreateSqlSvcAccount {
+            DomainName            = $DomainFQDN
+            UserName              = $SqlSvcCreds.UserName
+            UserPrincipalName     = "$($SqlSvcCreds.UserName)@$DomainFQDN"
+            Password              = $SQLCredsQualified
+            PasswordNeverExpires  = $true
+            Ensure                = "Present"
+            PsDscRunAsCredential  = $DomainCredsNetbios
+            DependsOn            = "[WaitForADDomain]WaitForDCReady"
+        }
+
+        ADUser CreateSPSetupAccount {
+            # Both SQL and SharePoint DSCs run this SPSetupAccount AD account creation
+            DomainName           = $DomainFQDN
+            UserName             = $SPSetupCreds.UserName
+            UserPrincipalName    = "$($SPSetupCreds.UserName)@$DomainFQDN"
+            Password             = $SPSetupCreds
+            PasswordNeverExpires = $true
+            Ensure               = "Present"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+            DependsOn            = "[WaitForADDomain]WaitForDCReady"
         }
         
         #**********************************************************
@@ -740,6 +767,8 @@ help ConfigDc
 $password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -Force
 $Admincreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
 $AdfsSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "adfssvc", $password
+$SqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "sqlsvc", $password
+$SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
 $DomainFQDN = "contoso.local"
 $PrivateIP = "10.1.1.4"
 $SPServerName = "SP"
@@ -747,7 +776,7 @@ $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigDc.0\ConfigDc"
-ConfigDc -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -SPServerName $SPServerName -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigDc -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -SPServerName $SPServerName -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
