@@ -3,7 +3,7 @@
 
 param(
     [string] $vmName = "*",
-    [string] $dscFolderPath
+    [string] $dscFolderPath = ".\src\"
 )
 
 if (-not (Test-Path -PathType Container -Path $dscFolderPath)) {

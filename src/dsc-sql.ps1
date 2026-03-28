@@ -154,6 +154,7 @@ configuration ConfigSql
             }
             GetScript            = { }
             TestScript           = { return $false }
+            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
             PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
