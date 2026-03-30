@@ -23,16 +23,15 @@
     Import-DscResource -ModuleName AdfsDsc -ModuleVersion 1.4.0
 
     # Init
-    [String] $InterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
+    [String] $InterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
     [String] $ComputerName = Get-Content env:computername
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
     [String] $AdditionalUsersPath = "OU=AdditionalUsers,DC={0},DC={1}" -f $DomainFQDN.Split('.')[0], $DomainFQDN.Split('.')[1]
+    [String] $SetupPath = "C:\DSC Data"
 
     # Format credentials to be qualified by domain name: "domain\username"
     [System.Management.Automation.PSCredential] $DomainCredsNetbios = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
     [System.Management.Automation.PSCredential] $AdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($AdfsSvcCreds.UserName)", $AdfsSvcCreds.Password)
-
-    [String] $SetupPath = "C:\DSC Data"
 
     # ADFS settings
     [String] $ADFSSiteName = "adfs"
@@ -246,10 +245,18 @@
         #**********************************************************
         # Install AD FS early (before reboot) to workaround error below on resource AdfsApplicationGroup:
         # "System.InvalidOperationException: The test script threw an error. ---> System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.IdentityServer.Diagnostics, Version=10.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35' or one of its dependencie"
-        WindowsFeature AddADFS { Name = "ADFS-Federation"; Ensure = "Present"; }
-        WindowsFeature AddADDS { Name = "AD-Domain-Services"; Ensure = "Present" }
-        WindowsFeature AddDNS { Name = "DNS"; Ensure = "Present" }
-        WindowsFeature AddGroupPolicyPowerShellModule { Name = "GPMC"; Ensure = "Present" }
+        WindowsFeature AddADFS {
+            Name = "ADFS-Federation"; Ensure = "Present"; 
+        }
+        WindowsFeature AddADDS {
+            Name = "AD-Domain-Services"; Ensure = "Present" 
+        }
+        WindowsFeature AddDNS {
+            Name = "DNS"; Ensure = "Present" 
+        }
+        WindowsFeature AddGroupPolicyPowerShellModule {
+            Name = "GPMC"; Ensure = "Present" 
+        }
 
         DnsServerAddress SetDNS {
             Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4' 
@@ -515,32 +522,6 @@
             DependsOn                    = "[WindowsFeature]AddADFS"
         }
 
-
-        ######
-        ADUser CreateSqlSvcAccount {
-            DomainName            = $DomainFQDN
-            UserName              = $SqlSvcCreds.UserName
-            UserPrincipalName     = "$($SqlSvcCreds.UserName)@$DomainFQDN"
-            Password              = $SqlSvcCreds
-            PasswordNeverExpires  = $true
-            Ensure                = "Present"
-            PsDscRunAsCredential  = $DomainCredsNetbios
-            DependsOn            = "[WaitForADDomain]WaitForDCReady"
-        }
-
-        ADUser CreateSPSetupAccount {
-            # Both SQL and SharePoint DSCs run this SPSetupAccount AD account creation
-            DomainName           = $DomainFQDN
-            UserName             = $SPSetupCreds.UserName
-            UserPrincipalName    = "$($SPSetupCreds.UserName)@$DomainFQDN"
-            Password             = $SPSetupCreds
-            PasswordNeverExpires = $true
-            Ensure               = "Present"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[WaitForADDomain]WaitForDCReady"
-        }
-
-
         # This DNS record is tested by other VMs to join AD only after it was found
         # It is added after DSC resource AdfsFarm, because it is the last operation that triggers a reboot of the DC
         DnsRecordA AddADFSHostDNS {
@@ -549,6 +530,29 @@
             IPv4Address = $PrivateIP
             Ensure      = "Present"
             DependsOn   = "[AdfsFarm]CreateADFSFarm"
+        }
+
+        # Create other service accounts
+        ADUser CreateSqlSvcAccount {
+            DomainName           = $DomainFQDN
+            UserName             = $SqlSvcCreds.UserName
+            UserPrincipalName    = "$($SqlSvcCreds.UserName)@$DomainFQDN"
+            Password             = $SqlSvcCreds
+            PasswordNeverExpires = $true
+            Ensure               = "Present"
+            PsDscRunAsCredential = $DomainCredsNetbios
+            DependsOn            = "[WaitForADDomain]WaitForDCReady"
+        }
+
+        ADUser CreateSPSetupAccount {
+            DomainName           = $DomainFQDN
+            UserName             = $SPSetupCreds.UserName
+            UserPrincipalName    = "$($SPSetupCreds.UserName)@$DomainFQDN"
+            Password             = $SPSetupCreds
+            PasswordNeverExpires = $true
+            Ensure               = "Present"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+            DependsOn            = "[WaitForADDomain]WaitForDCReady"
         }
 
         ADFSRelyingPartyTrust CreateADFSRelyingParty {
@@ -649,9 +653,9 @@
             DependsOn            = "[AdfsNativeClientApplication]OidcNativeApp", "[AdfsWebApiApplication]OidcWebApiApp"
         }
 
-        WindowsFeature AddADTools {
-            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
-        }
+        # WindowsFeature AddADTools {
+        #     Name = "RSAT-AD-Tools"; Ensure = "Present"; 
+        # }
         # WindowsFeature AddDnsTools {
         #     Name = "RSAT-DNS-Server"; Ensure = "Present"; 
         # }

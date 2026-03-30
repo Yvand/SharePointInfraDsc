@@ -4,9 +4,9 @@ configuration ConfigSql
     (
         [Parameter(Mandatory)] [String]$DNSServerIP,
         [Parameter(Mandatory)] [String]$DomainFQDN,
+        [Parameter(Mandatory)] [String]$SPSetupUserName,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SqlSvcCreds,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SqlSvcCreds
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
@@ -20,14 +20,16 @@ configuration ConfigSql
     [String] $ComputerName = Get-Content env:computername
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
     [String] $DomainLDAPPath = "DC=$($DomainFQDN.Split(".")[0]),DC=$($DomainFQDN.Split(".")[1])"
+    [String] $DCServerName = "DC"
+    [String] $AdfsDnsEntryName = "adfs"
     
     # Format username as user@contoso.local to workaround issue https://github.com/dsccommunity/ComputerManagementDsc/issues/413
     [System.Management.Automation.PSCredential] $DomainAdminCredsToJoinDomain = New-Object System.Management.Automation.PSCredential ("$($DomainAdminCreds.UserName)@$($DomainFQDN)", $DomainAdminCreds.Password)
     # Format credentials to be qualified by domain name: "domain\username"
     [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($DomainAdminCreds.UserName)", $DomainAdminCreds.Password)
     [System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object PSCredential ("$($DomainNetbiosName)\$($SqlSvcCreds.UserName)", $SqlSvcCreds.Password)
-    [String] $SqlSvcUserName = "$($DomainNetbiosName)\$($SqlSvcCreds.UserName)"
-    [String] $AdfsDnsEntryName = "adfs"
+    [String] $SqlSvcUserNameQualified = "$($DomainNetbiosName)\$($SqlSvcCreds.UserName)"
+    [String] $SPSetupUserNameQualified = "$($DomainNetbiosName)\$SPSetupUserName"
 
     Node localhost
     {
@@ -39,12 +41,7 @@ configuration ConfigSql
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
-        # xWindowsFeature AddADPowerShell {
-        #     Name = "RSAT-AD-PowerShell"; Ensure = "Present"; 
-        # } # Required for ADUser resource
-        DnsServerAddress SetDNS {
-            Address = $DNSServerIP; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4' 
-        }
+        DnsServerAddress SetDNS { Address = $DNSServerIP; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4' }
 
         Script EnableFileSharing {
             GetScript  = { }
@@ -87,30 +84,10 @@ configuration ConfigSql
             DependsOn  = "[DnsServerAddress]SetDNS"
         }
 
-        # # If WaitForADDomain does not find the domain whtin "WaitTimeout" secs, it will signar a restart to DSC engine "RestartCount" times
-        # WaitForADDomain WaitForDCReady
-        # {
-        #     DomainName              = $DomainFQDN
-        #     WaitTimeout             = 1800
-        #     RestartCount            = 2
-        #     WaitForValidCredentials = $True
-        #     Credential              = $DomainAdminCredsQualified
-        #     DependsOn               = "[Script]WaitForADFSFarmReady"
-        # }
-
-        # # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
-        # PendingReboot RebootOnSignalFromWaitForDCReady
-        # {
-        #     Name             = "RebootOnSignalFromWaitForDCReady"
-        #     SkipCcmClientSDK = $true
-        #     DependsOn        = "[WaitForADDomain]WaitForDCReady"
-        # }
-
         Computer JoinDomain {
             Name       = $ComputerName
             DomainName = $DomainFQDN
             Credential = $DomainAdminCredsToJoinDomain
-            # DependsOn  = "[PendingReboot]RebootOnSignalFromWaitForDCReady"
             DependsOn  = "[Script]WaitForADFSFarmReady"
         }
 
@@ -147,16 +124,16 @@ configuration ConfigSql
                 setspn -D "$spn" "$computerName"
                 setspn -D "$($spn):1433" "$computerName"
 
-                # $targetObject = "$($using:SqlSvcUserName)"
-                # Write-Verbose -Verbose -Message "Adding SPNs '$spn' and '$($spn):1433' to '$targetObject'..."
-                # setspn -U -S "$spn" "$targetObject"
-                # setspn -U -S "$($spn):1433" "$targetObject"
+                $targetObject = "$($using:SqlSvcUserNameQualified)"
+                Write-Verbose -Verbose -Message "Adding SPNs '$spn' and '$($spn):1433' to '$targetObject'..."
+                setspn -U -S "$spn" "$targetObject"
+                setspn -U -S "$($spn):1433" "$targetObject"
             }
             DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
             PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
-        # Allow SQL to automatically register the SPN when the SQL Server Database Engine starts
+        # Allow SQL Server to automatically register the SPN when its service starts
         Script GrantWriteSpnPermissionToSqlSvcOnSQLMachine {
             SetScript            =
             {
@@ -183,7 +160,7 @@ configuration ConfigSql
                     $TargetObject.psBase.CommitChanges()
                 }
                 $targetObject = "LDAP://CN=$($using:ComputerName),CN=Computers,$($using:DomainLDAPPath)"
-                $identity = [System.Security.Principal.NTAccount] "$($using:SqlSvcUserName)"
+                $identity = [System.Security.Principal.NTAccount] "$($using:SqlSvcUserNameQualified)"
                 Set-SpnPermission -TargetObject $targetObject -Identity $identity
             }
             GetScript            = { }
@@ -218,32 +195,12 @@ configuration ConfigSql
                     return $false
                 }
                 $targetObject = "LDAP://CN=$($using:ComputerName),CN=Computers,$($using:DomainLDAPPath)"
-                $identity = [System.Security.Principal.NTAccount] "$($using:SqlSvcUserName)"
+                $identity = [System.Security.Principal.NTAccount] "$($using:SqlSvcUserNameQualified)"
                 return Test-SpnPermission -TargetObject $targetObject -Identity $identity
             }
             DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-        }        
-
-        # ADUser CreateSqlSvcAccount {
-        #     DomainName            = $DomainFQDN
-        #     UserName              = $SqlSvcCreds.UserName
-        #     UserPrincipalName     = "$($SqlSvcCreds.UserName)@$DomainFQDN"
-        #     Password              = $SQLCredsQualified
-        #     PasswordNeverExpires  = $true
-        #     ServicePrincipalNames = @("MSSQLSvc/$($ComputerName).$($DomainFQDN):1433", "MSSQLSvc/$($ComputerName).$($DomainFQDN)")
-        #     Ensure                = "Present"
-        #     PsDscRunAsCredential  = $DomainAdminCredsQualified
-        #     DependsOn             = "[Script]RemoveSQLSpnOnSQLMachine", "[xWindowsFeature]AddADPowerShell"
-        # }
-
-        # Script EnsureSQLServiceStarted {
-        #     GetScript            = { }
-        #     TestScript           = { return (Get-Service -Name "MSSQLSERVER").Status -like 'Running' }
-        #     SetScript            = { Start-Service -Name "MSSQLSERVER" }
-        #     DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
-        #     PsDscRunAsCredential = $DomainAdminCredsQualified
-        # }
+        }
 
         SqlServiceAccount SetSqlInstanceServiceAccount {
             ServerName     = $ComputerName
@@ -251,11 +208,11 @@ configuration ConfigSql
             ServiceType    = "DatabaseEngine"
             ServiceAccount = $SQLCredsQualified
             RestartService = $true
-            #DependsOn      = "[Script]EnsureSQLServiceStarted"#, "[ADUser]CreateSqlSvcAccount"
+            DependsOn      = "[Script]GrantWriteSpnPermissionToSqlSvcOnSQLMachine"
         }
 
         SqlMaxDop ConfigureMaxDOP {
-            ServerName = $ComputerName; InstanceName = "MSSQLSERVER"; MaxDop = 1; #DependsOn = "[Script]EnsureSQLServiceStarted" 
+            ServerName = $ComputerName; InstanceName = "MSSQLSERVER"; MaxDop = 1; DependsOn = "[SqlServiceAccount]SetSqlInstanceServiceAccount" 
         }
 
         SqlLogin AddDomainAdminLogin {
@@ -264,28 +221,16 @@ configuration ConfigSql
             ServerName   = $ComputerName
             InstanceName = "MSSQLSERVER"
             LoginType    = "WindowsUser"
-            DependsOn    = "[PendingReboot]RebootOnSignalFromJoinDomain"
+            DependsOn    = "[SqlServiceAccount]SetSqlInstanceServiceAccount" 
         }
 
-        # ADUser CreateSPSetupAccount {
-        #     # Both SQL and SharePoint DSCs run this SPSetupAccount AD account creation
-        #     DomainName           = $DomainFQDN
-        #     UserName             = $SPSetupCreds.UserName
-        #     UserPrincipalName    = "$($SPSetupCreds.UserName)@$DomainFQDN"
-        #     Password             = $SPSetupCreds
-        #     PasswordNeverExpires = $true
-        #     Ensure               = "Present"
-        #     PsDscRunAsCredential = $DomainAdminCredsQualified
-        #     DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
-        # }
-
         SqlLogin AddSPSetupLogin {
-            Name         = "${DomainNetbiosName}\$($SPSetupCreds.UserName)"
+            Name         = $SPSetupUserNameQualified
             Ensure       = "Present"
             ServerName   = $ComputerName
             InstanceName = "MSSQLSERVER"
             LoginType    = "WindowsUser"
-            # DependsOn    = "[ADUser]CreateSPSetupAccount"
+            DependsOn    = "[SqlServiceAccount]SetSqlInstanceServiceAccount" 
         }
 
         SqlRole GrantSQLRoleSysadmin {
@@ -299,7 +244,7 @@ configuration ConfigSql
 
         SqlRole GrantSQLRoleSecurityAdmin {
             ServerRoleName   = "securityadmin"
-            MembersToInclude = @("${DomainNetbiosName}\$($SPSetupCreds.UserName)")
+            MembersToInclude = @($SPSetupUserNameQualified)
             ServerName       = $ComputerName
             InstanceName     = "MSSQLSERVER"
             Ensure           = "Present"
@@ -308,7 +253,7 @@ configuration ConfigSql
 
         SqlRole GrantSQLRoleDBCreator {
             ServerRoleName   = "dbcreator"
-            MembersToInclude = @("${DomainNetbiosName}\$($SPSetupCreds.UserName)")
+            MembersToInclude = @($SPSetupUserNameQualified)
             ServerName       = $ComputerName
             InstanceName     = "MSSQLSERVER"
             Ensure           = "Present"
@@ -322,14 +267,14 @@ configuration ConfigSql
             InstanceName = "MSSQLSERVER"
             DatabaseName = "tempdb"
             UserType     = 'Login'
-            Name         = "${DomainNetbiosName}\$($SPSetupCreds.UserName)"
-            LoginName    = "${DomainNetbiosName}\$($SPSetupCreds.UserName)"
+            Name         = $SPSetupUserNameQualified
+            LoginName    = $SPSetupUserNameQualified
             DependsOn    = "[SqlLogin]AddSPSetupLogin"
         }
 
         # Reference: https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-schema-permissions-transact-sql?view=sql-server-ver16
         SqlDatabasePermission GrantPermissionssToTempdb {
-            Name         = "${DomainNetbiosName}\$($SPSetupCreds.UserName)"
+            Name         = $SPSetupUserNameQualified
             ServerName   = $ComputerName
             InstanceName = "MSSQLSERVER"
             DatabaseName = "tempdb"
@@ -351,7 +296,7 @@ configuration ConfigSql
         }
 
         SqlDatabaseObjectPermission GrantPermissionssToDboSchema {
-            Name         = "${DomainNetbiosName}\$($SPSetupCreds.UserName)"
+            Name         = $SPSetupUserNameQualified
             ServerName   = $ComputerName
             InstanceName = "MSSQLSERVER"
             DatabaseName = "tempdb"
@@ -394,14 +339,12 @@ configuration ConfigSql
         #     DatabaseName         = "tempdb"
         #     Name                 = "db_owner"
         #     Ensure               = "Present"
-        #     MembersToInclude     = @("${DomainNetbiosName}\$($SPSetupCreds.UserName)")
+        #     MembersToInclude     = @($SPSetupUserNameQualified)
         #     PsDscRunAsCredential = $SqlAdministratorCredential
         #     DependsOn            = "[SqlLogin]AddSPSetupLogin"
         # }
 
-        # Update GPO to ensure the root certificate of the CA is present in "cert:\LocalMachine\Root\", otherwise certificate request will fail
-        # $DCServerName = Get-ADDomainController | Select-Object -First 1 -Expand Name
-        $DCServerName = "DC"
+        # Update GPOs to ensure the root certificate of the CA is present in "cert:\LocalMachine\Root\", otherwise certificate request will fail
         Script UpdateGPOToTrustRootCACert {
             SetScript            =
             {
@@ -442,12 +385,11 @@ configuration ConfigSql
             DependsOn           = '[Script]UpdateGPOToTrustRootCACert'
         }
 
-        $sqlsvcUserName = $SQLCredsQualified.UserName
         Script GrantSqlsvcFullControlToPrivateKey {
             SetScript            = 
             {
                 $subjectName = "CN=$($using:ComputerName).$($using:DomainFQDN)"
-                $sqlsvcUserName = $using:sqlsvcUserName
+                $sqlSvcUserNameQualified = $using:SqlSvcUserNameQualified
 
                 # Grant access to the certificate private key.
                 $cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -eq $subjectName }
@@ -455,7 +397,7 @@ configuration ConfigSql
                 $fileName = $rsaCert.key.UniqueName
                 $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
                 $permissions = Get-Acl -Path $path
-                $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($sqlsvcUserName, 'FullControl', 'None', 'None', 'Allow')
+                $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($sqlSvcUserNameQualified, 'FullControl', 'None', 'None', 'Allow')
                 $permissions.AddAccessRule($access_rule)
                 Set-Acl -Path $path -AclObject $permissions
             }
@@ -477,7 +419,7 @@ configuration ConfigSql
         # $sqlServerEncryptionCertThumbprint = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -eq "CN=$ComputerName.$DomainFQDN" } | Select-Object -Expand Thumbprint
         SqlSecureConnection EnableSecureConnection {
             InstanceName    = 'MSSQLSERVER'
-            Thumbprint      = "CN=SQL.contoso.local"
+            Thumbprint      = "CN=$ComputerName.$DomainFQDN"
             ForceEncryption = $false
             Ensure          = 'Present'
             ServiceAccount  = $SqlSvcCreds.UserName
@@ -537,18 +479,16 @@ function WaitForSqlSetup {
     }
 }
 
-
-
 <#
 $password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -Force
 $DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
 $SqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "sqlsvc", $password
-$SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
 $DNSServerIP = "10.1.1.100"
 $DomainFQDN = "contoso.local"
+$SPSetupUserName = "spsetup"
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\dsc-sql.0\ConfigSql"
-ConfigSql -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSql -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupUserName $SPSetupUserName -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 

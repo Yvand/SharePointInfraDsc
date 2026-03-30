@@ -472,18 +472,6 @@ configuration ConfigSpMain
         #**********************************************************
         # Provision required accounts for SharePoint
         #**********************************************************
-        ADUser CreateSPSetupAccount
-        {   # Both SQL and SharePoint DSCs run this SPSetupAccount AD account creation
-            DomainName           = $DomainFQDN
-            UserName             = $SPSetupCreds.UserName
-            UserPrincipalName    = "$($SPSetupCreds.UserName)@$DomainFQDN"
-            Password             = $SPSetupCreds
-            PasswordNeverExpires = $true
-            Ensure               = "Present"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
-        }
-
         ADUser CreateSParmAccount
         {
             DomainName                    = $DomainFQDN
@@ -503,7 +491,7 @@ configuration ConfigSpMain
             MembersToInclude     = @("$($SPSetupCredsQualified.UserName)")
             Credential           = $DomainAdminCredsQualified
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[ADUser]CreateSPSetupAccount"
+            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
         ADUser CreateSPSvcAccount
