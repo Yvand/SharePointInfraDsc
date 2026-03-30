@@ -17,16 +17,16 @@ configuration ConfigSql
     # Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
 
     WaitForSqlSetup
+    [String] $InterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
+    [String] $ComputerName = Get-Content env:computername
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
-    $Interface = Get-NetAdapter | Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1
-    $InterfaceAlias = $($Interface.Name)
+    [String] $DomainLDAPPath = "DC=$($DomainFQDN.Split(".")[0]),DC=$($DomainFQDN.Split(".")[1])"
     
     # Format username as user@contoso.local to workaround issue https://github.com/dsccommunity/ComputerManagementDsc/issues/413
     [System.Management.Automation.PSCredential] $DomainAdminCredsToJoinDomain = New-Object System.Management.Automation.PSCredential ("$($DomainAdminCreds.UserName)@$($DomainFQDN)", $DomainAdminCreds.Password)
     # Format credentials to be qualified by domain name: "domain\username"
     [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($DomainAdminCreds.UserName)", $DomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object PSCredential ("$($DomainNetbiosName)\$($SqlSvcCreds.UserName)", $SqlSvcCreds.Password)
-    [String] $ComputerName = Get-Content env:computername
+    #[System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object PSCredential ("$($DomainNetbiosName)\$($SqlSvcCreds.UserName)", $SqlSvcCreds.Password)
     [String] $AdfsDnsEntryName = "adfs"
 
     Node localhost
@@ -80,7 +80,7 @@ configuration ConfigSql
                         Write-Verbose -Verbose -Message "DNS record '$dnsRecordFQDN' not found yet: $_"
                         Start-Sleep -Seconds $sleepTime
                     }
-                } while ($false -eq $dnsRecordFound)
+                } while (-not $dnsRecordFound)
             }
             GetScript  = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript = { try { [Net.DNS]::GetHostEntry("$($using:AdfsDnsEntryName).$($using:DomainFQDN)"); return $true } catch { return $false } }
@@ -123,7 +123,34 @@ configuration ConfigSql
         #**********************************************************
         # Create accounts and configure SQL Server
         #**********************************************************
-        ######
+        # By default, SPNs MSSQLSvc/SQL.contoso.local:1433 and MSSQLSvc/SQL.contoso.local are set on the machine account
+        # They need to be removed before they can be set on the SQL service account
+        Script RemoveSQLSpnOnSQLMachine {
+            GetScript            = { return @{ "Result" = "false" } }
+            TestScript           = 
+            {
+                return $false
+                # $spn = "MSSQLSvc/$($using:ComputerName).$($using:DomainFQDN)"
+                # $computerAccount = Get-ADComputer -Identity $using:ComputerName -Properties ServicePrincipalName -ErrorAction SilentlyContinue
+                # if ([bool]($computerAccount.ServicePrincipalName -contains $Spn) -or [bool]($computerAccount.ServicePrincipalName -contains "$($spn):1433")) {
+                #     return $false   # SPN still exists on machine account, need to run SetScript to remove it
+                # }
+                # else {
+                #     return $true    # SPN already removed from machine account
+                # }
+            }
+            SetScript            = 
+            {
+                $computerName = $using:ComputerName
+                $spn = "MSSQLSvc/$($using:ComputerName).$($using:DomainFQDN)"
+                Write-Verbose -Verbose -Message "Removing SPNs '$spn' and '$($spn):1433' from computer $computerName..."
+                setspn -D "$spn" "$computerName"
+                setspn -D "$($spn):1433" "$computerName"
+            }
+            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+        }
+
         Script GrantWriteSpnPermissionToSqlSvcOnSQLMachine {
             SetScript            =
             {
@@ -133,6 +160,7 @@ configuration ConfigSql
                         [Security.Principal.IdentityReference]$Identity
                     )
     
+                    Write-Verbose -Verbose -Message "Granting delegated permission 'Validated write to service principal name' to '$Identity' on '$TargetObject'"
                     # GUID for "Validated write to service principal name"
                     $validateWriteSPNGuid = "f3a64788-5f6a-11d2-a764-00905f58176d"
                     # Create the ACE (Access Control Entry)
@@ -146,33 +174,16 @@ configuration ConfigSql
                     $computerAD = [ADSI]$TargetObject
                     $computerAD.psBase.ObjectSecurity.AddAccessRule($ace)
                     $computerAD.psBase.CommitChanges()
-                    Write-Host "Delegated permission 'Validated write to service principal name' granted to $Identity on $TargetObject"
                 }
-                $TargetObject = "LDAP://CN=SQL,CN=Computers,DC=contoso,DC=local"
-                $Identity = [security.principal.ntaccount]"contoso\sqlsvc"
-                Set-SpnPermission -TargetObject $TargetObject -Identity $Identity
+                $targetObject = "LDAP://CN=$($using:ComputerName),CN=Computers,$($using:DomainLDAPPath)"
+                $identity = [System.Security.Principal.NTAccount]$using:SQLCredsQualified.UserName
+                Set-SpnPermission -TargetObject $targetObject -Identity $identity
             }
             GetScript            = { }
             TestScript           = { return $false }
             DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-        }
-
-        # # By default, SPNs MSSQLSvc/SQL.contoso.local:1433 and MSSQLSvc/SQL.contoso.local are set on the machine account
-        # # They need to be removed before they can be set on the SQL service account
-        # Script RemoveSQLSpnOnSQLMachine {
-        #     GetScript            = { }
-        #     TestScript           = { return $false }
-        #     SetScript            = 
-        #     {
-        #         $hostname = $using:ComputerName
-        #         $domainFQDN = $using:DomainFQDN
-        #         setspn -D "MSSQLSvc/$hostname.$($domainFQDN)" "$hostname"
-        #         setspn -D "MSSQLSvc/$hostname.$($domainFQDN):1433" "$hostname"
-        #     }
-        #     DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
-        #     PsDscRunAsCredential = $DomainAdminCredsQualified
-        # }
+        }        
 
         # ADUser CreateSqlSvcAccount {
         #     DomainName            = $DomainFQDN
@@ -186,27 +197,11 @@ configuration ConfigSql
         #     DependsOn             = "[Script]RemoveSQLSpnOnSQLMachine", "[xWindowsFeature]AddADPowerShell"
         # }
 
-        Script EnsureSQLServiceStarted {
-            GetScript            = { }
-            TestScript           = { return (Get-Service -Name "MSSQLSERVER").Status -like 'Running' }
-            SetScript            = { Start-Service -Name "MSSQLSERVER" }
-            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-        }
-
-        SqlMaxDop ConfigureMaxDOP {
-            ServerName = $ComputerName; InstanceName = "MSSQLSERVER"; MaxDop = 1; DependsOn = "[Script]EnsureSQLServiceStarted" 
-        }
-
-        # Script WorkaroundErrorInSqlServiceAccountResource
-        # {
-        #     GetScript = { }
-        #     TestScript = { return $false }
-        #     SetScript = { 
-        #         [reflection.assembly]::LoadWithPartialName("Microsoft.SqlServer.SqlWmiManagement")
-        #         $mc = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer
-        #     }
-        #     DependsOn      = "[Script]EnsureSQLServiceStarted", "[ADUser]CreateSqlSvcAccount"
+        # Script EnsureSQLServiceStarted {
+        #     GetScript            = { }
+        #     TestScript           = { return (Get-Service -Name "MSSQLSERVER").Status -like 'Running' }
+        #     SetScript            = { Start-Service -Name "MSSQLSERVER" }
+        #     DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
         #     PsDscRunAsCredential = $DomainAdminCredsQualified
         # }
 
@@ -216,8 +211,11 @@ configuration ConfigSql
             ServiceType    = "DatabaseEngine"
             ServiceAccount = $SQLCredsQualified
             RestartService = $true
-            DependsOn      = "[Script]EnsureSQLServiceStarted"#, "[ADUser]CreateSqlSvcAccount"
-            # DependsOn      = "[Script]WorkaroundErrorInSqlServiceAccountResource"
+            #DependsOn      = "[Script]EnsureSQLServiceStarted"#, "[ADUser]CreateSqlSvcAccount"
+        }
+
+        SqlMaxDop ConfigureMaxDOP {
+            ServerName = $ComputerName; InstanceName = "MSSQLSERVER"; MaxDop = 1; #DependsOn = "[Script]EnsureSQLServiceStarted" 
         }
 
         SqlLogin AddDomainAdminLogin {
@@ -505,7 +503,7 @@ $password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -F
 $DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
 $SqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "sqlsvc", $password
 $SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
-$DNSServerIP = "10.1.1.4"
+$DNSServerIP = "10.1.1.100"
 $DomainFQDN = "contoso.local"
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigSql.0\ConfigSql"
