@@ -14,7 +14,6 @@ configuration ConfigSql
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.0
     Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 17.1.0 # Custom workaround on SqlSecureConnection
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 6.0.0
-    # Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
 
     WaitForSqlSetup
     [String] $InterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
@@ -148,15 +147,16 @@ configuration ConfigSql
                 setspn -D "$spn" "$computerName"
                 setspn -D "$($spn):1433" "$computerName"
 
-                $targetObject = "$($using:SqlSvcUserName)"
-                Write-Verbose -Verbose -Message "Adding SPNs '$spn' and '$($spn):1433' to '$targetObject'..."
-                setspn -U -S "$spn" "$targetObject"
-                setspn -U -S "$($spn):1433" "$targetObject"
+                # $targetObject = "$($using:SqlSvcUserName)"
+                # Write-Verbose -Verbose -Message "Adding SPNs '$spn' and '$($spn):1433' to '$targetObject'..."
+                # setspn -U -S "$spn" "$targetObject"
+                # setspn -U -S "$($spn):1433" "$targetObject"
             }
             DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
             PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
+        # Allow SQL to automatically register the SPN when the SQL Server Database Engine starts
         Script GrantWriteSpnPermissionToSqlSvcOnSQLMachine {
             SetScript            =
             {
@@ -168,11 +168,12 @@ configuration ConfigSql
     
                     Write-Verbose -Verbose -Message "Granting delegated permission 'Validated write to service principal name' to '$Identity' on '$($TargetObject.Name)'"
                     # GUID for "Validated write to service principal name"
-                    $validateWriteSPNGuid = "f3a64788-5f6a-11d2-a764-00905f58176d"
+                    $validateWriteSPNGuid = "f3a64788-5306-11d1-a9c5-0000f80367c1"
+                    $activeDirectoryRights = [System.DirectoryServices.ActiveDirectoryRights]::WriteProperty -bor [System.DirectoryServices.ActiveDirectoryRights]::ReadProperty -bor [System.DirectoryServices.ActiveDirectoryRights]::Self
                     # Create the ACE (Access Control Entry)
                     $ace = New-Object System.DirectoryServices.ActiveDirectoryAccessRule(
                         $Identity,
-                        [System.DirectoryServices.ActiveDirectoryRights]::WriteProperty,
+                        $activeDirectoryRights,
                         [System.Security.AccessControl.AccessControlType]::Allow,
                         [guid]$validateWriteSPNGuid,
                         [System.DirectoryServices.ActiveDirectorySecurityInheritance]::None
@@ -195,7 +196,8 @@ configuration ConfigSql
                         
                     Write-Verbose -Verbose -Message "Checking if delegated permission 'Validated write to service principal name' exists for '$Identity' on '$($TargetObject.Name)'"
                     # GUID for "Validated write to service principal name"
-                    $validateWriteSPNGuid = [guid]"f3a64788-5f6a-11d2-a764-00905f58176d"
+                    $validateWriteSPNGuid = [guid]"f3a64788-5306-11d1-a9c5-0000f80367c1"
+                    $expectedRights = [System.DirectoryServices.ActiveDirectoryRights]::WriteProperty -bor [System.DirectoryServices.ActiveDirectoryRights]::ReadProperty -bor [System.DirectoryServices.ActiveDirectoryRights]::Self
                     
                     # Get the current ACL
                     $acl = $TargetObject.psBase.ObjectSecurity
@@ -204,7 +206,7 @@ configuration ConfigSql
                     # Check if the permission already exists
                     foreach ($rule in $accessRules) {
                         if ($rule.IdentityReference -eq $Identity -and
-                            $rule.ActiveDirectoryRights -eq [System.DirectoryServices.ActiveDirectoryRights]::Self -and
+                            ($rule.ActiveDirectoryRights -band $expectedRights) -eq $expectedRights -and
                             $rule.ObjectType -eq $validateWriteSPNGuid -and
                             $rule.AccessControlType -eq [System.Security.AccessControl.AccessControlType]::Allow) {
                             Write-Verbose -Verbose -Message "Permission already exists"
