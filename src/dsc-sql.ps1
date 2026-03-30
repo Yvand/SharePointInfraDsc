@@ -26,7 +26,8 @@ configuration ConfigSql
     [System.Management.Automation.PSCredential] $DomainAdminCredsToJoinDomain = New-Object System.Management.Automation.PSCredential ("$($DomainAdminCreds.UserName)@$($DomainFQDN)", $DomainAdminCreds.Password)
     # Format credentials to be qualified by domain name: "domain\username"
     [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($DomainAdminCreds.UserName)", $DomainAdminCreds.Password)
-    #[System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object PSCredential ("$($DomainNetbiosName)\$($SqlSvcCreds.UserName)", $SqlSvcCreds.Password)
+    [System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object PSCredential ("$($DomainNetbiosName)\$($SqlSvcCreds.UserName)", $SqlSvcCreds.Password)
+    [String] $SqlSvcUserName = "$($DomainNetbiosName)\$($SqlSvcCreds.UserName)"
     [String] $AdfsDnsEntryName = "adfs"
 
     Node localhost
@@ -160,7 +161,7 @@ configuration ConfigSql
                         [Security.Principal.IdentityReference]$Identity
                     )
     
-                    Write-Verbose -Verbose -Message "Granting delegated permission 'Validated write to service principal name' to '$Identity' on '$TargetObject'"
+                    Write-Verbose -Verbose -Message "Granting delegated permission 'Validated write to service principal name' to '$Identity' on '$($TargetObject.Name)'"
                     # GUID for "Validated write to service principal name"
                     $validateWriteSPNGuid = "f3a64788-5f6a-11d2-a764-00905f58176d"
                     # Create the ACE (Access Control Entry)
@@ -176,7 +177,7 @@ configuration ConfigSql
                     $computerAD.psBase.CommitChanges()
                 }
                 $targetObject = "LDAP://CN=$($using:ComputerName),CN=Computers,$($using:DomainLDAPPath)"
-                $identity = [System.Security.Principal.NTAccount]$using:SQLCredsQualified.UserName
+                $identity = [System.Security.Principal.NTAccount] "$($using:SqlSvcUserName)"
                 Set-SpnPermission -TargetObject $targetObject -Identity $identity
             }
             GetScript            = { }
@@ -487,7 +488,8 @@ function WaitForSqlSetup {
     # Wait for SQL Server Setup to finish before proceeding.
     while ($true) {
         try {
-            Get-ScheduledTaskInfo "\ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
+            $taskResult = Get-ScheduledTaskInfo "\ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
+            Write-Verbose -Verbose -Message "ScheduledTaskInfo results: LastRunTime: $($taskResult.LastRunTime); LastTaskResult: $($taskResult.LastTaskResult); NextRunTime: $($taskResult.NextRunTime); NumberOfMissedRuns: $($taskResult.NumberOfMissedRuns);"
             Start-Sleep -Seconds 5
         }
         catch {
@@ -506,8 +508,9 @@ $SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -
 $DNSServerIP = "10.1.1.100"
 $DomainFQDN = "contoso.local"
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigSql.0\ConfigSql"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\dsc-sql.0\ConfigSql"
 ConfigSql -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
 #>

@@ -649,18 +649,18 @@
             DependsOn            = "[AdfsNativeClientApplication]OidcNativeApp", "[AdfsWebApiApplication]OidcWebApiApp"
         }
 
-        # WindowsFeature AddADTools {
-        #     Name = "RSAT-AD-Tools"; Ensure = "Present"; 
-        # }        
+        WindowsFeature AddADTools {
+            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
+        }
         # WindowsFeature AddDnsTools {
         #     Name = "RSAT-DNS-Server"; Ensure = "Present"; 
         # }
         # WindowsFeature AddADLDS {
         #     Name = "RSAT-ADLDS"; Ensure = "Present"; 
         # }
-        # WindowsFeature AddADCSManagementTools {
-        #     Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
-        # }
+        WindowsFeature AddADCSManagementTools {
+            Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
+        }
 
         Script EnableFileSharing {
             GetScript  = { }
