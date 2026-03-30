@@ -147,6 +147,11 @@ configuration ConfigSql
                 Write-Verbose -Verbose -Message "Removing SPNs '$spn' and '$($spn):1433' from computer $computerName..."
                 setspn -D "$spn" "$computerName"
                 setspn -D "$($spn):1433" "$computerName"
+
+                $targetObject = "$($using:SqlSvcUserName)"
+                Write-Verbose -Verbose -Message "Adding SPNs '$spn' and '$($spn):1433' to '$targetObject'..."
+                setspn -U -S "$spn" "$targetObject"
+                setspn -U -S "$($spn):1433" "$targetObject"
             }
             DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
             PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -167,21 +172,53 @@ configuration ConfigSql
                     # Create the ACE (Access Control Entry)
                     $ace = New-Object System.DirectoryServices.ActiveDirectoryAccessRule(
                         $Identity,
-                        [System.DirectoryServices.ActiveDirectoryRights] "ReadProperty, WriteProperty",
+                        [System.DirectoryServices.ActiveDirectoryRights]::WriteProperty,
                         [System.Security.AccessControl.AccessControlType]::Allow,
-                        [guid]$validateWriteSPNGuid
+                        [guid]$validateWriteSPNGuid,
+                        [System.DirectoryServices.ActiveDirectorySecurityInheritance]::None
                     )
                     # Get the AD object and apply the ACE
-                    $computerAD = [ADSI]$TargetObject
-                    $computerAD.psBase.ObjectSecurity.AddAccessRule($ace)
-                    $computerAD.psBase.CommitChanges()
+                    $TargetObject.psBase.ObjectSecurity.AddAccessRule($ace)
+                    $TargetObject.psBase.CommitChanges()
                 }
                 $targetObject = "LDAP://CN=$($using:ComputerName),CN=Computers,$($using:DomainLDAPPath)"
                 $identity = [System.Security.Principal.NTAccount] "$($using:SqlSvcUserName)"
                 Set-SpnPermission -TargetObject $targetObject -Identity $identity
             }
             GetScript            = { }
-            TestScript           = { return $false }
+            TestScript           = {
+                Function Test-SpnPermission {
+                    param(
+                        [ADSI]$TargetObject,
+                        [Security.Principal.IdentityReference]$Identity
+                    )
+                        
+                    Write-Verbose -Verbose -Message "Checking if delegated permission 'Validated write to service principal name' exists for '$Identity' on '$($TargetObject.Name)'"
+                    # GUID for "Validated write to service principal name"
+                    $validateWriteSPNGuid = [guid]"f3a64788-5f6a-11d2-a764-00905f58176d"
+                    
+                    # Get the current ACL
+                    $acl = $TargetObject.psBase.ObjectSecurity
+                    $accessRules = $acl.GetAccessRules($true, $false, [System.Security.Principal.NTAccount])
+                    
+                    # Check if the permission already exists
+                    foreach ($rule in $accessRules) {
+                        if ($rule.IdentityReference -eq $Identity -and
+                            $rule.ActiveDirectoryRights -eq [System.DirectoryServices.ActiveDirectoryRights]::Self -and
+                            $rule.ObjectType -eq $validateWriteSPNGuid -and
+                            $rule.AccessControlType -eq [System.Security.AccessControl.AccessControlType]::Allow) {
+                            Write-Verbose -Verbose -Message "Permission already exists"
+                            return $true
+                        }
+                    }
+                    
+                    Write-Verbose -Verbose -Message "Permission does not exist"
+                    return $false
+                }
+                $targetObject = "LDAP://CN=$($using:ComputerName),CN=Computers,$($using:DomainLDAPPath)"
+                $identity = [System.Security.Principal.NTAccount] "$($using:SqlSvcUserName)"
+                return Test-SpnPermission -TargetObject $targetObject -Identity $identity
+            }
             DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
             PsDscRunAsCredential = $DomainAdminCredsQualified
         }        
