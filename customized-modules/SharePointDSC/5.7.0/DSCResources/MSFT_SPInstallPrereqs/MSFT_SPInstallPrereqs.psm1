@@ -1214,6 +1214,30 @@ function Set-TargetResource
                 -Source $MyInvocation.MyCommand.Source
             $global:DSCMachineStatus = 1
         }
+        -1
+        {
+            #YVAND
+            <#
+2026-03-20 14:53:05 - Installing MSVCRT 14.2, Visual C++ Redistributable Package for Visual Studio 2015-2019 (version 14.29.30133.0 or higher).
+2026-03-20 14:53:05 - MSVCRT142.exe local install path is NULL. Try to download from FWLink.
+2026-03-20 14:53:05 - Beginning download of Visual C++ Redistributable Package for Visual Studio 2015-2019
+2026-03-20 14:53:05 - https://go.microsoft.com/fwlink/?linkid=2130438
+2026-03-20 14:53:33 - Error: InternetOpenUrl failed (0X80072F78=-2147012744)
+2026-03-20 14:53:33 - https://go.microsoft.com/fwlink/?linkid=2130438
+2026-03-20 14:53:33 - Error: Download failed (0)
+2026-03-20 14:53:33 - Last return code (-1)
+            #>
+            # ExitCode -1 is when downloading a package failed, let's reboot and retry until it succeeds
+            $message = ("The prerequisite installer has failed with an error -1, " + `
+                    "(download of a package failed), reboot and retry.")
+            Write-Verbose -Message $message
+            Add-SPDscEvent -Message $message `
+                -EntryType 'Error' `
+                -EventID 100 `
+                -Source $MyInvocation.MyCommand.Source
+            #throw $message
+            $global:DSCMachineStatus = 1
+        }
         default
         {
             $message = ("The prerequisite installer ran with the following unknown " + `

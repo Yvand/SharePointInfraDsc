@@ -3,18 +3,13 @@ permissions:
   contents: write
 on:
   workflow_dispatch:
-    # inputs:
-    #   dsc_folder:
-    #     description: 'Name of the folder containing the DSC files to build archives for.'
-    #     required: true
-    #     default: 'SharePoint.Full'
   push: 
     #branches: [main]
     tags:
       - "releases/*"
 
 env:
-  dsc_folder: "SharePoint.Full"
+  dsc_folder: "src"
   artifact_name: "dsc-archives"
   vm_name: ""
 
@@ -34,51 +29,26 @@ jobs:
       #     path: "~/.local/share/powershell/Modules"
       #     key: ${{ runner.os }}-mandatory-modules
       
-      - name: Install mandatory modules
+      - name: Setup PowerShell
         #if: steps.cacher.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
           Install-Module Az.Compute #, PSDesiredStateConfiguration
 
-      - name: Install dsc modules
+      - name: Install DSC modules
         shell: powershell
         env:
-          scripts_folder: "scripts"
-        run: |
-          Write-Host "Get DSC files in folder '${{ env.dsc_folder }}'"
-          $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-${{ env.vm_name }}*.ps1"
-          foreach ($dscFilePath in $dscFilesPath) {
-              $dscMissingModules = ${{ env.scripts_folder }}/Get-MissingDscModules.ps1 -dscFilePath "$($dscFilePath.FullName)"
-              Write-Host "Found $($dscMissingModules.Count) missing DSC module(s) for '$dscFilePath'."
-              foreach ($dscMissingModule in $dscMissingModules) {
-                Write-Host "Installing module '$($dscMissingModule.Name)' version '$($dscMissingModule.Version)'..."
-                Install-Module -Name $dscMissingModule.Name -RequiredVersion $dscMissingModule.Version -Scope AllUsers
-              }
-          }
-
-      - name: Replace customized modules
-        shell: powershell
-        env:
-          customModulesFolder: "customized-modules"
-        run: |
-          $modulesLocation = "$($Env:ProgramFiles)\WindowsPowerShell\Modules"
-          $customModulesPath = Get-ChildItem "${{ env.customModulesFolder }}" -Directory
-          foreach ($customModulePath in $customModulesPath) {
-            Write-Host "Replacing module '$($customModulePath.BaseName)' with its customized version..."
-            Move-Item -Path $customModulePath.FullName -Destination $modulesLocation -Force
-          }
+          scripts_folder: "setup"
+        run: ${{ env.scripts_folder }}/Install-Modules.ps1 -repoPath "${{ github.workspace }}" -vmName "${{ env.vm_name }}" -copyCustomizedModules $true
 
       - name: Build DSC archives
         shell: powershell
         env:
-          scripts_folder: "scripts"
+          scripts_folder: "setup"
         run: |
-          $dscFilesPath = Get-ChildItem "${{ env.dsc_folder }}" -File -Filter "dsc-${{ env.vm_name }}*.ps1"
-          foreach ($dscFilePath in $dscFilesPath) {
-              Write-Host "Creating DSC archive for '$($dscFilePath.BaseName)'."
-              ${{ env.scripts_folder }}/New-DscArchive.ps1 -vmName "$($dscFilePath.BaseName)" -dscFolderPath "${{ env.dsc_folder }}"
-          }
+          Remove-Item "${{ env.dsc_folder }}/*.zip" -ErrorAction SilentlyContinue
+          ${{ env.scripts_folder }}/New-DscArchive.ps1 -vmName "${{ env.vm_name }}" -dscFolderPath "${{ env.dsc_folder }}"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -97,22 +67,24 @@ jobs:
         with:
           name: ${{ env.artifact_name }}
 
-      # example input (github.ref_name):          "releases/SharePoint.Full-v1.0"
-      # example output (config_name_and_version): "SharePoint.Full-v1.0"
+      # example input (github.ref_name):  "releases/v2.0"
+      # example output (release_version): "v2.0"
       - name: Extract version number from git tag name
         id: splittag
         env:
           git_tag: ${{ github.ref_name }}
-        run: echo "config_name_and_version=`echo ${git_tag:9}`" >> $GITHUB_OUTPUT
+        run: echo "release_version=`echo ${git_tag:9}`" >> $GITHUB_OUTPUT
+      
+      - run: echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
 
       - run: |
-          echo "${{ steps.splittag.outputs.config_name_and_version }}" 
+          echo "${{ steps.splittag.outputs.release_version }}" 
           ls -alh .
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          name: '${{ steps.splittag.outputs.config_name_and_version }}'
+          name: '${{ github.event.repository.name }} - ${{ steps.splittag.outputs.release_version }}'
           files: |
             *.ps1
             *.zip
