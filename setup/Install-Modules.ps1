@@ -3,7 +3,7 @@
 param(
     [string] $repoPath,
     [string] $vmName,
-    [bool] $copyCustomizedModules = $false
+    [int] $copyCustomizedModules = 0
 )
 
 <# INIT
