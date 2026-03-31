@@ -29,6 +29,9 @@
   - **BREAKING CHANGE**: Added parameter `ConfigurationLevel`: Admin can now choose how much SharePoint configuration is performed
   - Other breaking changes and multiple optimizations.
 
+- DSC for SharePoint Legacy main and frontend
+  - Made the minimum changes necessary to keep them working, but no investment was made to improve them
+
 ## [1.0.0] - 2026-03-16
 
 - Initial release in this dedicated repository. The DSC configurations themselves have been developed for a very long time in https://github.com/Yvand/AzureRM-Templates.

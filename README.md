@@ -1,10 +1,11 @@
 # SharePointInfraDsc
 
-DSC configuration files for all the virtual machines required to run a SharePoint server farm
+DSC configuration files for all the virtual machines required to run a SharePoint server farm.  
+This project is used by [this Terraform module](https://github.com/Yvand/terraform-azurerm-sharepoint) and [this Bicep template](https://learn.microsoft.com/en-us/samples/azure/azure-quickstart-templates/sharepoint-adfs/).  
+For a very long time the DSC configuration files were mixed with the Bicep template's code, but considering their increasing complexity, criticity, and use by several other projects, it became necessary to move them in this dedicated repository.
 
+<!-- 
 ## Configuration details
-
-Extensive configuration with many SharePoint and AD features configured:
 
 ### DC
 
@@ -27,4 +28,4 @@ Extensive configuration with many SharePoint and AD features configured:
 #### About SharePoint legacy (2019 / 2016)
 
 - The HTTPS site certificate is set in IIS manually.
-- Federated authentication with ADFS is configured using SAML 1.1.
+- Federated authentication with ADFS is configured using SAML 1.1. -->
