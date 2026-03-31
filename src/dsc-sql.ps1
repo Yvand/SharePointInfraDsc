@@ -134,6 +134,7 @@ configuration ConfigSql
         }
 
         # Allow SQL Server to automatically register the SPN when its service starts
+        # Doc: https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/register-a-service-principal-name-for-kerberos-connections?view=sql-server-ver17#automatic-spn-registration
         Script GrantWriteSpnPermissionToSqlSvcOnSQLMachine {
             SetScript            =
             {
