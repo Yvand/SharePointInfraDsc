@@ -16,7 +16,7 @@ $urls = @(
 )
 foreach ($url in $urls) {
    $uri = New-Object Uri($url)
-   Invoke-WebRequest -Uri $uri -OutFile $uri.Segments[-1]
+   Invoke-WebRequest -UseBasicParsing -Uri $uri -OutFile $uri.Segments[-1]
    Write-Host -ForegroundColor Blue "Applying config in '$($uri.Segments[-1])'..."
    winget configure --file $uri.Segments[-1] --accept-configuration-agreements
 }

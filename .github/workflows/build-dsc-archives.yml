@@ -84,7 +84,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          name: '${{ github.event.repository.name }} - ${{ steps.splittag.outputs.release_version }}'
+          name: '${{ github.event.repository.name }}-${{ steps.splittag.outputs.release_version }}'
           files: |
             *.ps1
             *.zip
