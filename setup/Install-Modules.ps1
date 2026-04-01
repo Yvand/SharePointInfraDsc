@@ -1,7 +1,8 @@
 #Requires -PSEdition Desktop #reason: https://github.com/dsccommunity/DnsServerDsc/issues/264 / https://github.com/dsccommunity/DnsServerDsc/issues/268
+#Requires -RunAsAdministrator #reason: Install-Module with -Scope AllUsers requires admin privileges
 
 param(
-    [string] $repoPath,
+    [string] $localProjectPath,
     [string] $vmName,
     [bool] $copyCustomizedModules = $false
 )
@@ -12,9 +13,9 @@ Set-PSRepository PSGallery -InstallationPolicy Trusted
 Install-Module Az.Compute -Scope AllUsers
 #>
 
-$dscFolderPath = Join-Path -Path $repoPath -ChildPath "src"
-$scritpsFolderPath = Join-Path -Path $repoPath -ChildPath "setup"
-$customizedModulesPath = Join-Path -Path $repoPath -ChildPath "customized-modules"
+$dscFolderPath = Join-Path -Path $localProjectPath -ChildPath "src"
+$scritpsFolderPath = Join-Path -Path $localProjectPath -ChildPath "setup"
+$customizedModulesPath = Join-Path -Path $localProjectPath -ChildPath "customized-modules"
 
 Write-Host "Get DSC files in folder '$dscFolderPath'" -ForegroundColor Cyan
 $dscFilesPath = Get-ChildItem "$dscFolderPath" -File -Filter "dsc-$vmName*.ps1"

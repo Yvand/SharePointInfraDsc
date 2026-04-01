@@ -45,7 +45,7 @@
             "type": "shell",
             "command": "${workspaceFolder}${/}setup${/}Install-Modules.ps1",
             "args": [
-                "-repoPath",
+                "-localProjectPath",
                 "'${workspaceFolder}'",
                 "-vmName",
                 "*",

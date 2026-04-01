@@ -40,7 +40,7 @@ jobs:
         shell: powershell
         env:
           scripts_folder: "setup"
-        run: ${{ env.scripts_folder }}/Install-Modules.ps1 -repoPath "${{ github.workspace }}" -vmName "${{ env.vm_name }}" -copyCustomizedModules $true
+        run: ${{ env.scripts_folder }}/Install-Modules.ps1 -localProjectPath "${{ github.workspace }}" -vmName "${{ env.vm_name }}" -copyCustomizedModules $true
 
       - name: Build DSC archives
         shell: powershell
