@@ -4,6 +4,12 @@ DSC configuration files for all the machines required to run a SharePoint server
 This project is used by [this Terraform module](https://github.com/Yvand/terraform-azurerm-sharepoint) and [this Bicep template](https://learn.microsoft.com/en-us/samples/azure/azure-quickstart-templates/sharepoint-adfs/).  
 For a very long time, the DSC code was mixed with the Bicep template's code, but considering its increasing complexity, criticity, and use by several other projects, it became necessary to move it in this dedicated repository.
 
+## Main objectives
+
+- Provide the administrators with a fully configured SharePoint farm, able to cover many scenarios that are very time-consuming to configure manually.
+- Truly ready-to-use virtual machines, where everything a SharePoint administrator needs is already there and up-to-date.
+- A state-of-the-art configuration, that showcases how a well-configured SharePoint farm works.
+
 <!-- 
 ## Configuration details
 
