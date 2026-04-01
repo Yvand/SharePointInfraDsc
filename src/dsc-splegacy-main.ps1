@@ -1371,7 +1371,7 @@ configuration ConfigSpMain
                         # -UseDefaultCredentials: Does NTLM authN
                         # -UseBasicParsing: Avoid exception because IE was not first launched yet
                         # Expected traffic is HTTP 401/302/200, and $Response.StatusCode is 200
-                        Invoke-WebRequest -Uri $uri -UseDefaultCredentials -TimeoutSec 40 -UseBasicParsing -ErrorAction SilentlyContinue
+                        Invoke-WebRequest -UseBasicParsing -Uri $uri -UseDefaultCredentials -TimeoutSec 40 -UseBasicParsing -ErrorAction SilentlyContinue
                         Write-Verbose -Verbose -Message "Connected successfully to $uri"
                     }
                     catch [System.Exception] {
@@ -1576,7 +1576,7 @@ function Get-LatestGitHubRelease
     # Force protocol TLS 1.2 in Invoke-WebRequest to fix TLS/SSL connection error with GitHub in Windows Server 2012 R2, as documented in https://docs.microsoft.com/en-us/azure/azure-stack/azure-stack-update-1802
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    $latestRelease = Invoke-WebRequest "https://api.github.com/repos/$Repo/releases/$ReleaseId" -Headers @{"Accept"="application/json"} -UseBasicParsing
+    $latestRelease = Invoke-WebRequest -UseBasicParsing "https://api.github.com/repos/$Repo/releases/$ReleaseId" -Headers @{"Accept"="application/json"} -UseBasicParsing
     $json = $latestRelease.Content | ConvertFrom-Json
     $asset = $json.assets | Where-Object{$_.name -like $Artifact}
     $assetUrl = $asset.browser_download_url
