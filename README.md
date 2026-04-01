@@ -1,7 +1,7 @@
 # SharePointInfraDsc
 
 DSC configuration files for all the machines required to run a SharePoint server farm.  
-This project is used by [this Terraform module](https://github.com/Yvand/terraform-azurerm-sharepoint) and [this Bicep template](https://learn.microsoft.com/en-us/samples/azure/azure-quickstart-templates/sharepoint-adfs/).  
+This project is used by [this Terraform module](https://registry.terraform.io/modules/Yvand/sharepoint/azurerm/latest) and [this Bicep template](https://learn.microsoft.com/en-us/samples/azure/azure-quickstart-templates/sharepoint-adfs/).  
 For a very long time, the DSC code was mixed with the Bicep template's code, but considering its increasing complexity, criticity, and use by several other projects, it became necessary to move it in this dedicated repository.
 
 ## Main objectives
