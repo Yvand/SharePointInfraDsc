@@ -1576,7 +1576,7 @@ function Get-LatestGitHubRelease
     # Force protocol TLS 1.2 in Invoke-WebRequest to fix TLS/SSL connection error with GitHub in Windows Server 2012 R2, as documented in https://docs.microsoft.com/en-us/azure/azure-stack/azure-stack-update-1802
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    $latestRelease = Invoke-WebRequest -UseBasicParsing "https://api.github.com/repos/$Repo/releases/$ReleaseId" -Headers @{"Accept"="application/json"} -UseBasicParsing
+    $latestRelease = Invoke-WebRequest -UseBasicParsing "https://api.github.com/repos/$Repo/releases/$ReleaseId" -Headers @{"Accept"="application/json"}
     $json = $latestRelease.Content | ConvertFrom-Json
     $asset = $json.assets | Where-Object{$_.name -like $Artifact}
     $assetUrl = $asset.browser_download_url

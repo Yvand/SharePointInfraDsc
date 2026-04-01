@@ -2109,8 +2109,8 @@ function Get-LatestGitHubRelease {
         [string] $Artifact,
         [string] $ReleaseId
     )
-    
-    $latestRelease = Invoke-WebRequest -UseBasicParsing "https://api.github.com/repos/$Repo/releases/$ReleaseId" -Headers @{"Accept" = "application/json" } -UseBasicParsing
+
+    $latestRelease = Invoke-WebRequest -UseBasicParsing "https://api.github.com/repos/$Repo/releases/$ReleaseId" -Headers @{"Accept" = "application/json" }
     $json = $latestRelease.Content | ConvertFrom-Json
     $asset = $json.assets | Where-Object { $_.name -like $Artifact }
     $assetUrl = $asset.browser_download_url
