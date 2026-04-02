@@ -248,24 +248,21 @@
         WindowsFeature AddADFS {
             Name = "ADFS-Federation"; Ensure = "Present"; 
         }
-        WindowsFeature AddADDS {
-            Name = "AD-Domain-Services"; Ensure = "Present" 
-        }
-        WindowsFeature AddDNS {
-            Name = "DNS"; Ensure = "Present" 
-        }
-        WindowsFeature AddGroupPolicyPowerShellModule {
-            Name = "GPMC"; Ensure = "Present" 
-        }
+        # WindowsFeature AddADDS {
+        #     Name = "AD-Domain-Services"; Ensure = "Present" 
+        # }
+        # WindowsFeature AddDNS {
+        #     Name = "DNS"; Ensure = "Present" 
+        # }
 
         DnsServerAddress SetDNS {
             Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4' 
         }
 
-        PendingReboot CheckRebootBeforeCreateADForest {
-            Name      = "CheckRebootBeforeCreateADForest"
-            DependsOn = "[WindowsFeature]AddGroupPolicyPowerShellModule"
-        }
+        # PendingReboot CheckRebootBeforeCreateADForest {
+        #     Name      = "CheckRebootBeforeCreateADForest"
+        #     DependsOn = "[WindowsFeature]AddGroupPolicyPowerShellModule"
+        # }
 
         ADDomain CreateADForest {
             DomainName                    = $DomainFQDN
@@ -274,7 +271,7 @@
             DatabasePath                  = "C:\NTDS"
             LogPath                       = "C:\NTDS"
             SysvolPath                    = "C:\SYSVOL"
-            DependsOn                     = "[DnsServerAddress]SetDNS", "[WindowsFeature]AddADDS"
+            DependsOn                     = "[DnsServerAddress]SetDNS" #, "[WindowsFeature]AddADDS"
         }
 
         PendingReboot RebootOnSignalFromCreateADForest {
@@ -289,65 +286,6 @@
             Credential              = $DomainCredsNetbios
             WaitForValidCredentials = $true
             DependsOn               = "[PendingReboot]RebootOnSignalFromCreateADForest"
-        }
-
-        if ($true -eq $ApplyBrowserPolicies) {
-            # Set browser policies asap, so that computers that join domain get them immediately, and  it runs very quickly (<5 secs)
-            # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
-            Script ConfigureEdgePolicies {
-                SetScript  = {
-                    $domain = Get-ADDomain -Current LocalComputer
-                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge"
-                    $policies = $using:EdgePolicies
-                    $gpo = New-GPO -name "Edge_browser"
-                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
-
-                    foreach ($policy in $policies) {
-                        $key = $registryKey
-                        if ($true -eq $policy.policyCanBeRecommended) { $key += "\Recommended" }
-                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
-                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
-                    }
-                }
-                GetScript  = { return @{ "Result" = "false" } }
-                TestScript = {
-                    $policy = Get-GPO -name "Edge_browser" -ErrorAction SilentlyContinue
-                    if ($null -eq $policy) {
-                        return $false
-                    }
-                    else {
-                        return $true
-                    }
-                }
-            }
-
-            # Chrome - https://chromeenterprise.google/intl/en_us/policies/
-            Script ConfigureChromePolicies {
-                SetScript  = {
-                    $domain = Get-ADDomain -Current LocalComputer
-                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome"
-                    $policies = $using:ChromePolicies
-                    $gpo = New-GPO -name "Chrome_browser"
-                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
-
-                    foreach ($policy in $policies) {
-                        $key = $registryKey
-                        if ($true -eq $policy.policyCanBeRecommended) { $key += "\Recommended" }
-                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
-                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
-                    }
-                }
-                GetScript  = { return @{ "Result" = "false" } }
-                TestScript = {
-                    $policy = Get-GPO -name "Chrome_browser" -ErrorAction SilentlyContinue
-                    if ($null -eq $policy) {
-                        return $false
-                    }
-                    else {
-                        return $true
-                    }
-                }
-            }
         }
         
         #**********************************************************
@@ -653,17 +591,68 @@
             DependsOn            = "[AdfsNativeClientApplication]OidcNativeApp", "[AdfsWebApiApplication]OidcWebApiApp"
         }
 
-        # WindowsFeature AddADTools {
-        #     Name = "RSAT-AD-Tools"; Ensure = "Present"; 
-        # }
-        # WindowsFeature AddDnsTools {
-        #     Name = "RSAT-DNS-Server"; Ensure = "Present"; 
-        # }
-        # WindowsFeature AddADLDS {
-        #     Name = "RSAT-ADLDS"; Ensure = "Present"; 
-        # }
-        WindowsFeature AddADCSManagementTools {
-            Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
+        if ($true -eq $ApplyBrowserPolicies) {
+            WindowsFeature AddGroupPolicyPowerShellModule {
+                Name = "GPMC"; Ensure = "Present" 
+            }
+            # Set browser policies asap, so that computers that join domain get them immediately, and  it runs very quickly (<5 secs)
+            # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
+            Script ConfigureEdgePolicies {
+                SetScript  = {
+                    $domain = Get-ADDomain -Current LocalComputer
+                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge"
+                    $policies = $using:EdgePolicies
+                    $gpo = New-GPO -name "Edge_browser"
+                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
+
+                    foreach ($policy in $policies) {
+                        $key = $registryKey
+                        if ($true -eq $policy.policyCanBeRecommended) { $key += "\Recommended" }
+                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
+                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
+                    }
+                }
+                GetScript  = { return @{ "Result" = "false" } }
+                TestScript = {
+                    $policy = Get-GPO -name "Edge_browser" -ErrorAction SilentlyContinue
+                    if ($null -eq $policy) {
+                        return $false
+                    }
+                    else {
+                        return $true
+                    }
+                }
+                DependsOn = "[WindowsFeature]AddGroupPolicyPowerShellModule"
+            }
+
+            # Chrome - https://chromeenterprise.google/intl/en_us/policies/
+            Script ConfigureChromePolicies {
+                SetScript  = {
+                    $domain = Get-ADDomain -Current LocalComputer
+                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome"
+                    $policies = $using:ChromePolicies
+                    $gpo = New-GPO -name "Chrome_browser"
+                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
+
+                    foreach ($policy in $policies) {
+                        $key = $registryKey
+                        if ($true -eq $policy.policyCanBeRecommended) { $key += "\Recommended" }
+                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
+                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
+                    }
+                }
+                GetScript  = { return @{ "Result" = "false" } }
+                TestScript = {
+                    $policy = Get-GPO -name "Chrome_browser" -ErrorAction SilentlyContinue
+                    if ($null -eq $policy) {
+                        return $false
+                    }
+                    else {
+                        return $true
+                    }
+                }
+                DependsOn = "[WindowsFeature]AddGroupPolicyPowerShellModule"
+            }
         }
 
         Script EnableFileSharing {
@@ -726,6 +715,19 @@
                 Ensure               = "Present"
                 DependsOn            = "[ADOrganizationalUnit]AdditionalUsersOU"
             }
+        }
+
+        # WindowsFeature AddADTools {
+        #     Name = "RSAT-AD-Tools"; Ensure = "Present"; 
+        # }
+        # WindowsFeature AddDnsTools {
+        #     Name = "RSAT-DNS-Server"; Ensure = "Present"; 
+        # }
+        # WindowsFeature AddADLDS {
+        #     Name = "RSAT-ADLDS"; Ensure = "Present"; 
+        # }
+        WindowsFeature AddADCSManagementTools {
+            Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
         }
     }
 }
