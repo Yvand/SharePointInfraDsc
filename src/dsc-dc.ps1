@@ -577,10 +577,6 @@
         }
 
         if ($true -eq $ApplyBrowserPolicies) {
-            WindowsFeature AddGroupPolicyPowerShellModule {
-                Name = "GPMC"; Ensure = "Present" 
-            }
-
             # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
             Script ConfigureEdgePolicies {
                 SetScript  = {
@@ -607,7 +603,7 @@
                         return $true
                     }
                 }
-                DependsOn = "[WindowsFeature]AddGroupPolicyPowerShellModule"
+                DependsOn = "[WaitForADDomain]WaitForDCReady"
             }
 
             # Chrome - https://chromeenterprise.google/intl/en_us/policies/
@@ -636,7 +632,7 @@
                         return $true
                     }
                 }
-                DependsOn = "[WindowsFeature]AddGroupPolicyPowerShellModule"
+                DependsOn = "[WaitForADDomain]WaitForDCReady"
             }
         }
 
