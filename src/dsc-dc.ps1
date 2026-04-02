@@ -14,11 +14,11 @@
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds
     )
 
-    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.0
+    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.1
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.1.0
     Import-DscResource -ModuleName ActiveDirectoryCSDsc -ModuleVersion 5.0.0
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 6.0.0
-    Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.1
+    Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.3
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
     Import-DscResource -ModuleName AdfsDsc -ModuleVersion 1.4.0
 
@@ -233,13 +233,6 @@
             RebootNodeIfNeeded = $true
         }
 
-        # Fix emerging issue "WinRM cannot process the request. The following error with errorcode 0x80090350" while Windows Azure Guest Agent service initiates using https://stackoverflow.com/a/74015954/8669078
-        Script SetWindowsAzureGuestAgentDepndencyOnDNS {
-            GetScript  = { }
-            TestScript = { return $false }
-            SetScript  = { Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\WindowsAzureGuestAgent' -Name "DependOnService" -Type MultiString -Value "DNS" }
-        }
-
         #**********************************************************
         # Create AD domain
         #**********************************************************
@@ -251,20 +244,9 @@
         WindowsFeature AddADDS {
             Name = "AD-Domain-Services"; Ensure = "Present" 
         }
-        WindowsFeature AddDNS {
-            Name = "DNS"; Ensure = "Present" 
-        }
-        WindowsFeature AddGroupPolicyPowerShellModule {
-            Name = "GPMC"; Ensure = "Present" 
-        }
 
         DnsServerAddress SetDNS {
             Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4' 
-        }
-
-        PendingReboot CheckRebootBeforeCreateADForest {
-            Name      = "CheckRebootBeforeCreateADForest"
-            DependsOn = "[WindowsFeature]AddGroupPolicyPowerShellModule"
         }
 
         ADDomain CreateADForest {
@@ -289,65 +271,6 @@
             Credential              = $DomainCredsNetbios
             WaitForValidCredentials = $true
             DependsOn               = "[PendingReboot]RebootOnSignalFromCreateADForest"
-        }
-
-        if ($true -eq $ApplyBrowserPolicies) {
-            # Set browser policies asap, so that computers that join domain get them immediately, and  it runs very quickly (<5 secs)
-            # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
-            Script ConfigureEdgePolicies {
-                SetScript  = {
-                    $domain = Get-ADDomain -Current LocalComputer
-                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge"
-                    $policies = $using:EdgePolicies
-                    $gpo = New-GPO -name "Edge_browser"
-                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
-
-                    foreach ($policy in $policies) {
-                        $key = $registryKey
-                        if ($true -eq $policy.policyCanBeRecommended) { $key += "\Recommended" }
-                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
-                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
-                    }
-                }
-                GetScript  = { return @{ "Result" = "false" } }
-                TestScript = {
-                    $policy = Get-GPO -name "Edge_browser" -ErrorAction SilentlyContinue
-                    if ($null -eq $policy) {
-                        return $false
-                    }
-                    else {
-                        return $true
-                    }
-                }
-            }
-
-            # Chrome - https://chromeenterprise.google/intl/en_us/policies/
-            Script ConfigureChromePolicies {
-                SetScript  = {
-                    $domain = Get-ADDomain -Current LocalComputer
-                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome"
-                    $policies = $using:ChromePolicies
-                    $gpo = New-GPO -name "Chrome_browser"
-                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
-
-                    foreach ($policy in $policies) {
-                        $key = $registryKey
-                        if ($true -eq $policy.policyCanBeRecommended) { $key += "\Recommended" }
-                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
-                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
-                    }
-                }
-                GetScript  = { return @{ "Result" = "false" } }
-                TestScript = {
-                    $policy = Get-GPO -name "Chrome_browser" -ErrorAction SilentlyContinue
-                    if ($null -eq $policy) {
-                        return $false
-                    }
-                    else {
-                        return $true
-                    }
-                }
-            }
         }
         
         #**********************************************************
@@ -653,17 +576,64 @@
             DependsOn            = "[AdfsNativeClientApplication]OidcNativeApp", "[AdfsWebApiApplication]OidcWebApiApp"
         }
 
-        # WindowsFeature AddADTools {
-        #     Name = "RSAT-AD-Tools"; Ensure = "Present"; 
-        # }
-        # WindowsFeature AddDnsTools {
-        #     Name = "RSAT-DNS-Server"; Ensure = "Present"; 
-        # }
-        # WindowsFeature AddADLDS {
-        #     Name = "RSAT-ADLDS"; Ensure = "Present"; 
-        # }
-        WindowsFeature AddADCSManagementTools {
-            Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
+        if ($true -eq $ApplyBrowserPolicies) {
+            # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
+            Script ConfigureEdgePolicies {
+                SetScript  = {
+                    $domain = Get-ADDomain -Current LocalComputer
+                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge"
+                    $policies = $using:EdgePolicies
+                    $gpo = New-GPO -name "Edge_browser"
+                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
+
+                    foreach ($policy in $policies) {
+                        $key = $registryKey
+                        if ($true -eq $policy.policyCanBeRecommended) { $key += "\Recommended" }
+                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
+                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
+                    }
+                }
+                GetScript  = { return @{ "Result" = "false" } }
+                TestScript = {
+                    $policy = Get-GPO -name "Edge_browser" -ErrorAction SilentlyContinue
+                    if ($null -eq $policy) {
+                        return $false
+                    }
+                    else {
+                        return $true
+                    }
+                }
+                DependsOn = "[WaitForADDomain]WaitForDCReady"
+            }
+
+            # Chrome - https://chromeenterprise.google/intl/en_us/policies/
+            Script ConfigureChromePolicies {
+                SetScript  = {
+                    $domain = Get-ADDomain -Current LocalComputer
+                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome"
+                    $policies = $using:ChromePolicies
+                    $gpo = New-GPO -name "Chrome_browser"
+                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
+
+                    foreach ($policy in $policies) {
+                        $key = $registryKey
+                        if ($true -eq $policy.policyCanBeRecommended) { $key += "\Recommended" }
+                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
+                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
+                    }
+                }
+                GetScript  = { return @{ "Result" = "false" } }
+                TestScript = {
+                    $policy = Get-GPO -name "Chrome_browser" -ErrorAction SilentlyContinue
+                    if ($null -eq $policy) {
+                        return $false
+                    }
+                    else {
+                        return $true
+                    }
+                }
+                DependsOn = "[WaitForADDomain]WaitForDCReady"
+            }
         }
 
         Script EnableFileSharing {
@@ -727,6 +697,19 @@
                 DependsOn            = "[ADOrganizationalUnit]AdditionalUsersOU"
             }
         }
+
+        # WindowsFeature AddADTools {
+        #     Name = "RSAT-AD-Tools"; Ensure = "Present"; 
+        # }
+        # WindowsFeature AddDnsTools {
+        #     Name = "RSAT-DNS-Server"; Ensure = "Present"; 
+        # }
+        # WindowsFeature AddADLDS {
+        #     Name = "RSAT-ADLDS"; Ensure = "Present"; 
+        # }
+        WindowsFeature AddADCSManagementTools {
+            Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
+        }
     }
 }
 
@@ -754,19 +737,6 @@ function Get-NetBIOSName {
 }
 
 <#
-# Azure DSC extension logging: C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.80.0.0
-# Azure DSC extension configuration: C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.0\DSCWork
-
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-Install-Module -Name xAdcsDeployment
-Install-Module -Name xCertificate
-Install-Module -Name xPSDesiredStateConfiguration
-Install-Module -Name xCredSSP
-Install-Module -Name xWebAdministration
-Install-Module -Name xDisk
-Install-Module -Name xNetworking
-
 help ConfigDc
 
 $password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -Force
