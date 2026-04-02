@@ -1,0 +1,523 @@
+.NAME
+    SqlDatabase
+
+.SYNOPSIS
+    The SqlDatabase DSC resource is used to create, modify, or remove
+    databases on a SQL Server instance.
+
+.DESCRIPTION
+    The SqlDatabase DSC resource is used to create, modify, or remove
+    databases on a SQL Server instance.
+
+    The built-in parameter PSDscRunAsCredential can be used to run the resource
+    as another user. The resource will then authenticate to the SQL Server
+    instance as that user. It also possible to instead use impersonation by the
+    parameter Credential.
+
+    ## Requirements
+
+    * Target machine must be running Windows Server 2012 or later.
+    * Target machine must be running SQL Server Database Engine 2012 or later.
+    * Target machine must have access to the SQLPS PowerShell module or the SqlServer
+      PowerShell module.
+
+    ## Known issues
+
+    All issues are not listed here, see https://github.com/dsccommunity/SqlServerDsc/issues?q=is%3Aissue+is%3Aopen+in%3Atitle+SqlDatabase.
+
+    ### Property Reasons does not work with PSDscRunAsCredential
+
+    When using the built-in parameter PSDscRunAsCredential the read-only
+    property Reasons will return empty values for the properties Code
+    and Phrase. The built-in property PSDscRunAsCredential does not work
+    together with class-based resources that using advanced type like the parameter
+    Reasons have.
+
+    ### Using Credential property
+
+    SQL Authentication and Group Managed Service Accounts is not supported as
+    impersonation credentials. Currently only Windows Integrated Security is
+    supported to use as credentials.
+
+    For Windows Authentication the username must either be provided with the User
+    Principal Name (UPN), e.g. username@domain.local or if using non-domain
+    (for example a local Windows Server account) account the username must be
+    provided without the NetBIOS name, e.g. username. Using the NetBIOS name, e.g
+    using the format DOMAIN\username will not work.
+
+    See more information in https://github.com/dsccommunity/SqlServerDsc/wiki/CredentialOverview.
+
+    ### Read-only properties after creation
+
+    The following properties cannot be modified after database creation and can
+    only be set during creation:
+
+    - CatalogCollation: The catalog-level collation used for metadata and
+      temporary objects.
+    - IsLedger: Ledger status cannot be changed after database is created.
+
+.PARAMETER Name
+    Key - System.String
+    The name of the database.
+
+.PARAMETER Ensure
+    Write - Ensure
+    Specifies if the database should be present or absent. If set to Present
+    the database will be added if it does not exist, or updated if the database
+    exist. If Absent then the database will be removed from the server.
+    Defaults to Present.
+
+.PARAMETER Collation
+    Write - System.String
+    Specifies the default collation for the database.
+
+.PARAMETER CompatibilityLevel
+    Write - System.String
+    Allowed values: Version80, Version90, Version100, Version110, Version120, Version130, Version140, Version150, Version160, Version170
+    Specifies the database compatibility level.
+
+.PARAMETER RecoveryModel
+    Write - System.String
+    Allowed values: Simple, Full, BulkLogged
+    Specifies the database recovery model.
+
+.PARAMETER OwnerName
+    Write - System.String
+    Specifies the name of the login that should be the owner of the database.
+
+.PARAMETER SnapshotIsolation
+    Write - Nullable[System.Boolean]
+    Specifies whether snapshot isolation should be enabled for the database.
+
+.PARAMETER CatalogCollation
+    Write - System.String
+    Allowed values: DatabaseDefault, SqlLatin1GeneralCp1CiAs
+    Specifies the collation type for the system catalog. Can only be set during
+    database creation. Requires SQL Server 2019 or later.
+
+.PARAMETER IsLedger
+    Write - Nullable[System.Boolean]
+    Specifies whether to create a ledger database. Can only be set during
+    database creation. Requires SQL Server 2022 or later.
+
+.PARAMETER AcceleratedRecoveryEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether Accelerated Database Recovery (ADR) is enabled. Requires
+    SQL Server 2019 or later.
+
+.PARAMETER AnsiNullDefault
+    Write - Nullable[System.Boolean]
+    Specifies whether new columns allow NULL by default unless explicitly
+    specified.
+
+.PARAMETER AnsiNullsEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether comparisons to NULL follow ANSI SQL behavior.
+
+.PARAMETER AnsiPaddingEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether padding for variable-length columns follows ANSI rules.
+
+.PARAMETER AnsiWarningsEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether ANSI warnings are generated for certain conditions.
+
+.PARAMETER ArithmeticAbortEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether a query is terminated when an overflow or divide-by-zero
+    error occurs.
+
+.PARAMETER AutoClose
+    Write - Nullable[System.Boolean]
+    Specifies whether the database closes after the last user exits.
+
+.PARAMETER AutoCreateIncrementalStatisticsEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether creation of incremental statistics on partitioned tables
+    is allowed.
+
+.PARAMETER AutoCreateStatisticsEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether single-column statistics are automatically created for
+    query optimization.
+
+.PARAMETER AutoShrink
+    Write - Nullable[System.Boolean]
+    Specifies whether the database automatically shrinks files when free space
+    is detected.
+
+.PARAMETER AutoUpdateStatisticsAsync
+    Write - Nullable[System.Boolean]
+    Specifies whether statistics are updated asynchronously.
+
+.PARAMETER AutoUpdateStatisticsEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether statistics are automatically updated when out-of-date.
+
+.PARAMETER BrokerEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether Service Broker is enabled for the database.
+
+.PARAMETER ChangeTrackingAutoCleanUp
+    Write - Nullable[System.Boolean]
+    Specifies whether automatic cleanup of change tracking information is
+    enabled.
+
+.PARAMETER ChangeTrackingEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether change tracking is enabled for the database.
+
+.PARAMETER CloseCursorsOnCommitEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether open cursors are closed when a transaction is committed.
+
+.PARAMETER ConcatenateNullYieldsNull
+    Write - Nullable[System.Boolean]
+    Specifies whether concatenation with NULL results in NULL.
+
+.PARAMETER DatabaseOwnershipChaining
+    Write - Nullable[System.Boolean]
+    Specifies whether ownership chaining across objects within the database is
+    enabled.
+
+.PARAMETER DataRetentionEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether SQL Server data retention policy is enabled. Requires SQL
+    Server 2017 or later.
+
+.PARAMETER DateCorrelationOptimization
+    Write - Nullable[System.Boolean]
+    Specifies whether date correlation optimization is enabled.
+
+.PARAMETER EncryptionEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether Transparent Data Encryption (TDE) is enabled.
+
+.PARAMETER HonorBrokerPriority
+    Write - Nullable[System.Boolean]
+    Specifies whether honoring Service Broker conversation priority is enabled.
+
+.PARAMETER IsFullTextEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether full-text search is enabled.
+
+.PARAMETER IsParameterizationForced
+    Write - Nullable[System.Boolean]
+    Specifies whether forced parameterization is enabled.
+
+.PARAMETER IsReadCommittedSnapshotOn
+    Write - Nullable[System.Boolean]
+    Specifies whether READCOMMITTEDSNAPSHOT isolation is ON.
+
+.PARAMETER IsSqlDw
+    Write - Nullable[System.Boolean]
+    Specifies whether the database is a SQL Data Warehouse database.
+
+.PARAMETER IsVarDecimalStorageFormatEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether vardecimal compression is enabled.
+
+.PARAMETER LocalCursorsDefault
+    Write - Nullable[System.Boolean]
+    Specifies whether cursors are local by default instead of global.
+
+.PARAMETER NestedTriggersEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether triggers are allowed to fire other triggers.
+
+.PARAMETER NumericRoundAbortEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether an error is raised on loss of precision due to rounding.
+
+.PARAMETER QuotedIdentifiersEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether identifiers can be delimited by double quotes.
+
+.PARAMETER ReadOnly
+    Write - Nullable[System.Boolean]
+    Specifies whether the database is in read-only mode.
+
+.PARAMETER RecursiveTriggersEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether a trigger is allowed to fire itself recursively.
+
+.PARAMETER RemoteDataArchiveEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether Stretch Database (remote data archive) is enabled.
+
+.PARAMETER RemoteDataArchiveUseFederatedServiceAccount
+    Write - Nullable[System.Boolean]
+    Specifies whether to use federated service account for remote data archive.
+
+.PARAMETER TemporalHistoryRetentionEnabled
+    Write - Nullable[System.Boolean]
+    Specifies whether automatic cleanup of system-versioned temporal history is
+    enabled. Requires SQL Server 2017 or later.
+
+.PARAMETER TransformNoiseWords
+    Write - Nullable[System.Boolean]
+    Specifies how full-text noise word behavior is controlled during queries.
+
+.PARAMETER Trustworthy
+    Write - Nullable[System.Boolean]
+    Specifies whether implicit access to external resources by modules is
+    allowed.
+
+.PARAMETER ChangeTrackingRetentionPeriod
+    Write - Nullable[System.Int32]
+    Specifies the retention period value for change tracking information.
+
+.PARAMETER DefaultFullTextLanguage
+    Write - Nullable[System.Int32]
+    Specifies the LCID of the default full-text language.
+
+.PARAMETER DefaultLanguage
+    Write - Nullable[System.Int32]
+    Specifies the ID of the default language for the database.
+
+.PARAMETER MaxDop
+    Write - Nullable[System.Int32]
+    Specifies the MAXDOP database-scoped configuration for primary replicas.
+
+.PARAMETER MaxDopForSecondary
+    Write - Nullable[System.Int32]
+    Specifies the MAXDOP database-scoped configuration for secondary replicas.
+
+.PARAMETER MirroringRedoQueueMaxSize
+    Write - Nullable[System.Int32]
+    Specifies the redo queue maximum size for mirroring/AGs.
+
+.PARAMETER MirroringTimeout
+    Write - Nullable[System.Int32]
+    Specifies the timeout in seconds for mirroring sessions.
+
+.PARAMETER TargetRecoveryTime
+    Write - Nullable[System.Int32]
+    Specifies the target recovery time (seconds) for indirect checkpointing.
+
+.PARAMETER TwoDigitYearCutoff
+    Write - Nullable[System.Int32]
+    Specifies the two-digit year cutoff used for date conversion.
+
+.PARAMETER MaxSizeInBytes
+    Write - Nullable[System.Double]
+    Specifies the maximum size of the database in bytes.
+
+.PARAMETER FilestreamDirectoryName
+    Write - System.String
+    Specifies the directory name used for FILESTREAM data.
+
+.PARAMETER MirroringPartner
+    Write - System.String
+    Specifies the mirroring partner server name.
+
+.PARAMETER MirroringPartnerInstance
+    Write - System.String
+    Specifies the mirroring partner instance name.
+
+.PARAMETER MirroringWitness
+    Write - System.String
+    Specifies the mirroring witness server.
+
+.PARAMETER PersistentVersionStoreFileGroup
+    Write - System.String
+    Specifies the filegroup used for the Persistent Version Store (PVS).
+    Requires SQL Server 2019 or later.
+
+.PARAMETER PrimaryFilePath
+    Write - System.String
+    Specifies the path of the primary data files directory.
+
+.PARAMETER RemoteDataArchiveCredential
+    Write - System.String
+    Specifies the credential name for Stretch Database/remote data archive.
+
+.PARAMETER RemoteDataArchiveEndpoint
+    Write - System.String
+    Specifies the endpoint URL for remote data archive.
+
+.PARAMETER RemoteDataArchiveLinkedServer
+    Write - System.String
+    Specifies the linked server used by remote data archive.
+
+.PARAMETER RemoteDatabaseName
+    Write - System.String
+    Specifies the remote database name for remote data archive.
+
+.PARAMETER ChangeTrackingRetentionPeriodUnits
+    Write - System.String
+    Allowed values: None, Days, Hours, Minutes
+    Specifies the units for the retention period.
+
+.PARAMETER ContainmentType
+    Write - System.String
+    Allowed values: None, Partial
+    Specifies the containment level of the database.
+
+.PARAMETER DelayedDurability
+    Write - System.String
+    Allowed values: Disabled, Allowed, Forced
+    Specifies the delayed durability setting for the database.
+
+.PARAMETER FilestreamNonTransactedAccess
+    Write - System.String
+    Allowed values: Off, ReadOnly, Full
+    Specifies the FILESTREAM access level for non-transactional access.
+
+.PARAMETER LegacyCardinalityEstimation
+    Write - System.String
+    Allowed values: Off, On, Primary
+    Specifies the legacy cardinality estimator setting for the primary.
+
+.PARAMETER LegacyCardinalityEstimationForSecondary
+    Write - System.String
+    Allowed values: Off, On, Primary
+    Specifies the legacy cardinality estimator setting for secondary replicas.
+
+.PARAMETER MirroringSafetyLevel
+    Write - System.String
+    Allowed values: None, Unknown, Off, Full
+    Specifies the mirroring safety level.
+
+.PARAMETER PageVerify
+    Write - System.String
+    Allowed values: None, TornPageDetection, Checksum
+    Specifies the page verification setting.
+
+.PARAMETER ParameterSniffing
+    Write - System.String
+    Allowed values: Off, On, Primary
+    Specifies the parameter sniffing setting for the primary.
+
+.PARAMETER ParameterSniffingForSecondary
+    Write - System.String
+    Allowed values: Off, On, Primary
+    Specifies the parameter sniffing setting for secondary replicas.
+
+.PARAMETER QueryOptimizerHotfixes
+    Write - System.String
+    Allowed values: Off, On, Primary
+    Specifies the query optimizer hotfixes setting for the primary.
+
+.PARAMETER QueryOptimizerHotfixesForSecondary
+    Write - System.String
+    Allowed values: Off, On, Primary
+    Specifies the query optimizer hotfixes setting for secondary replicas.
+
+.PARAMETER UserAccess
+    Write - System.String
+    Allowed values: Multiple, Restricted, Single
+    Specifies the database user access mode.
+
+.EXAMPLE 1
+
+This example shows how to create a database with
+the database name equal to 'Contoso'.
+
+The second example shows how to create a database
+with a different collation.
+
+The third example shows how to create a database
+with a different compatibility level.
+
+The fourth example shows how to create a database
+with a different recovery model.
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName 'SqlServerDsc'
+
+    node localhost
+    {
+        SqlDatabase 'Create_Database'
+        {
+            Ensure               = 'Present'
+            ServerName           = 'sqltest.company.local'
+            InstanceName         = 'DSC'
+            Name                 = 'Contoso'
+
+            PsDscRunAsCredential = $SqlAdministratorCredential
+        }
+
+        SqlDatabase 'Create_Database_with_different_collation'
+        {
+            Ensure               = 'Present'
+            ServerName           = 'sqltest.company.local'
+            InstanceName         = 'DSC'
+            Name                 = 'AdventureWorks'
+            Collation            = 'SQL_Latin1_General_Pref_CP850_CI_AS'
+
+            PsDscRunAsCredential = $SqlAdministratorCredential
+        }
+
+        SqlDatabase 'Create_Database_with_different_compatibility_level'
+        {
+            Ensure               = 'Present'
+            ServerName           = 'sqltest.company.local'
+            InstanceName         = 'DSC'
+            Name                 = 'Fabrikam'
+            CompatibilityLevel   = 'Version130'
+
+            PsDscRunAsCredential = $SqlAdministratorCredential
+        }
+
+        SqlDatabase 'Create_Database_with_different_recovery_model'
+        {
+            Ensure               = 'Present'
+            ServerName           = 'sqltest.company.local'
+            InstanceName         = 'DSC'
+            Name                 = 'FabrikamData'
+            RecoveryModel        = 'Simple'
+
+            PsDscRunAsCredential = $SqlAdministratorCredential
+        }
+
+        SqlDatabase 'Create_Database_with_specific_owner'
+        {
+            Ensure               = 'Present'
+            ServerName           = 'sqltest.company.local'
+            InstanceName         = 'DSC'
+            Name                 = 'FabrikamDataOwner'
+            OwnerName            = 'sa'
+
+            PsDscRunAsCredential = $SqlAdministratorCredential
+        }
+    }
+}
+
+.EXAMPLE 2
+
+This example shows how to remove a database with
+the database name equal to 'AdventureWorks'.
+
+Configuration Example
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $SqlAdministratorCredential
+    )
+
+    Import-DscResource -ModuleName 'SqlServerDsc'
+
+    node localhost
+    {
+        SqlDatabase 'Delete_Database'
+        {
+            Ensure               = 'Absent'
+            ServerName           = 'sqltest.company.local'
+            InstanceName         = 'DSC'
+            Name                 = 'AdventureWorks'
+
+            PsDscRunAsCredential = $SqlAdministratorCredential
+        }
+    }
+}
