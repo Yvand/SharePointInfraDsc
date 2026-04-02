@@ -19,15 +19,6 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
-     
-      # TODO: Consider caching deps: https://docs.github.com/en/actions/tutorials/build-and-test-code/powershell#caching-dependencies
-      # - name: Setup PowerShell module cache
-      #   if: false
-      #   id: cacher
-      #   uses: actions/cache@v5
-      #   with:
-      #     path: "~/.local/share/powershell/Modules"
-      #     key: ${{ runner.os }}-mandatory-modules
 
       - name: Install DSC modules
         shell: powershell
