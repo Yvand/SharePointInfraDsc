@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.1.0] - 2026-04-02
+
 ### Changed
 
 - SharePointInfraDsc
