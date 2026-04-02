@@ -1,5 +1,12 @@
 # Changelog for SharePointInfraDsc
 
+## Unreleased
+
+### Changed
+
+- DSC for all configurations
+  - Ensure `UseBasicParsing` is always set with cmdlet `Invoke-WebRequest`, to address security update for [CVE-2025-54100](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-54100).
+
 ## [2.0.0] - 2026-04-01
 
 ### Changed

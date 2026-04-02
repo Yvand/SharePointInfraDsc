@@ -589,7 +589,7 @@ configuration ConfigSpFrontend
                         Write-Verbose -Verbose -Message "Trying to connect to $uri..."
                         # -UseDefaultCredentials: Does NTLM authN
                         # -UseBasicParsing: Avoid exception because IE was not first launched yet
-                        $Response = Invoke-WebRequest -Uri $uri -UseDefaultCredentials -TimeoutSec 10 -ErrorAction Stop -UseBasicParsing
+                        $Response = Invoke-WebRequest -UseBasicParsing -Uri $uri -UseDefaultCredentials -TimeoutSec 10 -ErrorAction Stop
                         # When it will be actually ready, site will respond 401/302/200, and $Response.StatusCode will be 200
                         $currentStatusCode = $Response.StatusCode
                     }
@@ -741,7 +741,7 @@ configuration ConfigSpFrontend
                         # -UseDefaultCredentials: Does NTLM authN
                         # -UseBasicParsing: Avoid exception because IE was not first launched yet
                         # Expected traffic is HTTP 401/302/200, and $Response.StatusCode is 200
-                        Invoke-WebRequest -Uri $uri -UseDefaultCredentials -TimeoutSec 40 -UseBasicParsing -ErrorAction SilentlyContinue
+                        Invoke-WebRequest -UseBasicParsing -Uri $uri -UseDefaultCredentials -TimeoutSec 40 -ErrorAction SilentlyContinue
                         Write-Verbose -Verbose -Message "Connected successfully to $uri"
                     }
                     catch [System.Exception] {
