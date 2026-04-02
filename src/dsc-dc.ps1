@@ -233,12 +233,12 @@
             RebootNodeIfNeeded = $true
         }
 
-        # Fix emerging issue "WinRM cannot process the request. The following error with errorcode 0x80090350" while Windows Azure Guest Agent service initiates using https://stackoverflow.com/a/74015954/8669078
-        Script SetWindowsAzureGuestAgentDepndencyOnDNS {
-            GetScript  = { }
-            TestScript = { return $false }
-            SetScript  = { Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\WindowsAzureGuestAgent' -Name "DependOnService" -Type MultiString -Value "DNS" }
-        }
+        # # Fix emerging issue "WinRM cannot process the request. The following error with errorcode 0x80090350" while Windows Azure Guest Agent service initiates using https://stackoverflow.com/a/74015954/8669078
+        # Script SetWindowsAzureGuestAgentDepndencyOnDNS {
+        #     GetScript  = { }
+        #     TestScript = { return $false }
+        #     SetScript  = { Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\WindowsAzureGuestAgent' -Name "DependOnService" -Type MultiString -Value "DNS" }
+        # }
 
         #**********************************************************
         # Create AD domain
@@ -251,18 +251,10 @@
         WindowsFeature AddADDS {
             Name = "AD-Domain-Services"; Ensure = "Present" 
         }
-        # WindowsFeature AddDNS {
-        #     Name = "DNS"; Ensure = "Present" 
-        # }
 
         DnsServerAddress SetDNS {
             Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4' 
         }
-
-        # PendingReboot CheckRebootBeforeCreateADForest {
-        #     Name      = "CheckRebootBeforeCreateADForest"
-        #     DependsOn = "[WindowsFeature]AddGroupPolicyPowerShellModule"
-        # }
 
         ADDomain CreateADForest {
             DomainName                    = $DomainFQDN
@@ -271,7 +263,7 @@
             DatabasePath                  = "C:\NTDS"
             LogPath                       = "C:\NTDS"
             SysvolPath                    = "C:\SYSVOL"
-            DependsOn                     = "[DnsServerAddress]SetDNS" #, "[WindowsFeature]AddADDS"
+            DependsOn                     = "[DnsServerAddress]SetDNS", "[WindowsFeature]AddADDS"
         }
 
         PendingReboot RebootOnSignalFromCreateADForest {
@@ -595,7 +587,7 @@
             WindowsFeature AddGroupPolicyPowerShellModule {
                 Name = "GPMC"; Ensure = "Present" 
             }
-            # Set browser policies asap, so that computers that join domain get them immediately, and  it runs very quickly (<5 secs)
+
             # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
             Script ConfigureEdgePolicies {
                 SetScript  = {
@@ -756,19 +748,6 @@ function Get-NetBIOSName {
 }
 
 <#
-# Azure DSC extension logging: C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.80.0.0
-# Azure DSC extension configuration: C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.0\DSCWork
-
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-Install-Module -Name xAdcsDeployment
-Install-Module -Name xCertificate
-Install-Module -Name xPSDesiredStateConfiguration
-Install-Module -Name xCredSSP
-Install-Module -Name xWebAdministration
-Install-Module -Name xDisk
-Install-Module -Name xNetworking
-
 help ConfigDc
 
 $password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -Force
