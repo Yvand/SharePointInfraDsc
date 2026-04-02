@@ -248,9 +248,9 @@
         WindowsFeature AddADFS {
             Name = "ADFS-Federation"; Ensure = "Present"; 
         }
-        # WindowsFeature AddADDS {
-        #     Name = "AD-Domain-Services"; Ensure = "Present" 
-        # }
+        WindowsFeature AddADDS {
+            Name = "AD-Domain-Services"; Ensure = "Present" 
+        }
         # WindowsFeature AddDNS {
         #     Name = "DNS"; Ensure = "Present" 
         # }
