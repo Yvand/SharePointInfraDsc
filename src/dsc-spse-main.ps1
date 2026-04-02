@@ -1864,7 +1864,7 @@ configuration ConfigSpMain
                         # -UseDefaultCredentials: Does NTLM authN
                         # -UseBasicParsing: Avoid exception because IE was not first launched yet
                         # Expected traffic is HTTP 401/302/200, and $Response.StatusCode is 200
-                        Invoke-WebRequest -UseBasicParsing -Uri $uri -UseDefaultCredentials -TimeoutSec 40 -UseBasicParsing -ErrorAction SilentlyContinue
+                        Invoke-WebRequest -UseBasicParsing -Uri $uri -UseDefaultCredentials -TimeoutSec 40 -ErrorAction SilentlyContinue
                         Write-Verbose -Verbose -Message "Connected successfully to $uri"
                     }
                     catch [System.Exception] {
