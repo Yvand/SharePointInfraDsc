@@ -7,6 +7,10 @@
 - DSC for all configurations
   - Ensure `UseBasicParsing` is always set with cmdlet `Invoke-WebRequest`, to address security update for [CVE-2025-54100](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-54100).
 
+- DSC for DC
+  - Removed unnecessary features and reboot to speed up the provisionning time.
+  - Focused on reducing the time to wait before other machines can join the AD domain.
+
 - Dependencies
   - Updated module `SqlServerDsc` from 17.1.0 to 17.5.1
   - Updated module `ActiveDirectoryDsc` from 6.7.0 to 6.7.1
