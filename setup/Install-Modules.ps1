@@ -7,11 +7,14 @@ param(
     [bool] $copyCustomizedModules = $false
 )
 
-<# INIT
+# Ensure prerequisites are installed
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-Set-PSRepository PSGallery -InstallationPolicy Trusted
-Install-Module Az.Compute -Scope AllUsers
-#>
+if ((Get-PSRepository -Name PSGallery).InstallationPolicy -ne "Trusted") {
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+}
+if (-not (Get-InstalledModule -Name "Az.Compute" -ErrorAction SilentlyContinue)) {
+    Install-Module Az.Compute -Scope AllUsers
+}
 
 $dscFolderPath = Join-Path -Path $localProjectPath -ChildPath "src"
 $scritpsFolderPath = Join-Path -Path $localProjectPath -ChildPath "setup"

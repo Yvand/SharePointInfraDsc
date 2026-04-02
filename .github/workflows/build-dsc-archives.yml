@@ -28,13 +28,6 @@ jobs:
       #   with:
       #     path: "~/.local/share/powershell/Modules"
       #     key: ${{ runner.os }}-mandatory-modules
-      
-      - name: Setup PowerShell
-        #if: steps.cacher.outputs.cache-hit != 'true'
-        shell: powershell
-        run: |
-          Set-PSRepository PSGallery -InstallationPolicy Trusted
-          Install-Module Az.Compute #, PSDesiredStateConfiguration
 
       - name: Install DSC modules
         shell: powershell

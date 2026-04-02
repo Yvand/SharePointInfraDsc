@@ -4,6 +4,10 @@
 
 ### Changed
 
+- SharePointInfraDsc
+  - Updated script `Install-Modules.ps1` to install the prerequisites if necessary
+  - Removed the setup task in workflow action 'Build DSC archives' since installing prerequisites is now taken care of in `Install-Modules.ps1`
+
 - DSC for all configurations
   - Ensure `UseBasicParsing` is always set with cmdlet `Invoke-WebRequest`, to address security update for [CVE-2025-54100](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-54100).
 
