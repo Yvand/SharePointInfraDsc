@@ -8,7 +8,9 @@
   - Ensure `UseBasicParsing` is always set with cmdlet `Invoke-WebRequest`, to address security update for [CVE-2025-54100](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-54100).
 
 - Dependencies
-  - Bumped module `SqlServerDsc` from 17.1.0 to 17.5.1
+  - Updated module `SqlServerDsc` from 17.1.0 to 17.5.1
+  - Updated module `ActiveDirectoryDsc` from 6.7.0 to 6.7.1
+  - Updated module `DnsServerDsc` from 3.0.1 to 3.0.3
 
 ## [2.0.0] - 2026-04-01
 
