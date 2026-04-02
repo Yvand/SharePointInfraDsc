@@ -4,8 +4,8 @@
 
 ### Changed
 
-- DSC for all SharePoint configurations
-  - Always use `UseBasicParsing` with cmdlet `Invoke-WebRequest` to address security update for [CVE-2025-54100](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-54100).
+- DSC for all configurations
+  - Ensure `UseBasicParsing` is always set with cmdlet `Invoke-WebRequest`, to address security update for [CVE-2025-54100](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-54100).
 
 ## [2.0.0] - 2026-04-01
 
