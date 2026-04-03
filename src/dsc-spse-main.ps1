@@ -134,9 +134,6 @@ configuration ConfigSpMain
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
-        WindowsFeature AddADTools {
-            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
-        }
         WindowsFeature AddDnsTools {
             Name = "RSAT-DNS-Server"; Ensure = "Present"; 
         }
@@ -664,6 +661,9 @@ configuration ConfigSpMain
         #**********************************************************
         # Provision required accounts for SharePoint
         #**********************************************************
+        WindowsFeature AddADTools {
+            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
+        }
         ADUser CreateSParmAccount {
             DomainName           = $DomainFQDN
             UserName             = $SPFarmCreds.UserName
