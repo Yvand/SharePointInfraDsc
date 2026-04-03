@@ -507,10 +507,6 @@ configuration ConfigSpMain
             DependsOn  = "[DnsServerAddress]SetDNS", "[SPInstall]InstallBinaries"
         }
 
-        WindowsFeature AddADTools {
-            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
-        }
-
         Computer JoinDomain {
             Name       = $ComputerName
             DomainName = $DomainFQDN
@@ -542,6 +538,10 @@ configuration ConfigSpMain
         #     Key = "HKCU:\Software\Microsoft\OneDrive\PreSignInSettingsOverrides"; ValueName = "204"; ValueType = "String"; ValueData = "-1835"
         #     PsDscRunAsCredential = $DomainAdminCredsQualified; Ensure = "Present" 
         # }
+
+        WindowsFeature AddADTools {
+            Name = "RSAT-AD-Tools"; IncludeAllSubFeature = $true; Ensure = "Present"; 
+        }
 
         # This script is still needed
         Script CreateWSManSPNsIfNeeded {
