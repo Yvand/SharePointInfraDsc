@@ -558,6 +558,9 @@ configuration ConfigSpMain
         #     PsDscRunAsCredential = $DomainAdminCredsQualified; Ensure = "Present" 
         # }
 
+        WindowsFeature AddADTools {
+            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
+        }
         # This script is still needed
         Script CreateWSManSPNsIfNeeded {
             SetScript  =
@@ -661,9 +664,6 @@ configuration ConfigSpMain
         #**********************************************************
         # Provision required accounts for SharePoint
         #**********************************************************
-        WindowsFeature AddADTools {
-            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
-        }
         ADUser CreateSParmAccount {
             DomainName           = $DomainFQDN
             UserName             = $SPFarmCreds.UserName
