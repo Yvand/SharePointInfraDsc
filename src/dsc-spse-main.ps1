@@ -507,24 +507,9 @@ configuration ConfigSpMain
             DependsOn  = "[DnsServerAddress]SetDNS", "[SPInstall]InstallBinaries"
         }
 
-        # # If WaitForADDomain does not find the domain whtin "WaitTimeout" secs, it will signal a restart to DSC engine "RestartCount" times
-        # WaitForADDomain WaitForDCReady
-        # {
-        #     DomainName              = $DomainFQDN
-        #     WaitTimeout             = 1800
-        #     RestartCount            = 2
-        #     WaitForValidCredentials = $True
-        #     Credential              = $DomainAdminCredsQualified
-        #     DependsOn               = "[Script]WaitForADFSFarmReady"
-        # }
-
-        # # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
-        # PendingReboot RebootOnSignalFromWaitForDCReady
-        # {
-        #     Name             = "RebootOnSignalFromWaitForDCReady"
-        #     SkipCcmClientSDK = $true
-        #     DependsOn        = "[WaitForADDomain]WaitForDCReady"
-        # }
+        WindowsFeature AddADTools {
+            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
+        }
 
         Computer JoinDomain {
             Name       = $ComputerName
@@ -558,9 +543,6 @@ configuration ConfigSpMain
         #     PsDscRunAsCredential = $DomainAdminCredsQualified; Ensure = "Present" 
         # }
 
-        WindowsFeature AddADTools {
-            Name = "RSAT-AD-Tools"; Ensure = "Present"; 
-        }
         # This script is still needed
         Script CreateWSManSPNsIfNeeded {
             SetScript  =
