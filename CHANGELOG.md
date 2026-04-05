@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
+- DSC for DC
+  - Optimized the dependencies of the resources
+  - Removed the install of any Windows feature that is not strictly required
+
 ## [2.1.0] - 2026-04-02
 
 ### Changed
