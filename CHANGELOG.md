@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- DSC for SPSE-main
+  - Moved install of Windows feature "RSAT-AD-Tools" as late as possible, because its test function randomly takes 60-80 secs (called after each reboot)
+
 ## [2.1.0] - 2026-04-02
 
 ### Changed
