@@ -422,7 +422,7 @@
             PasswordAuthentication = 'Negotiate'
             PasswordNeverExpires   = $true
             Ensure                 = "Present"
-            DependsOn              = "[CertReq]GenerateADFSSiteCertificate", "[CertReq]GenerateADFSSigningCertificate", "[CertReq]GenerateADFSDecryptionCertificate"
+            DependsOn              = "[WaitForADDomain]WaitForDCReady"
         }
 
         # https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/configure-corporate-dns-for-the-federation-service-and-drs
@@ -434,6 +434,7 @@
             DependsOn     = "[WaitForADDomain]WaitForDCReady"
         }
 
+        # This will do a reboot
         AdfsFarm CreateADFSFarm {
             FederationServiceName        = "$ADFSSiteName.$DomainFQDN"
             FederationServiceDisplayName = "$ADFSSiteName.$DomainFQDN"
@@ -442,11 +443,11 @@
             DecryptionCertificateDnsName = "$ADFSSiteName.Decryption"
             ServiceAccountCredential     = $AdfsSvcCredsQualified
             Credential                   = $DomainCredsNetbios
-            DependsOn                    = "[WindowsFeature]AddADFS"
+            DependsOn                    = "[WindowsFeature]AddADFS", "[ADUser]CreateAdfsSvcAccount", "[Script]ExportCertificates"
         }
 
-        # This DNS record is tested by other VMs to join AD only after it was found
-        # It is added after DSC resource AdfsFarm, because it is the last operation that triggers a reboot of the DC
+        # This DNS record is tested by other VMs, to join the domain once it is found
+        # Added after DSC resource AdfsFarm, because it is the last operation that triggers a reboot
         DnsRecordA AddADFSHostDNS {
             Name        = $ADFSSiteName
             ZoneName    = $DomainFQDN
@@ -671,6 +672,7 @@
                     return $true
                 }
             }
+            DependsOn = "[WaitForADDomain]WaitForDCReady"
         }
 
         ADOrganizationalUnit AdditionalUsersOU {
@@ -707,9 +709,9 @@
         # WindowsFeature AddADLDS {
         #     Name = "RSAT-ADLDS"; Ensure = "Present"; 
         # }
-        WindowsFeature AddADCSManagementTools {
-            Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
-        }
+        # WindowsFeature AddADCSManagementTools {
+        #     Name = "RSAT-ADCS-Mgmt"; Ensure = "Present"; 
+        # }
     }
 }
 
