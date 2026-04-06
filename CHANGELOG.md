@@ -7,6 +7,8 @@
 - DSC for DC
   - Optimized the dependencies of the resources
   - Removed the install of any Windows feature that is not strictly required
+- DSC for SPSE-main
+  - Moved install of Windows feature "RSAT-AD-Tools" as late as possible, because its test function randomly takes 60-80 secs (called after each reboot)
 
 ## [2.1.0] - 2026-04-02
 
