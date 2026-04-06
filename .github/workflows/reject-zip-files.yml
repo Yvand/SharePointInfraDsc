@@ -1,0 +1,70 @@
+name: Reject zip files in pull requests
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  reject-zip-files:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fail if the pull request contains zip files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          zip_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -Ei '^src/.*\.zip$' || true)
+
+          if [ -n "$zip_files" ]; then
+            echo "Zip files are not allowed in the src folder for pull requests."
+            echo "$zip_files"
+            exit 1
+          fi
+
+          echo "No zip files detected in the src folder for pull request changes."
+
+      # - name: Reject pull requests containing zip files
+      #   uses: actions/github-script@v8
+      #   with:
+      #     script: |
+      #       const pullRequest = context.payload.pull_request;
+
+      #       if (!pullRequest) {
+      #         core.info('No pull request payload found. Skipping zip file check.');
+      #         return;
+      #       }
+
+      #       const files = await github.paginate(github.rest.pulls.listFiles, {
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         pull_number: pullRequest.number,
+      #         per_page: 100,
+      #       });
+
+      #       for (const file of files) {
+      #         core.info(`Checking file: ${file.filename}`);
+      #         console.log(`File status: ${file.status}`);
+      #       }
+
+      #       const zipFiles = files
+      #         .map((file) => file.filename)
+      #         .filter((filename) => {
+      #           const normalized = filename.toLowerCase();
+      #           return normalized.startsWith('src/') && normalized.endsWith('.zip');
+      #         });
+
+      #       if (zipFiles.length > 0) {
+      #         core.setFailed([
+      #           'Zip files are not allowed in the src folder for pull requests.',
+      #           ...zipFiles,
+      #         ].join('\n'));
+      #         return;
+      #       }
+
+      #       core.info('No zip files detected in the src folder for pull request changes.');
