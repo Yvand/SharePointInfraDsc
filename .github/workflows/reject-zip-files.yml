@@ -10,10 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
       - name: Fail if the pull request contains zip files
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -28,6 +24,10 @@ jobs:
           fi
 
           echo "No zip files detected in the src folder for pull request changes."
+
+      # - uses: actions/checkout@v6
+      #   with:
+      #     fetch-depth: 0
 
       # - name: Reject pull requests containing zip files
       #   uses: actions/github-script@v8
