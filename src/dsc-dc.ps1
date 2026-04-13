@@ -236,17 +236,24 @@
         #**********************************************************
         # Create AD domain
         #**********************************************************
-        # Install AD FS early (before reboot) to workaround error below on resource AdfsApplicationGroup:
-        # "System.InvalidOperationException: The test script threw an error. ---> System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.IdentityServer.Diagnostics, Version=10.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35' or one of its dependencie"
-        WindowsFeature AddADFS {
-            Name = "ADFS-Federation"; Ensure = "Present"; 
-        }
         WindowsFeature AddADDS {
             Name = "AD-Domain-Services"; Ensure = "Present" 
         }
 
         DnsServerAddress SetDNS {
             Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4' 
+        }
+
+        # Avoids rare error in [ADDomain]CreateADForest resource, that fails because a reboot is necessary before forest can be created
+        PendingReboot RebootBeforeCreateADForest {
+            Name      = "RebootBeforeCreateADForest"
+            DependsOn = "[DnsServerAddress]SetDNS", "[WindowsFeature]AddADDS"
+        }
+
+        # Install AD FS early (before reboot) to workaround error below on resource AdfsApplicationGroup:
+        # "System.InvalidOperationException: The test script threw an error. ---> System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.IdentityServer.Diagnostics, Version=10.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35' or one of its dependencie"
+        WindowsFeature AddADFS {
+            Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[PendingReboot]RebootBeforeCreateADForest"
         }
 
         ADDomain CreateADForest {
@@ -256,7 +263,7 @@
             DatabasePath                  = "C:\NTDS"
             LogPath                       = "C:\NTDS"
             SysvolPath                    = "C:\SYSVOL"
-            DependsOn                     = "[DnsServerAddress]SetDNS", "[WindowsFeature]AddADDS"
+            DependsOn                     = "[PendingReboot]RebootBeforeCreateADForest"
         }
 
         PendingReboot RebootOnSignalFromCreateADForest {
