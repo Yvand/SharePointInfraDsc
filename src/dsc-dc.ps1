@@ -250,12 +250,6 @@
             DependsOn = "[DnsServerAddress]SetDNS", "[WindowsFeature]AddADDS"
         }
 
-        # Install AD FS early (before reboot) to workaround error below on resource AdfsApplicationGroup:
-        # "System.InvalidOperationException: The test script threw an error. ---> System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.IdentityServer.Diagnostics, Version=10.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35' or one of its dependencie"
-        WindowsFeature AddADFS {
-            Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[PendingReboot]RebootBeforeCreateADForest"
-        }
-
         ADDomain CreateADForest {
             DomainName                    = $DomainFQDN
             Credential                    = $DomainCredsNetbios
@@ -269,6 +263,11 @@
         PendingReboot RebootOnSignalFromCreateADForest {
             Name      = "RebootOnSignalFromCreateADForest"
             DependsOn = "[ADDomain]CreateADForest"
+        }
+
+        # Install AD FS early to avoid error on resource AdfsApplicationGroup: "System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.IdentityServer.Diagnostics, Version=10.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35' or one of its dependencie"
+        WindowsFeature AddADFS {
+            Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[PendingReboot]RebootOnSignalFromCreateADForest"
         }
 
         WaitForADDomain WaitForDCReady {
