@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+- DSC for DC
+  - Re-added a reboot just before creating the AD forest, to avoid rare configuration failures because a reboot was required before it could proceed
+- DSC for SQL
+  - Added a max attempts counter to function WaitForSqlSetup, as a safeguard to prevent infinite waits that happened very rarely
+
+
 ## [2.2.0] - 2026-04-07
 
 ### Changed
