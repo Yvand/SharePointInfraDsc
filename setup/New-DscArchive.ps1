@@ -17,4 +17,3 @@ foreach ($dscSourceFilePath in $dscSourceFilePaths) {
     $dscArchiveFilePath = "$($dscSourceFilePath.DirectoryName)\$($dscSourceFilePath.BaseName).zip"
     Publish-AzVMDscConfiguration -ConfigurationPath "$dscFolderPath\$($dscSourceFilePath.Name)" -OutputArchivePath $dscArchiveFilePath -Force #-Verbose
 }
-    
