@@ -2,8 +2,8 @@
 #Requires -Module Az.Compute
 
 param(
-    [string] $vmName = "*",
-    [string] $dscFolderPath = ".\src\"
+    [Parameter(Mandatory=$false)] [string] $vmName = "*",
+    [Parameter(Mandatory=$false)] [string] $dscFolderPath = ".\src\"
 )
 
 if (-not (Test-Path -PathType Container -Path $dscFolderPath)) {
