@@ -2,9 +2,9 @@
 #Requires -RunAsAdministrator #reason: Install-Module with -Scope AllUsers requires admin privileges
 
 param(
-    [string] $localProjectPath,
-    [string] $vmName,
-    [bool] $copyCustomizedModules = $false
+    [Parameter(Mandatory=$true)] [string] $localProjectPath,
+    [Parameter(Mandatory=$false)] [string] $vmName,
+    [Parameter(Mandatory=$false)] [bool] $copyCustomizedModules = $false
 )
 
 # Ensure prerequisites are installed

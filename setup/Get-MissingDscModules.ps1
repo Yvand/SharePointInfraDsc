@@ -1,7 +1,7 @@
 #Requires -Module Az.Compute
 
 param(
-    [string] $dscFilePath
+    [Parameter(Mandatory=$true)] [string] $dscFilePath
 )
 
 #Import-Module Az.Compute
