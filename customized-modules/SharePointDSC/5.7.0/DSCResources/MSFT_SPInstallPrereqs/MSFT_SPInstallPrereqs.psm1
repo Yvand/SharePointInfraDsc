@@ -1202,6 +1202,18 @@ function Set-TargetResource
                     "to reboot the machine before continuing.")
             $global:DSCMachineStatus = 1
         }
+        -1
+        {
+            # ExitCode -1 is when download of a package failed (frequent transient issue in Azure)
+            $message = ("The prerequisite installer has failed with error -1, " + `
+                    "(download of a package failed), do a reboot and retry.")
+            Write-Verbose -Message $message
+            Add-SPDscEvent -Message $message `
+                -EntryType 'Error' `
+                -EventID 100 `
+                -Source $MyInvocation.MyCommand.Source
+            $global:DSCMachineStatus = 1
+        }
         -2147467259
         {
             # This is the generic error 0x80004005, that should be fixed with a reboot
@@ -1212,30 +1224,6 @@ function Set-TargetResource
                 -EntryType 'Error' `
                 -EventID 100 `
                 -Source $MyInvocation.MyCommand.Source
-            $global:DSCMachineStatus = 1
-        }
-        -1
-        {
-            #YVAND
-            <#
-2026-03-20 14:53:05 - Installing MSVCRT 14.2, Visual C++ Redistributable Package for Visual Studio 2015-2019 (version 14.29.30133.0 or higher).
-2026-03-20 14:53:05 - MSVCRT142.exe local install path is NULL. Try to download from FWLink.
-2026-03-20 14:53:05 - Beginning download of Visual C++ Redistributable Package for Visual Studio 2015-2019
-2026-03-20 14:53:05 - https://go.microsoft.com/fwlink/?linkid=2130438
-2026-03-20 14:53:33 - Error: InternetOpenUrl failed (0X80072F78=-2147012744)
-2026-03-20 14:53:33 - https://go.microsoft.com/fwlink/?linkid=2130438
-2026-03-20 14:53:33 - Error: Download failed (0)
-2026-03-20 14:53:33 - Last return code (-1)
-            #>
-            # ExitCode -1 is when downloading a package failed, let's reboot and retry until it succeeds
-            $message = ("The prerequisite installer has failed with an error -1, " + `
-                    "(download of a package failed), reboot and retry.")
-            Write-Verbose -Message $message
-            Add-SPDscEvent -Message $message `
-                -EntryType 'Error' `
-                -EventID 100 `
-                -Source $MyInvocation.MyCommand.Source
-            #throw $message
             $global:DSCMachineStatus = 1
         }
         default
@@ -1507,7 +1495,7 @@ function Test-SPDscPrereqInstallStatus
                     }
                 }
             }
-            Default
+            default
             {
                 $message = ("Unable to search for a prereq with mode '$($itemToCheck.SearchType)'. " + `
                         "please use either 'Equals', 'Like' or 'Match', or 'BundleUpgradeCode'")
