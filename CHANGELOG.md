@@ -8,7 +8,11 @@
   - Re-added a reboot just before creating the AD forest, to avoid rare configuration failures because a reboot was required before it could proceed
 - DSC for SQL
   - Added a max attempts counter to function WaitForSqlSetup, as a safeguard to prevent infinite waits that happened very rarely
-
+- Customized Modules
+  - SharePointDSC: Apply the change made to resource SPInstallPrereqs in v5.7.1-preview0001
+- SharePointInfraDsc
+  - Specify what parameters are mandatory in the PowerShell setup scripts
+  - Enable workflow "Build DSC archives" when a pull request targets the main branch
 
 ## [2.2.0] - 2026-04-07
 
