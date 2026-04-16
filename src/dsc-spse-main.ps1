@@ -22,7 +22,8 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperUserCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperReaderCreds,
         [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
-        [Parameter(Mandatory = $false)] [ConfigurationLevel] $ConfigurationLevel = [ConfigurationLevel]::Full
+        # [Parameter(Mandatory = $false)] [ConfigurationLevel] $ConfigurationLevel = [ConfigurationLevel]::Full,
+        [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $SharePointConfiguration =  @("All")
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
@@ -57,25 +58,31 @@ configuration ConfigSpMain
     
     #################### DUPLICATED ####################
     # Provisioning options - set to $true to provision, $false to skip provisioning of the corresponding component. These are set based on the selected configuration level, but can be overridden by setting them directly.
-    [Boolean] $ProvisionStateServiceApplication = $false
-    [Boolean] $ProvisionTrustedAuthentication = $false
-    [Boolean] $ProvisionUserProfilesService = $false
-    [Boolean] $ProvisionAddins = $false
-    [Boolean] $ProvisionHnscSites = $false
-    [Boolean] $ProvisionExtendedZone = $false
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
-        $ProvisionStateServiceApplication = $true
-        $ProvisionTrustedAuthentication = $true
-    }
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
-        $ProvisionUserProfilesService = $true
-        $ProvisionExtendedZone = $true
-    }
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
-        $ProvisionAddins = $true
-        $ProvisionHnscSites = $true
-    }
+    # [Boolean] $ProvisionStateServiceApplication = $false
+    # [Boolean] $ProvisionTrustedAuthentication = $false
+    # [Boolean] $ProvisionUserProfilesService = $false
+    # [Boolean] $ProvisionAddins = $false
+    # [Boolean] $ProvisionHnscSites = $false
+    # [Boolean] $ProvisionExtendedZone = $false
+    # if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
+    # if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
+    #     $ProvisionStateServiceApplication = $true
+    #     $ProvisionTrustedAuthentication = $true
+    # }
+    # if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
+    #     $ProvisionUserProfilesService = $true
+    #     $ProvisionExtendedZone = $true
+    # }
+    # if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
+    #     $ProvisionAddins = $true
+    #     $ProvisionHnscSites = $true
+    # }
+    [Boolean] $ProvisionStateServiceApplication = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::StateService
+    [Boolean] $ProvisionTrustedAuthentication = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
+    [Boolean] $ProvisionUserProfilesService = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
+    [Boolean] $ProvisionAddins = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::Addins
+    [Boolean] $ProvisionHnscSites = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
+    [Boolean] $ProvisionExtendedZone = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
 
     # Final value for $DefaultZoneMustBeHttps must be set before setting $WebApplicationUrl
     if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
@@ -2152,6 +2159,16 @@ class SharePointPackageInfo {
     [ValidateNotNullOrEmpty()][string] $DownloadUrl
     [Parameter(Mandatory = $false)] [string] $ChecksumType
     [Parameter(Mandatory = $false)] [string] $Checksum
+}
+
+enum SharePointConfigurations {
+    All
+    TrustedAuthentication
+    UserProfilesService
+    ExtendedWebApplication
+    Addins
+    HostNamedSiteCollections
+    StateService
 }
 #################### DUPLICATED ####################
 
