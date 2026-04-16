@@ -2190,7 +2190,7 @@ $DomainFQDN = "contoso.local"
 $DCServerName = "DC"
 $SQLServerName = "SQL"
 $SQLAlias = "SQLAlias"
-$SharePointVersion = "SPRTM"
+$SharePointVersion = "SPRTM" #"SPLatest"
 $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
@@ -2219,8 +2219,7 @@ $SharePointBits = @(
     @{
         Label = "SPLatest"; 
         Packages = @(
-            @{ DownloadUrl = "https://download.microsoft.com/download/d/6/d/d6dcc9e7-744e-43e1-b4be-206a6acd4f88/sts-subscription-kb5002331-fullfile-x64-glb.exe" },
-            @{ DownloadUrl = "https://download.microsoft.com/download/d/3/5/d354b6e2-fa16-48e0-b3f8-423f7ca279a0/wssloc-subscription-kb5002326-fullfile-x64-glb.exe" }
+            @{ DownloadUrl = "https://download.microsoft.com/download/f839c57c-7b4e-4213-b03b-2c1508e13588/uber-subscription-kb5002853-fullfile-x64-glb.exe" }
         )
     }
 )
