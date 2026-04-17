@@ -22,7 +22,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperUserCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperReaderCreds,
         [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
-        # [Parameter(Mandatory = $false)] [ConfigurationLevel] $ConfigurationLevel = [ConfigurationLevel]::Full,
+        [Parameter(Mandatory = $false)] [SharePointConfigurationLevels] $SharePointConfigurationLevel = [SharePointConfigurationLevels]::Full,
         [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $SharePointConfiguration = @("All")
     )
 
@@ -57,34 +57,38 @@ configuration ConfigSpMain
     [System.Management.Automation.PSCredential] $SPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPADDirSyncCreds.UserName)", $SPADDirSyncCreds.Password)
     
     #################### DUPLICATED ####################
-    # Provisioning options - set to $true to provision, $false to skip provisioning of the corresponding component. These are set based on the selected configuration level, but can be overridden by setting them directly.
-    # [Boolean] $ProvisionStateServiceApplication = $false
-    # [Boolean] $ProvisionTrustedAuthentication = $false
-    # [Boolean] $ProvisionUserProfilesService = $false
-    # [Boolean] $ProvisionAddins = $false
-    # [Boolean] $ProvisionHnscSites = $false
-    # [Boolean] $ProvisionExtendedZone = $false
-    # if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
-    # if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
-    #     $ProvisionStateServiceApplication = $true
-    #     $ProvisionTrustedAuthentication = $true
-    # }
-    # if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
-    #     $ProvisionUserProfilesService = $true
-    #     $ProvisionExtendedZone = $true
-    # }
-    # if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
-    #     $ProvisionAddins = $true
-    #     $ProvisionHnscSites = $true
-    # }
-    [Boolean] $ProvisionStateServiceApplication = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::StateService
-    [Boolean] $ProvisionTrustedAuthentication = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
-    [Boolean] $ProvisionUserProfilesService = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
-    [Boolean] $ProvisionAddins = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::Addins
-    [Boolean] $ProvisionHnscSites = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
-    [Boolean] $ProvisionExtendedZone = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
+    # Provisioning options
+    [Boolean] $ProvisionStateServiceApplication = $false
+    [Boolean] $ProvisionTrustedAuthentication = $false
+    [Boolean] $ProvisionUserProfilesService = $false
+    [Boolean] $ProvisionAddins = $false
+    [Boolean] $ProvisionHnscSites = $false
+    [Boolean] $ProvisionExtendedZone = $false
+    if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
+        $ProvisionStateServiceApplication = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::StateService
+        $ProvisionTrustedAuthentication = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
+        $ProvisionUserProfilesService = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
+        $ProvisionAddins = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::Addins
+        $ProvisionHnscSites = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
+        $ProvisionExtendedZone = $SharePointConfiguration -ccontains [SharePointConfigurations]::All -or $SharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
+    }
+    else {
+        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
+        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Light) {
+            $ProvisionStateServiceApplication = $true
+            $ProvisionTrustedAuthentication = $true
+        }
+        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Medium) {
+            $ProvisionUserProfilesService = $true
+            $ProvisionExtendedZone = $true
+        }
+        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
+            $ProvisionAddins = $true
+            $ProvisionHnscSites = $true
+        }
+    }
 
-    # Final value for $DefaultZoneMustBeHttps must be set before setting $WebApplicationUrl
+    # $DefaultZoneMustBeHttps may need to be overwritten, and if so, before $WebApplicationUrl is set
     if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
         $DefaultZoneMustBeHttps = $true
     }
@@ -132,7 +136,7 @@ configuration ConfigSpMain
                 if (!(Test-Path $destinationFolder -PathType Container)) {
                     New-Item -ItemType Directory -Force -Path $destinationFolder
                 }
-                "$(Get-Date -Format u)`t$($using:ComputerName)`tDSC Configuration starting. DefaultZoneMustBeHttps: $($using:DefaultZoneMustBeHttps); Provisioning options: ProvisionStateServiceApplication: $($using:ProvisionStateServiceApplication), ProvisionTrustedAuthentication: $($using:ProvisionTrustedAuthentication), ProvisionUserProfilesService: $($using:ProvisionUserProfilesService), ProvisionAddins: $($using:ProvisionAddins), ProvisionHnscSites: $($using:ProvisionHnscSites), ProvisionExtendedZone: $($using:ProvisionExtendedZone)" | Out-File -FilePath $using:DscStatusFilePath -Append
+                "$(Get-Date -Format u)`t$($using:ComputerName)`tDSC Configuration starting. SharePointConfigurationLevel: $($using:SharePointConfigurationLevel); SharePointConfiguration: $($using:SharePointConfiguration); DefaultZoneMustBeHttps: $($using:DefaultZoneMustBeHttps); Provisioning options: ProvisionStateServiceApplication: $($using:ProvisionStateServiceApplication), ProvisionTrustedAuthentication: $($using:ProvisionTrustedAuthentication), ProvisionUserProfilesService: $($using:ProvisionUserProfilesService), ProvisionAddins: $($using:ProvisionAddins), ProvisionHnscSites: $($using:ProvisionHnscSites), ProvisionExtendedZone: $($using:ProvisionExtendedZone)" | Out-File -FilePath $using:DscStatusFilePath -Append
             }
             GetScript  = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
@@ -2143,7 +2147,8 @@ function Get-NetBIOSName {
     }
 }
 
-enum ConfigurationLevel {
+enum SharePointConfigurationLevels {
+    Custom
     Minimum
     Light
     Medium
@@ -2208,7 +2213,7 @@ $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
 $DefaultZoneMustBeHttps = $false
-$ConfigurationLevel = "Light"
+$SharePointConfigurationLevels = "Light"
 $SharePointBits = @(
     @{
         Label = "SPRTM"; 
@@ -2238,7 +2243,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\dsc-spse-main.0\ConfigSpMain"
-ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -ConfigurationLevel $ConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -ConfigurationLevel $SharePointConfigurationLevels -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
