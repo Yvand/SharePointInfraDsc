@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+- DSC for SharePoint
+  - Added parameter CustomSharePointConfiguration
+
+### Changed
+
+- DSC for SharePoint
+  - Renamed parameter ConfigurationLevel to SharePointConfigurationLevel
+
+### Fixed
+
+- DSC for SharePoint
+  - Only call the resource SPSiteUrl if needed
+
 ## [2.3.0] - 2026-04-15
 
 ### Changed

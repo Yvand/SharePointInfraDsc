@@ -10,7 +10,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [SharePointBuild] $SharePointVersion,
         [Parameter(Mandatory)] [String]$SharePointSitesAuthority,
         [Parameter(Mandatory)] [String]$SharePointCentralAdminPort,
-        [Parameter(Mandatory)] [Boolean]$EnableAnalysis,
+        [Parameter(Mandatory = $false)] [Boolean]$EnableAnalysis = $false,
         [Parameter(Mandatory)] [SharePointBuildInfo[]] $SharePointBits,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
@@ -23,7 +23,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperReaderCreds,
         [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
         [Parameter(Mandatory = $false)] [SharePointConfigurationLevels] $SharePointConfigurationLevel = [SharePointConfigurationLevels]::Full,
-        [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $CustomSharePointConfiguration = @("All")
+        [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService")
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
@@ -65,12 +65,12 @@ configuration ConfigSpMain
     [Boolean] $ProvisionHnscSites = $false
     [Boolean] $ProvisionExtendedZone = $false
     if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
-        $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::All -or $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
-        $ProvisionTrustedAuthentication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::All -or $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
-        $ProvisionUserProfilesService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::All -or $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
-        $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::All -or $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
-        $ProvisionHnscSites = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::All -or $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
-        $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::All -or $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
+        $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
+        $ProvisionTrustedAuthentication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
+        $ProvisionUserProfilesService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
+        $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
+        $ProvisionHnscSites = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
+        $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
     }
     else {
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
@@ -1428,13 +1428,6 @@ configuration ConfigSpMain
                     DependsOn            = "[SPSite]CreateMySiteHost"
                 }
             }
-            else {
-                SPSiteUrl SetMySiteHostIntranetUrl {
-                    Url                  = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
-                    PsDscRunAsCredential = $DomainAdminCredsQualified
-                    DependsOn            = "[SPSite]CreateMySiteHost"
-                }
-            }
 
             SPManagedPath CreateMySiteManagedPath {
                 WebAppUrl            = $WebApplicationUrl
@@ -1487,13 +1480,6 @@ configuration ConfigSpMain
                 SPSiteUrl SetHNSC1IntranetUrl {
                     Url                  = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
                     Intranet             = if ($DefaultZoneMustBeHttps) { "http://$HNSC1Alias/" } else { "https://$HNSC1Alias.$DomainFQDN/" }
-                    PsDscRunAsCredential = $DomainAdminCredsQualified
-                    DependsOn            = "[SPSite]CreateHNSC1"
-                }
-            }
-            else {
-                SPSiteUrl SetHNSC1IntranetUrl {
-                    Url                  = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
                     PsDscRunAsCredential = $DomainAdminCredsQualified
                     DependsOn            = "[SPSite]CreateHNSC1"
                 }
@@ -2155,6 +2141,15 @@ enum SharePointConfigurationLevels {
     Full
 }
 
+enum SharePointConfigurations {
+    TrustedAuthentication
+    UserProfilesService
+    ExtendedWebApplication
+    Addins
+    HostNamedSiteCollections
+    StateService
+}
+
 # enum values cannot start with a digit - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_enum?view=powershell-5.1#syntax
 enum SharePointBuild {
     SPRTM
@@ -2177,16 +2172,6 @@ class SharePointPackageInfo {
     [ValidateNotNullOrEmpty()][string] $DownloadUrl
     [Parameter(Mandatory = $false)] [string] $ChecksumType
     [Parameter(Mandatory = $false)] [string] $Checksum
-}
-
-enum SharePointConfigurations {
-    All
-    TrustedAuthentication
-    UserProfilesService
-    ExtendedWebApplication
-    Addins
-    HostNamedSiteCollections
-    StateService
 }
 #################### DUPLICATED ####################
 

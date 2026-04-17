@@ -16,7 +16,8 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds,
         [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
-        [Parameter(Mandatory = $false)] [ConfigurationLevel] $ConfigurationLevel = [ConfigurationLevel]::Full
+        [Parameter(Mandatory = $false)] [SharePointConfigurationLevels] $SharePointConfigurationLevel = [SharePointConfigurationLevels]::Full,
+        [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService")
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
@@ -44,28 +45,38 @@ configuration ConfigSpFrontend
     [System.Management.Automation.PSCredential] $SPFarmCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPFarmCreds.UserName)", $SPFarmCreds.Password)
 
     #################### DUPLICATED ####################
-    # Provisioning options - set to $true to provision, $false to skip provisioning of the corresponding component. These are set based on the selected configuration level, but can be overridden by setting them directly.
+    # Provisioning options
     [Boolean] $ProvisionStateServiceApplication = $false
     [Boolean] $ProvisionTrustedAuthentication = $false
     [Boolean] $ProvisionUserProfilesService = $false
     [Boolean] $ProvisionAddins = $false
     [Boolean] $ProvisionHnscSites = $false
     [Boolean] $ProvisionExtendedZone = $false
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Minimum) {}
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Light) {
-        $ProvisionStateServiceApplication = $true
-        $ProvisionTrustedAuthentication = $true
+    if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
+        $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
+        $ProvisionTrustedAuthentication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
+        $ProvisionUserProfilesService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
+        $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
+        $ProvisionHnscSites = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
+        $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
     }
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Medium) {
-        $ProvisionUserProfilesService = $true
-        $ProvisionExtendedZone = $true
-    }
-    if ($ConfigurationLevel -ge [ConfigurationLevel]::Full) {
-        $ProvisionAddins = $true
-        $ProvisionHnscSites = $true
+    else {
+        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
+        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Light) {
+            $ProvisionStateServiceApplication = $true
+            $ProvisionTrustedAuthentication = $true
+        }
+        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Medium) {
+            $ProvisionUserProfilesService = $true
+            $ProvisionExtendedZone = $true
+        }
+        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
+            $ProvisionAddins = $true
+            $ProvisionHnscSites = $true
+        }
     }
 
-    # Final value for $DefaultZoneMustBeHttps must be set before setting $WebApplicationUrl
+    # $DefaultZoneMustBeHttps may need to be overwritten, and if so, before $WebApplicationUrl is set
     if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
         $DefaultZoneMustBeHttps = $true
     }
@@ -920,11 +931,21 @@ function Get-NetBIOSName {
     }
 }
 
-enum ConfigurationLevel {
+enum SharePointConfigurationLevels {
+    Custom
     Minimum
     Light
     Medium
     Full
+}
+
+enum SharePointConfigurations {
+    TrustedAuthentication
+    UserProfilesService
+    ExtendedWebApplication
+    Addins
+    HostNamedSiteCollections
+    StateService
 }
 
 # enum values cannot start with a digit - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_enum?view=powershell-5.1#syntax
@@ -969,7 +990,7 @@ $SharePointVersion = "SPRTM"
 $SharePointSitesAuthority = "spsites"
 $EnableAnalysis = $true
 $DefaultZoneMustBeHttps = $false
-$ConfigurationLevel = "Light"
+$SharePointConfigurationLevel = "Light"
 $SharePointBits = @(
     @{
         Label = "SPRTM"; 
@@ -994,7 +1015,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureFESE.0\ConfigSpFrontend"
-ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -ConfigurationLevel $ConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -SharePointConfigurationLevel $SharePointConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
