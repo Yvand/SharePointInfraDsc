@@ -23,7 +23,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperReaderCreds,
         [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
         # [Parameter(Mandatory = $false)] [ConfigurationLevel] $ConfigurationLevel = [ConfigurationLevel]::Full,
-        [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $SharePointConfiguration =  @("All")
+        [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $SharePointConfiguration = @("All")
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
@@ -1416,16 +1416,20 @@ configuration ConfigSpMain
                 DependsOn                = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
             }
 
-            SPSiteUrl SetMySiteHostIntranetUrl {
-                Url                  = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
-                Intranet             = if ($ProvisionExtendedZone) {
-                    if ($DefaultZoneMustBeHttps) { "http://$MySiteHostAlias/" } else { "https://$MySiteHostAlias.$DomainFQDN/" }
+            if ($ProvisionExtendedZone) {
+                SPSiteUrl SetMySiteHostIntranetUrl {
+                    Url                  = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
+                    Intranet             = if ($DefaultZoneMustBeHttps) { "http://$MySiteHostAlias/" } else { "https://$MySiteHostAlias.$DomainFQDN/" }
+                    PsDscRunAsCredential = $DomainAdminCredsQualified
+                    DependsOn            = "[SPSite]CreateMySiteHost"
                 }
-                else { 
-                    [string]::Empty
+            }
+            else {
+                SPSiteUrl SetMySiteHostIntranetUrl {
+                    Url                  = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
+                    PsDscRunAsCredential = $DomainAdminCredsQualified
+                    DependsOn            = "[SPSite]CreateMySiteHost"
                 }
-                PsDscRunAsCredential = $DomainAdminCredsQualified
-                DependsOn            = "[SPSite]CreateMySiteHost"
             }
 
             SPManagedPath CreateMySiteManagedPath {
@@ -1475,11 +1479,20 @@ configuration ConfigSpMain
                 DependsOn                = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
             }
 
-            SPSiteUrl SetHNSC1IntranetUrl {
-                Url                  = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
-                Intranet             = if ($DefaultZoneMustBeHttps) { "http://$HNSC1Alias/" } else { "https://$HNSC1Alias.$DomainFQDN/" }
-                PsDscRunAsCredential = $DomainAdminCredsQualified
-                DependsOn            = "[SPSite]CreateHNSC1"
+            if ($ProvisionExtendedZone) {
+                SPSiteUrl SetHNSC1IntranetUrl {
+                    Url                  = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
+                    Intranet             = if ($DefaultZoneMustBeHttps) { "http://$HNSC1Alias/" } else { "https://$HNSC1Alias.$DomainFQDN/" }
+                    PsDscRunAsCredential = $DomainAdminCredsQualified
+                    DependsOn            = "[SPSite]CreateHNSC1"
+                }
+            }
+            else {
+                SPSiteUrl SetHNSC1IntranetUrl {
+                    Url                  = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
+                    PsDscRunAsCredential = $DomainAdminCredsQualified
+                    DependsOn            = "[SPSite]CreateHNSC1"
+                }
             }
         }
 
