@@ -16,6 +16,7 @@
 
 - DSC for SharePoint
   - Only call the resource SPSiteUrl if needed
+  - Fix dependencies on CreateTeamSite
 
 ## [2.3.0] - 2026-04-15
 

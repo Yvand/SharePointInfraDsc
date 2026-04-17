@@ -1193,58 +1193,6 @@ configuration ConfigSpMain
 
         [System.Array]$configureMainWebAppAuthenticationDependsOn = if ($ProvisionExtendedZone) { @( "[SPWebApplicationExtension]ExtendMainWebApp" ) } else { @() }
         if ($ProvisionTrustedAuthentication) { $configureMainWebAppAuthenticationDependsOn += "[SPTrustedIdentityTokenIssuer]CreateSPTrust" }
-
-        # if ($ProvisionExtendedZone) {
-        #         $IntranetArgs             =
-        #         if ($DefaultZoneMustBeHttps -or $false -eq $ProvisionTrustedAuthentication) {
-        #             @(
-        #                 MSFT_SPWebAppAuthenticationMode {
-        #                     AuthenticationMethod = "WindowsAuthentication"
-        #                     WindowsAuthMethod    = "NTLM"
-        #                 }
-        #             )
-        #         }
-        #     }
-
-        # SPWebAppAuthentication ConfigureMainWebAppAuthentication {
-        #     WebAppUrl            = $WebApplicationUrl
-        #     Default              = if ($DefaultZoneMustBeHttps) {
-        #         if ($ProvisionTrustedAuthentication) {
-        #             @(
-        #                 MSFT_SPWebAppAuthenticationMode {
-        #                     AuthenticationMethod   = "Federated"
-        #                     AuthenticationProvider = $DomainFQDN
-        #                 }
-        #                 MSFT_SPWebAppAuthenticationMode {
-        #                     AuthenticationMethod = "WindowsAuthentication"
-        #                     WindowsAuthMethod    = "NTLM"
-        #                 }
-        #             )
-        #         }
-        #         else {
-        #             @(
-        #                 MSFT_SPWebAppAuthenticationMode {
-        #                     AuthenticationMethod = "WindowsAuthentication"
-        #                     WindowsAuthMethod    = "NTLM"
-        #                 }
-        #             )
-        #         }
-        #     }
-        #     else {
-        #         @(
-        #             MSFT_SPWebAppAuthenticationMode {
-        #                 AuthenticationMethod = "WindowsAuthentication"
-        #                 WindowsAuthMethod    = "NTLM"
-        #             }
-        #         )
-        #     }
-        #     Intranet = $IntranetArgs
-            
-            
-        #     PsDscRunAsCredential = $DomainAdminCredsQualified
-        #     DependsOn            = $configureMainWebAppAuthenticationDependsOn
-        # }
-
         SPWebAppAuthentication ConfigureMainWebAppAuthentication {
             WebAppUrl            = $WebApplicationUrl
             Default              = if ($DefaultZoneMustBeHttps) {
@@ -1692,8 +1640,6 @@ configuration ConfigSpMain
         
         # This team site is tested by VM FE to wait before joining the farm, so it acts as a milestone and it should be created only when all SharePoint services are created
         # If VM FE joins the farm while a SharePoint service is creating here, it may block its creation forever.
-        $createTeamSiteDependsOn = @( "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication" )
-        if ($ProvisionAddins) { $createTeamSiteDependsOn += "[SPWebApplicationAppDomain]ConfigureAppDomainDefaultZone", "[SPWebApplicationAppDomain]ConfigureAppDomainIntranetZone", "[SPAppCatalog]SetAppCatalogUrl" }
         SPSite CreateTeamSite {
             Url                  = "$WebApplicationUrl/sites/team"
             OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
@@ -1702,7 +1648,7 @@ configuration ConfigSpMain
             Template             = $SPTeamSiteTemplate
             CreateDefaultGroups  = $true
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = $createTeamSiteDependsOn
+            DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
         }
 
         if ($ProvisionAddins) {
