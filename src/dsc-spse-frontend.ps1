@@ -574,6 +574,15 @@ configuration ConfigSpFrontend
             DependsOn            = "[cChocoInstaller]InstallChoco", "[PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
+        # Setup account is created by SP VM so it must be added to local admins group after the waiting script, to be sure it was created
+        Group AddSPSetupAccountToAdminGroup {
+            GroupName            = "Administrators"
+            Ensure               = "Present"
+            MembersToInclude     = @("$($SPSetupCredsQualified.UserName)")
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
+        }
+
         #********************************************************************
         # Wait for SharePoint app server to be ready
         #********************************************************************
@@ -728,14 +737,7 @@ configuration ConfigSpFrontend
             DependsOn            = "[Script]CreateWSManSPNsIfNeeded"
         }
 
-        # Setup account is created by SP VM so it must be added to local admins group after the waiting script, to be sure it was created
-        Group AddSPSetupAccountToAdminGroup {
-            GroupName            = "Administrators"
-            Ensure               = "Present"
-            MembersToInclude     = @("$($SPSetupCredsQualified.UserName)")
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[Script]WaitForSPFarmReadyToJoin"
-        }
+        
 
         # Update GPO to ensure the root certificate of the CA is present in "cert:\LocalMachine\Root\", otherwise certificate request will fail
         # At this point it is safe to assume that the DC finished provisioning AD CS
@@ -759,7 +761,7 @@ configuration ConfigSpFrontend
                     return $true    # Root CA already present
                 }
             }
-            DependsOn            = "[Script]WaitForSPFarmReadyToJoin"
+            DependsOn            = "[Script]WaitForDNSTxtRecordSPFarmReady"
             PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
@@ -787,7 +789,7 @@ configuration ConfigSpFrontend
                 return (Test-Path HKLM:\SOFTWARE\DscScriptExecution\Flag_WaitToAvoidServersJoiningFarmSimultaneously)
             }
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[Group]AddSPSetupAccountToAdminGroup"
+            DependsOn            = "[Script]UpdateGPOToTrustRootCACert"
         }
 
         #**********************************************************
