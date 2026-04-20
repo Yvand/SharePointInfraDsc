@@ -91,6 +91,7 @@ configuration ConfigSpFrontend
     [String] $SharePointIsoDriveLetter = "S"
     [String] $AdfsDnsEntryName = "adfs"
     [String] $NonceCookieCertificateFileName = "SharePoint OIDC nonce cert.pfx"
+    [String] $SharePointFarmReadyDnsTxtName = "SharePointFarmReady"
 
     # SharePoint settings
     [String] $SPDBPrefix = "SPDSC_"
@@ -585,54 +586,144 @@ configuration ConfigSpFrontend
             TestScript = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
 
-        # The best test is to check the latest HTTP team site to be created, after all SharePoint services are provisioned.
-        # If this server joins the farm while a SharePoint service is being created on the 1st server, it may block its creation forever.
-        # Not testing HTTPS avoid potential issues with the root CA cert maybe not present in the machine store yet
-        Script WaitForSPFarmReadyToJoin {
+        # # The best test is to check the latest HTTP team site to be created, after all SharePoint services are provisioned.
+        # # If this server joins the farm while a SharePoint service is being created on the 1st server, it may block its creation forever.
+        # # Not testing HTTPS avoid potential issues with the root CA cert maybe not present in the machine store yet
+        # Script WaitForSPFarmReadyToJoin {
+        #     SetScript            =
+        #     {
+        #         $tcpTestJobBlock = {
+        #             param($computerName, $port)
+        #             $sleepTime = 10
+                    
+        #             # Wait for TCP socket to be open
+        #             Write-Verbose -Verbose -Message "Testing TCP connection to $computerName on port $port..."
+        #             $tcpConnected = $false
+        #             do {
+        #                 try {
+        #                     $tcpTest = Test-NetConnection -ComputerName $computerName -Port $port -WarningAction SilentlyContinue
+        #                     if ($tcpTest.TcpTestSucceeded) {
+        #                         $tcpConnected = $true
+        #                         Write-Verbose -Verbose -Message "TCP connection to $computerName on port $port succeeded."
+        #                     }
+        #                     else {
+        #                         Write-Verbose -Verbose -Message "TCP connection to $computerName on port $port failed, retrying in $sleepTime secs..."
+        #                         Start-Sleep -Seconds $sleepTime
+        #                     }
+        #                 }
+        #                 catch {
+        #                     Write-Verbose -Verbose -Message "TCP connection test failed with exception: $($_.Exception.Message), retrying in $sleepTime secs..."
+        #                     Start-Sleep -Seconds $sleepTime
+        #                 }
+        #             } while (-not $tcpConnected)
+                    
+        #             return $port
+        #         }
+                                
+        #         # Resolve DNS alias to get the actual computer name - retry until it succeeds
+        #         $dnsAlias = $using:SharePointSitesAuthority
+        #         Write-Verbose -Verbose -Message "Resolving DNS alias '$dnsAlias' to get the actual computer name..."
+        #         $computerName = $null
+        #         $sleepTime = 10
+        #         do {
+        #             $dnsResult = Resolve-DnsName -Name $dnsAlias -Type CNAME -ErrorAction SilentlyContinue
+        #             if ($null -ne $dnsResult -and $null -ne $dnsResult.NameHost) {
+        #                 $resolvedName = $dnsResult.NameHost
+        #                 # Extract just the computer name (without domain suffix)
+        #                 $computerName = $resolvedName.Split('.')[0]
+        #                 Write-Verbose -Verbose -Message "DNS alias '$dnsAlias' resolved to '$resolvedName', using computer name '$computerName'"
+        #             }
+        #             else {
+        #                 Write-Verbose -Verbose -Message "DNS resolution returned no CNAME record, retrying in $sleepTime secs..."
+        #                 Start-Sleep -Seconds $sleepTime
+        #             }
+        #         } while ($null -eq $computerName)
+                
+        #         # Start two parallel jobs to test both ports
+        #         Write-Verbose -Verbose -Message "Starting parallel TCP connection tests on ports 80 and 443..."
+        #         $job80 = Start-Job -ScriptBlock $tcpTestJobBlock -ArgumentList $computerName, 80
+        #         $job443 = Start-Job -ScriptBlock $tcpTestJobBlock -ArgumentList $computerName, 443
+                
+        #         # Wait for the first job to complete
+        #         $completedJob = Wait-Job -Job $job80, $job443 -Any
+        #         $successfulPort = Receive-Job -Job $completedJob -AutoRemoveJob
+                
+        #         # Stop and remove the other job
+        #         Get-Job | Where-Object { $_.Id -ne $completedJob.Id } | Stop-Job | Remove-Job
+                
+        #         Write-Verbose -Verbose -Message "Port $successfulPort became available first. Proceeding with HTTP endpoint test..."
+                
+        #         # Now test HTTP endpoint using the successful port
+        #         $testUri = if ($successfulPort -eq 443) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/sites/team" } else { "http://$($using:SharePointSitesAuthority)/sites/team" }
+                
+        #         $sleepTime = 30
+        #         $currentStatusCode = 0
+        #         $expectedStatusCode = 200
+        #         do {
+        #             try {
+        #                 Write-Verbose -Verbose -Message "Trying to connect to $testUri..."
+        #                 $Response = Invoke-WebRequest -UseBasicParsing -Uri $testUri -UseDefaultCredentials -TimeoutSec 10 -ErrorAction Stop
+        #                 # When it will be actually ready, site will respond 401/302/200, and $Response.StatusCode will be 200
+        #                 $currentStatusCode = $Response.StatusCode
+        #             }
+        #             catch [System.Net.WebException] {
+        #                 # We always expect a WebException until site is actually up. 
+        #                 # Write-Verbose -Verbose -Message "Request failed with a WebException: $($_.Exception)"
+        #                 if ($null -ne $_.Exception.Response) {
+        #                     $currentStatusCode = $_.Exception.Response.StatusCode.value__
+        #                 }
+        #             }
+        #             catch {
+        #                 Write-Verbose -Verbose -Message "Request failed with an unexpected exception: $($_.Exception)"
+        #             }
+
+        #             if ($currentStatusCode -ne $expectedStatusCode) {
+        #                 Write-Verbose -Verbose -Message "Connection to $testUri... returned status code $currentStatusCode while $expectedStatusCode is expected, retrying in $sleepTime secs..."
+        #                 Start-Sleep -Seconds $sleepTime
+        #             }
+        #             else {
+        #                 Write-Verbose -Verbose -Message "Connection to $testUri... returned expected status code $currentStatusCode, exiting..."
+        #             }
+        #         } while ($currentStatusCode -ne $expectedStatusCode)
+
+
+        #         <#
+        #         Test-NetConnection -ComputerName "SP" -Port 80 | Select TcpTestSucceeded
+        #         Test-NetConnection -ComputerName "SP" -Port 443 | Select TcpTestSucceeded
+        #         Test-NetConnection -ComputerName "SP" -Port 445 | Select TcpTestSucceeded
+        #         #>
+        #     }
+        #     GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+        #     TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+        #     PsDscRunAsCredential = $DomainAdminCredsQualified
+        #     DependsOn            = "[Script]CreateWSManSPNsIfNeeded"
+        # }
+
+        # Wait for DNS TXT record SPFarmReady to be present before joining the farm
+        Script WaitForDNSTxtRecordSPFarmReady {
             SetScript            =
             {
-                $uri = $using:FarmReadinessTestUrl
-                $sleepTime = 30
-                $currentStatusCode = 0
-                $expectedStatusCode = 200
+                $dnsServer = $using:DCServerName
+                $domainFQDN = $using:DomainFQDN
+                $txtRecordName = $using:SharePointFarmReadyDnsTxtName
+                $sleepTime = 10
+                $recordFound = $false
+                
+                Write-Verbose -Verbose -Message "Waiting for DNS TXT record '$txtRecordName' in domain '$domainFQDN' on DNS server '$dnsServer'..."
                 do {
-                    try {
-                        Write-Verbose -Verbose -Message "Trying to connect to $uri..."
-                        # -UseDefaultCredentials: Does NTLM authN
-                        # -UseBasicParsing: Avoid exception because IE was not first launched yet
-                        $Response = Invoke-WebRequest -UseBasicParsing -Uri $uri -UseDefaultCredentials -TimeoutSec 10 -ErrorAction Stop
-                        # When it will be actually ready, site will respond 401/302/200, and $Response.StatusCode will be 200
-                        $currentStatusCode = $Response.StatusCode
-                    }
-                    catch [System.Net.WebException] {
-                        # We always expect a WebException until site is actually up. 
-                        # Write-Verbose -Verbose -Message "Request failed with a WebException: $($_.Exception)"
-                        if ($null -ne $_.Exception.Response) {
-                            $currentStatusCode = $_.Exception.Response.StatusCode.value__
-                        }
-                    }
-                    catch {
-                        Write-Verbose -Verbose -Message "Request failed with an unexpected exception: $($_.Exception)"
-                    }
-
-                    if ($currentStatusCode -ne $expectedStatusCode) {
-                        Write-Verbose -Verbose -Message "Connection to $uri... returned status code $currentStatusCode while $expectedStatusCode is expected, retrying in $sleepTime secs..."
-                        Start-Sleep -Seconds $sleepTime
+                    $txtRecords = Resolve-DnsName -Name $txtRecordName.$domainFQDN -Type TXT -Server $dnsServer -ErrorAction SilentlyContinue
+                    if ($null -ne $txtRecords) {
+                        $recordFound = $true
+                        Write-Verbose -Verbose -Message "DNS TXT record '$txtRecordName' found in domain '$domainFQDN'"
                     }
                     else {
-                        Write-Verbose -Verbose -Message "Connection to $uri... returned expected status code $currentStatusCode, exiting..."
+                        Write-Verbose -Verbose -Message "DNS TXT record '$txtRecordName' not found yet, retrying in $sleepTime secs..."
+                        Start-Sleep -Seconds $sleepTime
                     }
-                } while ($currentStatusCode -ne $expectedStatusCode)
-
-
-                <#
-                Test-NetConnection -ComputerName "SP" -Port 80 | Select TcpTestSucceeded
-                Test-NetConnection -ComputerName "SP" -Port 443 | Select TcpTestSucceeded
-                Test-NetConnection -ComputerName "SP" -Port 445 | Select TcpTestSucceeded
-                #>
+                } while (-not $recordFound)
             }
-            GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+            GetScript            = { return @{ "Result" = "false" } }
+            TestScript           = { return $false }
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[Script]CreateWSManSPNsIfNeeded"
         }

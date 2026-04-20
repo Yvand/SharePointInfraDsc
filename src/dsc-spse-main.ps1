@@ -106,6 +106,7 @@ configuration ConfigSpMain
     [String] $LdapcpSolutionId = "ff36c8cf-e510-42fc-8ba3-18af3c316aec"
     [String] $LdapcpReleaseId = "latest"
     [String] $LDAPCPFileFullPath = Join-Path -Path $SetupPath -ChildPath "Binaries\$LdapcpSolutionName.wsp"
+    [String] $SharePointFarmReadyDnsTxtName = "SharePointFarmReady"
 
     # SharePoint settings
     [String] $SPDBPrefix = "SPDSC_"
@@ -1637,19 +1638,28 @@ configuration ConfigSpMain
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[SPFarm]CreateSPFarm"
         }
-        
-        # This team site is tested by VM FE to wait before joining the farm, so it acts as a milestone and it should be created only when all SharePoint services are created
-        # If VM FE joins the farm while a SharePoint service is creating here, it may block its creation forever.
-        SPSite CreateTeamSite {
-            Url                  = "$WebApplicationUrl/sites/team"
-            OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
-            Name                 = "Team site"
-            Template             = $SPTeamSiteTemplate
-            CreateDefaultGroups  = $true
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
+
+        DnsRecordTxt 'SharePointFarmReady' {
+            ZoneName        = $DomainFQDN
+            DnsServer       = "$DCServerName.$DomainFQDN"
+            Name            = $SharePointFarmReadyDnsTxtName
+            DescriptiveText = $SharePointFarmReadyDnsTxtName
+            Ensure          = 'Present'
+            DependsOn       = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
         }
+        
+        # # This team site is tested by VM FE to wait before joining the farm, so it acts as a milestone and it should be created only when all SharePoint services are created
+        # # If VM FE joins the farm while a SharePoint service is creating here, it may block its creation forever.
+        # SPSite CreateTeamSite {
+        #     Url                  = "$WebApplicationUrl/sites/team"
+        #     OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
+        #     SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+        #     Name                 = "Team site"
+        #     Template             = $SPTeamSiteTemplate
+        #     CreateDefaultGroups  = $true
+        #     PsDscRunAsCredential = $DomainAdminCredsQualified
+        #     DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
+        # }
 
         if ($ProvisionAddins) {
             CertReq GenerateAddinsSiteCertificate {
