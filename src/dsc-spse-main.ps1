@@ -1639,13 +1639,14 @@ configuration ConfigSpMain
             DependsOn            = "[SPFarm]CreateSPFarm"
         }
 
-        DnsRecordTxt 'SharePointFarmReady' {
-            ZoneName        = $DomainFQDN
-            DnsServer       = "$DCServerName.$DomainFQDN"
-            Name            = $SharePointFarmReadyDnsTxtName
-            DescriptiveText = $SharePointFarmReadyDnsTxtName
-            Ensure          = 'Present'
-            DependsOn       = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
+        DnsRecordTxt SharePointFarmReady {
+            ZoneName             = $DomainFQDN
+            DnsServer            = "$DCServerName.$DomainFQDN"
+            Name                 = $SharePointFarmReadyDnsTxtName
+            DescriptiveText      = $SharePointFarmReadyDnsTxtName
+            Ensure               = 'Present'
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+            DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
         }
         
         # # This team site is tested by VM FE to wait before joining the farm, so it acts as a milestone and it should be created only when all SharePoint services are created
@@ -2170,6 +2171,7 @@ $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
 $DefaultZoneMustBeHttps = $false
 $SharePointConfigurationLevels = "Light"
+$CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService", "ExtendedWebApplication", "Addins", "HostNamedSiteCollections", "StateService")
 $SharePointBits = @(
     @{
         Label = "SPRTM"; 
@@ -2199,7 +2201,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\dsc-spse-main.0\ConfigSpMain"
-ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -ConfigurationLevel $SharePointConfigurationLevels -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpMain -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -SharePointConfigurationLevel $SharePointConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
