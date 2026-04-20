@@ -7,12 +7,11 @@
         [Parameter(Mandatory)] [String]$SPServerName,
         [Parameter(Mandatory)] [String]$SharePointSitesAuthority,
         [Parameter(Mandatory)] [String]$SharePointCentralAdminPort,
-        [Parameter ()] [Boolean]$ApplyBrowserPolicies = $true,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$Admincreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$AdfsSvcCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SqlSvcCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
-        [Parameter(Mandatory = $false)] [GlobalConfigurations[]] $GlobalConfiguration = @("EXP_DenyNtlmToAllDomainAccounts", "EXP_DenyNtlmToAllAccounts")
+        [Parameter(Mandatory = $false)] [GlobalConfigurations[]] $GlobalConfiguration = @("ApplyBrowserPolicies")
     )
 
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.1
@@ -608,7 +607,7 @@
             # }
         }
 
-        if ($true -eq $ApplyBrowserPolicies) {
+        if (@($GlobalConfiguration) -contains [GlobalConfigurations]::ApplyBrowserPolicies) {
             # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
             Script ConfigureEdgePolicies {
                 SetScript  = {
@@ -770,6 +769,8 @@ function Get-NetBIOSName {
 }
 
 enum GlobalConfigurations {
+    ApplyBrowserPolicies
+    EnableDscPerformanceAnalysis
     EXP_DenyNtlmToAllDomainAccounts
     EXP_DenyNtlmToAllAccounts
 }

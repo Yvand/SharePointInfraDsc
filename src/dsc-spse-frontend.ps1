@@ -623,6 +623,13 @@ configuration ConfigSpFrontend
                         Write-Verbose -Verbose -Message "Connection to $uri... returned expected status code $currentStatusCode, exiting..."
                     }
                 } while ($currentStatusCode -ne $expectedStatusCode)
+
+
+                <#
+                Test-NetConnection -ComputerName "SP" -Port 80 | Select TcpTestSucceeded
+                Test-NetConnection -ComputerName "SP" -Port 443 | Select TcpTestSucceeded
+                Test-NetConnection -ComputerName "SP" -Port 445 | Select TcpTestSucceeded
+                #>
             }
             GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
@@ -764,7 +771,8 @@ configuration ConfigSpFrontend
                     }
                 }
                 [System.Management.Automation.Job[]] $jobs = @()
-                $uri = $using:WebApplicationUrl
+                #$uri = $using:WebApplicationUrl
+                $uri = (Get-SPWebApplication)[0].Url
                 Write-Verbose -Verbose -Message "Warming up '$uri'..."
                 $jobs += Start-Job -ScriptBlock $jobBlock -ArgumentList @($uri)
 
@@ -790,8 +798,9 @@ configuration ConfigSpFrontend
                     $cert = Import-PfxCertificate -FilePath $cookieCertificateFilePath -CertStoreLocation Cert:\localMachine\My -Exportable
 
                     # Grant the application pool access to the private key of the cookie certificate
-                    $uri = $using:WebApplicationUrl
-                    $wa = Get-SPWebApplication $uri
+                    #$uri = $using:WebApplicationUrl
+                    #$wa = Get-SPWebApplication $uri
+                    $wa = (Get-SPWebApplication)[0]
                     $apppoolUserName = $wa.ApplicationPool.Username
                     $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
                     $fileName = $rsaCert.key.UniqueName

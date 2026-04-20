@@ -2119,6 +2119,21 @@ class SharePointPackageInfo {
     [Parameter(Mandatory = $false)] [string] $ChecksumType
     [Parameter(Mandatory = $false)] [string] $Checksum
 }
+
+<#
+rename SharePointConfigurationLevel to SharePointFeatureLevel?
+param SharePointSettings
+
+class SharePointSetting {
+    [int] $CentralAdminPort
+    [string] $webAppHostName
+    [SharePointBuild] $BuildName
+    [bool] $DefaultZoneMustBeHttps
+}
+
+class SharePointSettings {
+}
+#>
 #################### DUPLICATED ####################
 
 <#
