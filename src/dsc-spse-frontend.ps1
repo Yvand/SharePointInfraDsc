@@ -47,7 +47,7 @@ configuration ConfigSpFrontend
     #################### DUPLICATED ####################
     # Provisioning options
     [Boolean] $ProvisionStateServiceApplication = $false
-    [Boolean] $ProvisionTrustedAuthentication = $false
+    [Boolean] $ProvisionTrustedAuthentication = $false # USED
     [Boolean] $ProvisionUserProfilesService = $false
     [Boolean] $ProvisionAddins = $false
     [Boolean] $ProvisionHnscSites = $false
@@ -97,8 +97,6 @@ configuration ConfigSpFrontend
     [String] $SPDBPrefix = "SPDSC_"
     [String] $MySiteHostAlias = "OhMy"
     [String] $HNSC1Alias = "HNSC1"
-    [String] $WebApplicationUrl = if ($DefaultZoneMustBeHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
-    [String] $FarmReadinessTestUrl = "$WebApplicationUrl/sites/team"
 
     Node localhost
     {
@@ -486,25 +484,6 @@ configuration ConfigSpFrontend
             DependsOn  = "[DnsServerAddress]SetDNS"
         }
 
-        # # If WaitForADDomain does not find the domain whtin "WaitTimeout" secs, it will signar a restart to DSC engine "RestartCount" times
-        # WaitForADDomain WaitForDCReady
-        # {
-        #     DomainName              = $DomainFQDN
-        #     WaitTimeout             = 1800
-        #     RestartCount            = 2
-        #     WaitForValidCredentials = $True
-        #     Credential              = $DomainAdminCredsQualified
-        #     DependsOn               = "[DnsServerAddress]SetDNS"
-        # }
-
-        # # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
-        # PendingReboot RebootOnSignalFromWaitForDCReady
-        # {
-        #     Name             = "RebootOnSignalFromWaitForDCReady"
-        #     SkipCcmClientSDK = $true
-        #     DependsOn        = "[WaitForADDomain]WaitForDCReady"
-        # }
-
         Computer JoinDomain {
             Name       = $ComputerName
             DomainName = $DomainFQDN
@@ -715,7 +694,7 @@ configuration ConfigSpFrontend
                 $dnsServer = $using:DCServerName
                 $domainFQDN = $using:DomainFQDN
                 $txtRecordName = $using:SharePointFarmReadyDnsTxtName
-                $sleepTime = 10
+                $sleepTime = 30
                 $recordFound = $false
                 
                 Write-Verbose -Verbose -Message "Waiting for DNS TXT record '$txtRecordName' in domain '$domainFQDN' on DNS server '$dnsServer'..."
@@ -864,7 +843,6 @@ configuration ConfigSpFrontend
                     }
                 }
                 [System.Management.Automation.Job[]] $jobs = @()
-                #$uri = $using:WebApplicationUrl
                 $uri = (Get-SPWebApplication)[0].Url
                 Write-Verbose -Verbose -Message "Warming up '$uri'..."
                 $jobs += Start-Job -ScriptBlock $jobBlock -ArgumentList @($uri)
@@ -891,8 +869,6 @@ configuration ConfigSpFrontend
                     $cert = Import-PfxCertificate -FilePath $cookieCertificateFilePath -CertStoreLocation Cert:\localMachine\My -Exportable
 
                     # Grant the application pool access to the private key of the cookie certificate
-                    #$uri = $using:WebApplicationUrl
-                    #$wa = Get-SPWebApplication $uri
                     $wa = (Get-SPWebApplication)[0]
                     $apppoolUserName = $wa.ApplicationPool.Username
                     $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
