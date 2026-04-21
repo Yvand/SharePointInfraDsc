@@ -14,10 +14,10 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds,
-        [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
-        [Parameter(Mandatory = $false)] [SharePointConfigurationLevels] $SharePointConfigurationLevel = [SharePointConfigurationLevels]::Full,
-        [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService")
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds
+        # [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
+        # [Parameter(Mandatory = $false)] [SharePointConfigurationLevels] $SharePointConfigurationLevel = [SharePointConfigurationLevels]::Full,
+        # [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService")
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
@@ -44,43 +44,43 @@ configuration ConfigSpFrontend
     [System.Management.Automation.PSCredential] $SPSetupCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPSetupCreds.UserName)", $SPSetupCreds.Password)
     [System.Management.Automation.PSCredential] $SPFarmCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPFarmCreds.UserName)", $SPFarmCreds.Password)
 
-    #################### DUPLICATED ####################
-    # Provisioning options
-    [Boolean] $ProvisionStateServiceApplication = $false
-    [Boolean] $ProvisionTrustedAuthentication = $false # USED
-    [Boolean] $ProvisionUserProfilesService = $false
-    [Boolean] $ProvisionAddins = $false
-    [Boolean] $ProvisionHnscSites = $false
-    [Boolean] $ProvisionExtendedZone = $false
-    if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
-        $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
-        $ProvisionTrustedAuthentication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
-        $ProvisionUserProfilesService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
-        $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
-        $ProvisionHnscSites = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
-        $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
-    }
-    else {
-        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
-        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Light) {
-            $ProvisionStateServiceApplication = $true
-            $ProvisionTrustedAuthentication = $true
-        }
-        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Medium) {
-            $ProvisionUserProfilesService = $true
-            $ProvisionExtendedZone = $true
-        }
-        if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
-            $ProvisionAddins = $true
-            $ProvisionHnscSites = $true
-        }
-    }
+    # #################### DUPLICATED ####################
+    # # Provisioning options
+    # [Boolean] $ProvisionStateServiceApplication = $false
+    # [Boolean] $ProvisionTrustedAuthentication = $false # USED
+    # [Boolean] $ProvisionUserProfilesService = $false
+    # [Boolean] $ProvisionAddins = $false
+    # [Boolean] $ProvisionHnscSites = $false
+    # [Boolean] $ProvisionExtendedZone = $false
+    # if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
+    #     $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
+    #     $ProvisionTrustedAuthentication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
+    #     $ProvisionUserProfilesService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
+    #     $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
+    #     $ProvisionHnscSites = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
+    #     $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
+    # }
+    # else {
+    #     if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
+    #     if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Light) {
+    #         $ProvisionStateServiceApplication = $true
+    #         $ProvisionTrustedAuthentication = $true
+    #     }
+    #     if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Medium) {
+    #         $ProvisionUserProfilesService = $true
+    #         $ProvisionExtendedZone = $true
+    #     }
+    #     if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
+    #         $ProvisionAddins = $true
+    #         $ProvisionHnscSites = $true
+    #     }
+    # }
 
-    # $DefaultZoneMustBeHttps may need to be overwritten, and if so, before $WebApplicationUrl is set
-    if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
-        $DefaultZoneMustBeHttps = $true
-    }
-    #################### DUPLICATED ####################
+    # # $DefaultZoneMustBeHttps may need to be overwritten, and if so, before $WebApplicationUrl is set
+    # if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
+    #     $DefaultZoneMustBeHttps = $true
+    # }
+    # #################### DUPLICATED ####################
     
     # Setup settings
     [String] $SetupPath = "C:\DSC Data"
@@ -856,7 +856,7 @@ configuration ConfigSpFrontend
             DependsOn            = "[DnsRecordCname]UpdateDNSAliasSPSites"
         }
 
-        if ($ProvisionTrustedAuthentication) {
+        # if ($ProvisionTrustedAuthentication) {
             Script SetFarmPropertiesForOIDC {
                 SetScript            = 
                 {
@@ -887,10 +887,9 @@ configuration ConfigSpFrontend
                 TestScript           = 
                 {
                     # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-                    # Import-Module SharePointServer | Out-Null
-                    # $f = Get-SPFarm
-                    # if ($f.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint') -eq $false) {
-                    if ((Get-ChildItem -Path "cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq "CN=SharePoint Cookie Cert" }) -eq $null) {
+                    $farm = Get-SPFarm
+                    if ($farm.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint')) {
+                    #if ((Get-ChildItem -Path "cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq "CN=SharePoint Cookie Cert" }) -eq $null) {
                         return $false
                     }
                     else {
@@ -900,7 +899,7 @@ configuration ConfigSpFrontend
                 DependsOn            = "[SPFarm]JoinSPFarm"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
             }
-        }
+        # }
 
         Script CreateShortcuts {
             SetScript            =
