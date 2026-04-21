@@ -889,11 +889,10 @@ configuration ConfigSpFrontend
                     # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                     $nonceCertificateInstalled = (Get-ChildItem -Path "cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq "CN=SharePoint Cookie Cert" }) -ne $null
                     $farm = Get-SPFarm
-                    $trustedAuthenticationIsConfigured = $farm.Farm.Properties.ContainsKey('SP-TrustedAuthenticationProviderName')
+                    $trustedAuthenticationIsConfigured = $farm.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint')
                     if ($trustedAuthenticationIsConfigured -and -not $nonceCertificateInstalled) {
                         return $false
-                    }
-                    else {
+                    } else {
                         return $true
                     }
                 }
