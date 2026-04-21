@@ -11,6 +11,8 @@
 
 - DSC for SharePoint
   - Renamed parameter ConfigurationLevel to SharePointConfigurationLevel
+  - Changed the name of the SPTrustedIdentityTokenIssuer config, in SharePoint, to 'trusted'
+  - Removed unnecessary parameters in the frontend config
 
 ### Fixed
 

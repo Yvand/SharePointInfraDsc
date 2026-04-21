@@ -15,9 +15,6 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds
-        # [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps = $false,
-        # [Parameter(Mandatory = $false)] [SharePointConfigurationLevels] $SharePointConfigurationLevel = [SharePointConfigurationLevels]::Full,
-        # [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService")
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
@@ -43,44 +40,6 @@ configuration ConfigSpFrontend
     [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($DomainAdminCreds.UserName)", $DomainAdminCreds.Password)
     [System.Management.Automation.PSCredential] $SPSetupCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPSetupCreds.UserName)", $SPSetupCreds.Password)
     [System.Management.Automation.PSCredential] $SPFarmCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPFarmCreds.UserName)", $SPFarmCreds.Password)
-
-    # #################### DUPLICATED ####################
-    # # Provisioning options
-    # [Boolean] $ProvisionStateServiceApplication = $false
-    # [Boolean] $ProvisionTrustedAuthentication = $false # USED
-    # [Boolean] $ProvisionUserProfilesService = $false
-    # [Boolean] $ProvisionAddins = $false
-    # [Boolean] $ProvisionHnscSites = $false
-    # [Boolean] $ProvisionExtendedZone = $false
-    # if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
-    #     $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
-    #     $ProvisionTrustedAuthentication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
-    #     $ProvisionUserProfilesService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
-    #     $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
-    #     $ProvisionHnscSites = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::HostNamedSiteCollections
-    #     $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
-    # }
-    # else {
-    #     if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
-    #     if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Light) {
-    #         $ProvisionStateServiceApplication = $true
-    #         $ProvisionTrustedAuthentication = $true
-    #     }
-    #     if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Medium) {
-    #         $ProvisionUserProfilesService = $true
-    #         $ProvisionExtendedZone = $true
-    #     }
-    #     if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
-    #         $ProvisionAddins = $true
-    #         $ProvisionHnscSites = $true
-    #     }
-    # }
-
-    # # $DefaultZoneMustBeHttps may need to be overwritten, and if so, before $WebApplicationUrl is set
-    # if ($ProvisionTrustedAuthentication -and -not $ProvisionExtendedZone) {
-    #     $DefaultZoneMustBeHttps = $true
-    # }
-    # #################### DUPLICATED ####################
     
     # Setup settings
     [String] $SetupPath = "C:\DSC Data"
@@ -573,120 +532,7 @@ configuration ConfigSpFrontend
             GetScript  = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
-
-        # # The best test is to check the latest HTTP team site to be created, after all SharePoint services are provisioned.
-        # # If this server joins the farm while a SharePoint service is being created on the 1st server, it may block its creation forever.
-        # # Not testing HTTPS avoid potential issues with the root CA cert maybe not present in the machine store yet
-        # Script WaitForSPFarmReadyToJoin {
-        #     SetScript            =
-        #     {
-        #         $tcpTestJobBlock = {
-        #             param($computerName, $port)
-        #             $sleepTime = 10
-                    
-        #             # Wait for TCP socket to be open
-        #             Write-Verbose -Verbose -Message "Testing TCP connection to $computerName on port $port..."
-        #             $tcpConnected = $false
-        #             do {
-        #                 try {
-        #                     $tcpTest = Test-NetConnection -ComputerName $computerName -Port $port -WarningAction SilentlyContinue
-        #                     if ($tcpTest.TcpTestSucceeded) {
-        #                         $tcpConnected = $true
-        #                         Write-Verbose -Verbose -Message "TCP connection to $computerName on port $port succeeded."
-        #                     }
-        #                     else {
-        #                         Write-Verbose -Verbose -Message "TCP connection to $computerName on port $port failed, retrying in $sleepTime secs..."
-        #                         Start-Sleep -Seconds $sleepTime
-        #                     }
-        #                 }
-        #                 catch {
-        #                     Write-Verbose -Verbose -Message "TCP connection test failed with exception: $($_.Exception.Message), retrying in $sleepTime secs..."
-        #                     Start-Sleep -Seconds $sleepTime
-        #                 }
-        #             } while (-not $tcpConnected)
-                    
-        #             return $port
-        #         }
-                                
-        #         # Resolve DNS alias to get the actual computer name - retry until it succeeds
-        #         $dnsAlias = $using:SharePointSitesAuthority
-        #         Write-Verbose -Verbose -Message "Resolving DNS alias '$dnsAlias' to get the actual computer name..."
-        #         $computerName = $null
-        #         $sleepTime = 10
-        #         do {
-        #             $dnsResult = Resolve-DnsName -Name $dnsAlias -Type CNAME -ErrorAction SilentlyContinue
-        #             if ($null -ne $dnsResult -and $null -ne $dnsResult.NameHost) {
-        #                 $resolvedName = $dnsResult.NameHost
-        #                 # Extract just the computer name (without domain suffix)
-        #                 $computerName = $resolvedName.Split('.')[0]
-        #                 Write-Verbose -Verbose -Message "DNS alias '$dnsAlias' resolved to '$resolvedName', using computer name '$computerName'"
-        #             }
-        #             else {
-        #                 Write-Verbose -Verbose -Message "DNS resolution returned no CNAME record, retrying in $sleepTime secs..."
-        #                 Start-Sleep -Seconds $sleepTime
-        #             }
-        #         } while ($null -eq $computerName)
-                
-        #         # Start two parallel jobs to test both ports
-        #         Write-Verbose -Verbose -Message "Starting parallel TCP connection tests on ports 80 and 443..."
-        #         $job80 = Start-Job -ScriptBlock $tcpTestJobBlock -ArgumentList $computerName, 80
-        #         $job443 = Start-Job -ScriptBlock $tcpTestJobBlock -ArgumentList $computerName, 443
-                
-        #         # Wait for the first job to complete
-        #         $completedJob = Wait-Job -Job $job80, $job443 -Any
-        #         $successfulPort = Receive-Job -Job $completedJob -AutoRemoveJob
-                
-        #         # Stop and remove the other job
-        #         Get-Job | Where-Object { $_.Id -ne $completedJob.Id } | Stop-Job | Remove-Job
-                
-        #         Write-Verbose -Verbose -Message "Port $successfulPort became available first. Proceeding with HTTP endpoint test..."
-                
-        #         # Now test HTTP endpoint using the successful port
-        #         $testUri = if ($successfulPort -eq 443) { "https://$($using:SharePointSitesAuthority).$($using:DomainFQDN)/sites/team" } else { "http://$($using:SharePointSitesAuthority)/sites/team" }
-                
-        #         $sleepTime = 30
-        #         $currentStatusCode = 0
-        #         $expectedStatusCode = 200
-        #         do {
-        #             try {
-        #                 Write-Verbose -Verbose -Message "Trying to connect to $testUri..."
-        #                 $Response = Invoke-WebRequest -UseBasicParsing -Uri $testUri -UseDefaultCredentials -TimeoutSec 10 -ErrorAction Stop
-        #                 # When it will be actually ready, site will respond 401/302/200, and $Response.StatusCode will be 200
-        #                 $currentStatusCode = $Response.StatusCode
-        #             }
-        #             catch [System.Net.WebException] {
-        #                 # We always expect a WebException until site is actually up. 
-        #                 # Write-Verbose -Verbose -Message "Request failed with a WebException: $($_.Exception)"
-        #                 if ($null -ne $_.Exception.Response) {
-        #                     $currentStatusCode = $_.Exception.Response.StatusCode.value__
-        #                 }
-        #             }
-        #             catch {
-        #                 Write-Verbose -Verbose -Message "Request failed with an unexpected exception: $($_.Exception)"
-        #             }
-
-        #             if ($currentStatusCode -ne $expectedStatusCode) {
-        #                 Write-Verbose -Verbose -Message "Connection to $testUri... returned status code $currentStatusCode while $expectedStatusCode is expected, retrying in $sleepTime secs..."
-        #                 Start-Sleep -Seconds $sleepTime
-        #             }
-        #             else {
-        #                 Write-Verbose -Verbose -Message "Connection to $testUri... returned expected status code $currentStatusCode, exiting..."
-        #             }
-        #         } while ($currentStatusCode -ne $expectedStatusCode)
-
-
-        #         <#
-        #         Test-NetConnection -ComputerName "SP" -Port 80 | Select TcpTestSucceeded
-        #         Test-NetConnection -ComputerName "SP" -Port 443 | Select TcpTestSucceeded
-        #         Test-NetConnection -ComputerName "SP" -Port 445 | Select TcpTestSucceeded
-        #         #>
-        #     }
-        #     GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-        #     TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-        #     PsDscRunAsCredential = $DomainAdminCredsQualified
-        #     DependsOn            = "[Script]CreateWSManSPNsIfNeeded"
-        # }
-
+        
         # Wait for DNS TXT record SPFarmReady to be present before joining the farm
         Script WaitForDNSTxtRecordSPFarmReady {
             SetScript            =
@@ -856,50 +702,49 @@ configuration ConfigSpFrontend
             DependsOn            = "[DnsRecordCname]UpdateDNSAliasSPSites"
         }
 
-        # if ($ProvisionTrustedAuthentication) {
-            Script SetFarmPropertiesForOIDC {
-                SetScript            = 
-                {
-                    # Import OIDC-specific cookie certificate and set required permissions
-                    $DCSetupPath = Join-Path -Path $using:DCSetupPath -ChildPath "Certificates"
+        Script SetFarmPropertiesForOIDC {
+            SetScript            = 
+            {
+                # Import OIDC-specific cookie certificate and set required permissions
+                $DCSetupPath = Join-Path -Path $using:DCSetupPath -ChildPath "Certificates"
                 
-                    # Import OIDC-specific cookie certificate created in 1st SharePoint Server of the farm
-                    $cookieCertificateFileName = $using:NonceCookieCertificateFileName
-                    $cookieCertificateFilePath = Join-Path -Path $DCSetupPath -ChildPath $cookieCertificateFileName
-                    $cert = Import-PfxCertificate -FilePath $cookieCertificateFilePath -CertStoreLocation Cert:\localMachine\My -Exportable
+                # Import OIDC-specific cookie certificate created in 1st SharePoint Server of the farm
+                $cookieCertificateFileName = $using:NonceCookieCertificateFileName
+                $cookieCertificateFilePath = Join-Path -Path $DCSetupPath -ChildPath $cookieCertificateFileName
+                $cert = Import-PfxCertificate -FilePath $cookieCertificateFilePath -CertStoreLocation Cert:\localMachine\My -Exportable
 
-                    # Grant the application pool access to the private key of the cookie certificate
-                    $wa = (Get-SPWebApplication)[0]
-                    $apppoolUserName = $wa.ApplicationPool.Username
-                    $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
-                    $fileName = $rsaCert.key.UniqueName
-                    $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
-                    $permissions = Get-Acl -Path $path
-                    $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
-                    $permissions.AddAccessRule($access_rule)
-                    Set-Acl -Path $path -AclObject $permissions
-                }
-                GetScript            =  
-                {
-                    # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                    return @{ "Result" = "false" }
-                }
-                TestScript           = 
-                {
-                    # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-                    $nonceCertificateInstalled = (Get-ChildItem -Path "cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq "CN=SharePoint Cookie Cert" }) -ne $null
-                    $farm = Get-SPFarm
-                    $trustedAuthenticationIsConfigured = $farm.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint')
-                    if ($trustedAuthenticationIsConfigured -and -not $nonceCertificateInstalled) {
-                        return $false
-                    } else {
-                        return $true
-                    }
-                }
-                DependsOn            = "[SPFarm]JoinSPFarm"
-                PsDscRunAsCredential = $DomainAdminCredsQualified
+                # Grant the application pool access to the private key of the cookie certificate
+                $wa = (Get-SPWebApplication)[0]
+                $apppoolUserName = $wa.ApplicationPool.Username
+                $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
+                $fileName = $rsaCert.key.UniqueName
+                $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
+                $permissions = Get-Acl -Path $path
+                $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
+                $permissions.AddAccessRule($access_rule)
+                Set-Acl -Path $path -AclObject $permissions
             }
-        # }
+            GetScript            =  
+            {
+                # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+                return @{ "Result" = "false" }
+            }
+            TestScript           = 
+            {
+                # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+                $nonceCertificateInstalled = (Get-ChildItem -Path "cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq "CN=SharePoint Cookie Cert" }) -ne $null
+                $farm = Get-SPFarm
+                $trustedAuthenticationIsConfigured = $farm.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint')
+                if ($trustedAuthenticationIsConfigured -and -not $nonceCertificateInstalled) {
+                    return $false
+                }
+                else {
+                    return $true
+                }
+            }
+            DependsOn            = "[SPFarm]JoinSPFarm"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+        }
 
         Script CreateShortcuts {
             SetScript            =
@@ -1006,23 +851,6 @@ function Get-NetBIOSName {
             return $DomainFQDN
         }
     }
-}
-
-enum SharePointConfigurationLevels {
-    Custom
-    Minimum
-    Light
-    Medium
-    Full
-}
-
-enum SharePointConfigurations {
-    TrustedAuthentication
-    UserProfilesService
-    ExtendedWebApplication
-    Addins
-    HostNamedSiteCollections
-    StateService
 }
 
 # enum values cannot start with a digit - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_enum?view=powershell-5.1#syntax
