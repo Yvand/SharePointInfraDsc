@@ -105,7 +105,6 @@ configuration ConfigSpMain
     [String] $LdapcpReleaseId = "latest"
     [String] $LDAPCPFileFullPath = Join-Path -Path $SetupPath -ChildPath "Binaries\$LdapcpSolutionName.wsp"
     [String] $SharePointFarmReadyDnsTxtName = "SharePointFarmReady"
-    [String] $TrustedAuthenticationProviderName = "trusted"
 
     # SharePoint settings
     [String] $SPDBPrefix = "SPDSC_"
@@ -117,7 +116,9 @@ configuration ConfigSpMain
     [String] $HNSC1Alias = "HNSC1"
     [String] $AddinsSiteDNSAlias = "addins"
     [String] $AddinsSiteName = "Provider-hosted addins"
+    [String] $TrustedAuthenticationProviderName = "trusted"
     [String] $TrustedIdChar = "e"
+    [String] $TrustedDomainAdminAccountName = "i:0{0}.t|{1}|{2}" -f $TrustedIdChar, $TrustedAuthenticationProviderName, "$($DomainAdminCreds.UserName)@$DomainFQDN"
     [String] $SPTeamSiteTemplate = "STS#3"
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
     [String] $WebApplicationUrl = if ($DefaultZoneMustBeHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
@@ -1303,7 +1304,7 @@ configuration ConfigSpMain
         SPSite CreateRootSite {
             Url                  = $WebApplicationUrl
             OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$TrustedAuthenticationProviderName|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
             Name                 = "root site"
             Template             = $SPTeamSiteTemplate
             CreateDefaultGroups  = $true
@@ -1316,7 +1317,7 @@ configuration ConfigSpMain
             SPSite CreateAppCatalog {
                 Url                  = "$WebApplicationUrl/sites/AppCatalog"
                 OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$TrustedAuthenticationProviderName|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
                 Name                 = "AppCatalog"
                 Template             = "APPCATALOG#0"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -1332,7 +1333,7 @@ configuration ConfigSpMain
                 Url                      = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
                 HostHeaderWebApplication = $WebApplicationUrl
                 OwnerAlias               = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$TrustedAuthenticationProviderName|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
                 Name                     = "MySite host"
                 Template                 = "SPSMSITEHOST#0"
                 PsDscRunAsCredential     = $DomainAdminCredsQualified
@@ -1375,7 +1376,7 @@ configuration ConfigSpMain
         # {
         #     Url                  = "$WebApplicationUrl/sites/dev"
         #     OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-        #     SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$TrustedAuthenticationProviderName|$($DomainAdminCreds.UserName)@$DomainFQDN"} else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+        #     SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName} else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
         #     Name                 = "Developer site"
         #     Template             = "DEV#0"
         #     PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -1387,7 +1388,7 @@ configuration ConfigSpMain
                 Url                      = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
                 HostHeaderWebApplication = $WebApplicationUrl
                 OwnerAlias               = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$TrustedAuthenticationProviderName|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
                 Name                     = "$HNSC1Alias site"
                 Template                 = $SPTeamSiteTemplate
                 CreateDefaultGroups      = $true
@@ -1623,7 +1624,7 @@ configuration ConfigSpMain
             SPSite CreateTeamSite {
                 Url                  = "$WebApplicationUrl/sites/team"
                 OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { "i:0$TrustedIdChar.t|$TrustedAuthenticationProviderName|$($DomainAdminCreds.UserName)@$DomainFQDN" } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
                 Name                 = "Team site"
                 Template             = $SPTeamSiteTemplate
                 CreateDefaultGroups  = $true
