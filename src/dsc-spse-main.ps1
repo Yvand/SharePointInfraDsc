@@ -117,8 +117,10 @@ configuration ConfigSpMain
     [String] $AddinsSiteDNSAlias = "addins"
     [String] $AddinsSiteName = "Provider-hosted addins"
     [String] $TrustedAuthenticationProviderName = "trusted"
-    [String] $TrustedIdChar = "e"
-    [String] $TrustedDomainAdminAccountName = "i:0{0}.t|{1}|{2}" -f $TrustedIdChar, $TrustedAuthenticationProviderName, "$($DomainAdminCreds.UserName)@$DomainFQDN"
+    # [String] $TrustedIdChar = "e"
+    [String] $TrustedAccountPattern = "i:0e.t|$TrustedAuthenticationProviderName|{0}"
+    # [String] $TrustedDomainAdminAccountName = "i:0{0}.t|{1}|{2}" -f $TrustedIdChar, $TrustedAuthenticationProviderName, "$($DomainAdminCreds.UserName)@$DomainFQDN"
+    [String] $TrustedDomainAdminAccountName = $TrustedAccountPattern -f "$($DomainAdminCreds.UserName)@$DomainFQDN"
     [String] $SPTeamSiteTemplate = "STS#3"
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
     [String] $WebApplicationUrl = if ($DefaultZoneMustBeHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
@@ -1928,7 +1930,8 @@ configuration ConfigSpMain
                     }
                     $webAppUrl = $using:WebApplicationUrl
                     $accountPattern_WinClaims = "i:0#.w|$($using:DomainNetbiosName)\{0}"
-                    $accountPattern_Trusted = "i:0$($using:TrustedIdChar).t|$($using:DomainFQDN)|{0}@$($using:DomainFQDN)"
+                    # $accountPattern_Trusted = "i:0$($using:TrustedIdChar).t|$($using:TrustedAuthenticationProviderName)|{0}@$($using:DomainFQDN)"
+                    $accountPattern_Trusted = $using:TrustedAccountPattern -f "{0}@$($using:DomainFQDN)"
                     $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $accountPattern_WinClaims, $accountPattern_Trusted, $using:AdditionalUsersPath)
                     Receive-Job -Job $job -AutoRemoveJob -Wait
                 }
