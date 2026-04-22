@@ -105,6 +105,7 @@ configuration ConfigSpMain
     [String] $LdapcpReleaseId = "latest"
     [String] $LDAPCPFileFullPath = Join-Path -Path $SetupPath -ChildPath "Binaries\$LdapcpSolutionName.wsp"
     [String] $SharePointFarmReadyDnsTxtName = "SharePointFarmReady"
+    [String] $TrustedAuthenticationProviderName = "trusted"
 
     # SharePoint settings
     [String] $SPDBPrefix = "SPDSC_"
@@ -1078,7 +1079,7 @@ configuration ConfigSpMain
             }
 
             SPTrustedIdentityTokenIssuer CreateSPTrust {
-                Name                    = "trusted"
+                Name                    = $TrustedAuthenticationProviderName
                 Description             = "Federation with $DomainFQDN"
                 DefaultClientIdentifier = $AdfsOidcIdentifier
                 MetadataEndPoint        = "https://adfs.$DomainFQDN/adfs/.well-known/openid-configuration"
@@ -1170,7 +1171,7 @@ configuration ConfigSpMain
                     @(
                         MSFT_SPWebAppAuthenticationMode {
                             AuthenticationMethod   = "Federated"
-                            AuthenticationProvider = $DomainFQDN
+                            AuthenticationProvider = $TrustedAuthenticationProviderName
                         }
                         MSFT_SPWebAppAuthenticationMode {
                             AuthenticationMethod = "WindowsAuthentication"
@@ -1209,7 +1210,7 @@ configuration ConfigSpMain
                     @(
                         MSFT_SPWebAppAuthenticationMode {
                             AuthenticationMethod   = "Federated"
-                            AuthenticationProvider = $DomainFQDN
+                            AuthenticationProvider = $TrustedAuthenticationProviderName
                         }
                     )
                 }
