@@ -116,6 +116,8 @@ configuration ConfigSpMain
     [String] $HNSC1Alias = "HNSC1"
     [String] $AddinsSiteDNSAlias = "addins"
     [String] $AddinsSiteName = "Provider-hosted addins"
+    [String] $WindowsAccountPattern = "i:0#.w|$DomainNetbiosName\{0}"
+    [String] $WindowsDomainAdminAccountName = $WindowsAccountPattern -f $DomainAdminCreds.UserName
     [String] $TrustedAuthenticationProviderName = "trusted"
     [String] $TrustedAccountPattern = "i:0e.t|$TrustedAuthenticationProviderName|{0}"
     [String] $TrustedDomainAdminAccountName = $TrustedAccountPattern -f "$($DomainAdminCreds.UserName)@$DomainFQDN"
