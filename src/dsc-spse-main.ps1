@@ -1305,8 +1305,8 @@ configuration ConfigSpMain
 
         SPSite CreateRootSite {
             Url                  = $WebApplicationUrl
-            OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+            OwnerAlias           = $WindowsDomainAdminAccountName
+            SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
             Name                 = "root site"
             Template             = $SPTeamSiteTemplate
             CreateDefaultGroups  = $true
@@ -1318,8 +1318,8 @@ configuration ConfigSpMain
             # Create this site early, otherwise [SPAppCatalog]SetAppCatalogUrl may throw error "Cannot find an SPSite object with Id or Url: http://SPSites/sites/AppCatalog"
             SPSite CreateAppCatalog {
                 Url                  = "$WebApplicationUrl/sites/AppCatalog"
-                OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                OwnerAlias           = $WindowsDomainAdminAccountName
+                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
                 Name                 = "AppCatalog"
                 Template             = "APPCATALOG#0"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -1334,8 +1334,8 @@ configuration ConfigSpMain
             SPSite CreateMySiteHost {
                 Url                      = if ($DefaultZoneMustBeHttps) { "https://$MySiteHostAlias.$DomainFQDN/" } else { "http://$MySiteHostAlias/" }
                 HostHeaderWebApplication = $WebApplicationUrl
-                OwnerAlias               = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                OwnerAlias               = $WindowsDomainAdminAccountName
+                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
                 Name                     = "MySite host"
                 Template                 = "SPSMSITEHOST#0"
                 PsDscRunAsCredential     = $DomainAdminCredsQualified
@@ -1377,8 +1377,8 @@ configuration ConfigSpMain
         # SPSite CreateDevSite
         # {
         #     Url                  = "$WebApplicationUrl/sites/dev"
-        #     OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-        #     SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName} else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+        #     OwnerAlias           = $WindowsDomainAdminAccountName
+        #     SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName} else { $WindowsDomainAdminAccountName }
         #     Name                 = "Developer site"
         #     Template             = "DEV#0"
         #     PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -1389,8 +1389,8 @@ configuration ConfigSpMain
             SPSite CreateHNSC1 {
                 Url                      = if ($DefaultZoneMustBeHttps) { "https://$HNSC1Alias.$DomainFQDN/" } else { "http://$HNSC1Alias/" }
                 HostHeaderWebApplication = $WebApplicationUrl
-                OwnerAlias               = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                OwnerAlias               = $WindowsDomainAdminAccountName
+                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
                 Name                     = "$HNSC1Alias site"
                 Template                 = $SPTeamSiteTemplate
                 CreateDefaultGroups      = $true
@@ -1625,8 +1625,8 @@ configuration ConfigSpMain
         if ($ProvisionAdditionalSiteCollections) {
             SPSite CreateTeamSite {
                 Url                  = "$WebApplicationUrl/sites/team"
-                OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)" }
+                OwnerAlias           = $WindowsDomainAdminAccountName
+                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
                 Name                 = "Team site"
                 Template             = $SPTeamSiteTemplate
                 CreateDefaultGroups  = $true
@@ -1929,9 +1929,8 @@ configuration ConfigSpMain
                         }
                     }
                     $webAppUrl = $using:WebApplicationUrl
-                    $accountPattern_WinClaims = "i:0#.w|$($using:DomainNetbiosName)\{0}"
                     $accountPattern_Trusted = $using:TrustedAccountPattern -f "{0}@$($using:DomainFQDN)"
-                    $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $accountPattern_WinClaims, $accountPattern_Trusted, $using:AdditionalUsersPath)
+                    $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $using:WindowsAccountPattern, $accountPattern_Trusted, $using:AdditionalUsersPath)
                     Receive-Job -Job $job -AutoRemoveJob -Wait
                 }
                 GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
