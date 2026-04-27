@@ -99,6 +99,7 @@ configuration ConfigSpMain
     [String] $SharePointBitsPath = Join-Path -Path $SetupPath -ChildPath "Binaries" #[environment]::GetEnvironmentVariable("temp","machine")
     [String] $SharePointIsoFullPath = Join-Path -Path $SharePointBitsPath -ChildPath "OfficeServer.iso"
     [String] $SharePointIsoDriveLetter = "S"
+    [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
     [String] $AdfsDnsEntryName = "adfs"
     [String] $ClaimsProviderFilePath = Join-Path -Path $SetupPath -ChildPath "Binaries\LDAPCPSE.wsp"
     [String] $SharePointFarmReadyDnsTxtName = "SharePointFarmReady"
@@ -119,7 +120,6 @@ configuration ConfigSpMain
     [String] $TrustedAccountPattern = "i:0e.t|$TrustedAuthenticationProviderName|{0}"
     [String] $TrustedDomainAdminAccountName = $TrustedAccountPattern -f "$($DomainAdminCreds.UserName)@$DomainFQDN"
     [String] $SPTeamSiteTemplate = "STS#3"
-    [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
     [String] $WebApplicationUrl = if ($DefaultZoneMustBeHttps) { "https://$SharePointSitesAuthority.$DomainFQDN" } else { "http://$SharePointSitesAuthority" }
 
     Node localhost
