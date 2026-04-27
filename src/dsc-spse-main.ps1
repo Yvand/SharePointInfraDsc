@@ -100,10 +100,7 @@ configuration ConfigSpMain
     [String] $SharePointIsoFullPath = Join-Path -Path $SharePointBitsPath -ChildPath "OfficeServer.iso"
     [String] $SharePointIsoDriveLetter = "S"
     [String] $AdfsDnsEntryName = "adfs"
-    [String] $LdapcpSolutionName = "LDAPCPSE"
-    [String] $LdapcpSolutionId = "ff36c8cf-e510-42fc-8ba3-18af3c316aec"
-    [String] $LdapcpReleaseId = "latest"
-    [String] $LDAPCPFileFullPath = Join-Path -Path $SetupPath -ChildPath "Binaries\$LdapcpSolutionName.wsp"
+    [String] $ClaimsProviderFilePath = Join-Path -Path $SetupPath -ChildPath "Binaries\LDAPCPSE.wsp"
     [String] $SharePointFarmReadyDnsTxtName = "SharePointFarmReady"
 
     # SharePoint settings
@@ -271,8 +268,8 @@ configuration ConfigSpMain
         }
 
         xRemoteFile DownloadLDAPCP {
-            DestinationPath = $LDAPCPFileFullPath
-            Uri             = Get-LatestGitHubRelease -Repo "Yvand/LDAPCP" -Artifact "*.wsp" -ReleaseId $LdapcpReleaseId
+            DestinationPath = $ClaimsProviderFilePath
+            Uri             = Get-LatestGitHubRelease -Repo "Yvand/LDAPCP" -Artifact "*.wsp" -ReleaseId "latest"
             MatchSource     = $false
         }
 
@@ -861,8 +858,8 @@ configuration ConfigSpMain
 
         if ($ProvisionTrustedAuthentication) {
             SPFarmSolution InstallLdapcpSolution {
-                LiteralPath          = $LDAPCPFileFullPath
-                Name                 = "$LdapcpSolutionName.wsp"
+                LiteralPath          = $ClaimsProviderFilePath
+                Name                 = "LDAPCPSE.wsp"
                 Deployed             = $true
                 Ensure               = "Present"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -872,7 +869,7 @@ configuration ConfigSpMain
             Script InstallLdapcpFeatures {
                 SetScript            = 
                 {
-                    $solutionId = $using:LdapcpSolutionId
+                    $solutionId = "ff36c8cf-e510-42fc-8ba3-18af3c316aec"
                     Install-SPFeature -SolutionId $solutionId -AllExistingFeatures
                 }
                 GetScript            =  
@@ -883,8 +880,7 @@ configuration ConfigSpMain
                 TestScript           = 
                 {
                     # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-                    $claimsProviderName = $using:LdapcpSolutionName
-                    if ($null -eq (Get-SPClaimProvider -Identity $claimsProviderName -ErrorAction SilentlyContinue)) {
+                    if ($null -eq (Get-SPClaimProvider -Identity "LDAPCPSE" -ErrorAction SilentlyContinue)) {
                         return $false
                     }
                     else {
@@ -1101,7 +1097,7 @@ configuration ConfigSpMain
                         IncomingClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/groupsid"
                     }
                 )
-                ClaimProviderName       = $LdapcpSolutionName
+                ClaimProviderName       = "LDAPCPSE"
                 Ensure                  = "Present" 
                 DependsOn               = "[Script]SetFarmPropertiesForOIDC", "[Script]InstallLdapcpFeatures"
                 PsDscRunAsCredential    = $DomainAdminCredsQualified
