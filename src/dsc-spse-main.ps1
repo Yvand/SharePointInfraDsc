@@ -69,7 +69,7 @@ configuration ConfigSpMain
         $ProvisionUserProfilesService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::UserProfilesService
         $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
         $ProvisionAdditionalSiteCollections = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::AdditionalSiteCollections
-        $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedZone
+        $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedWebApplication
     }
     else {
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
@@ -2135,8 +2135,8 @@ $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
 $DefaultZoneMustBeHttps = $false
-$SharePointConfigurationLevels = "Light"
-$CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService", "ExtendedWebApplication", "Addins", "HostNamedSiteCollections", "StateService")
+$SharePointConfigurationLevel = "Light"
+$CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService", "ExtendedWebApplication", "Addins", "AdditionalSiteCollections", "StateService")
 $SharePointBits = @(
     @{
         Label = "SPRTM"; 

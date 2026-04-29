@@ -894,10 +894,6 @@ $SQLAlias = "SQLAlias"
 $SharePointVersion = "SPRTM" #"SPLatest"
 $SharePointSitesAuthority = "spsites"
 $EnableAnalysis = $true
-$DefaultZoneMustBeHttps = $false
-$SharePointConfigurationLevel = "Light"
-$CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService", "ExtendedWebApplication", "Addins", "HostNamedSiteCollections", "StateService")
-$CustomSharePointConfiguration = @("HostNamedSiteCollections")
 $SharePointBits = @(
     @{
         Label = "SPRTM"; 
@@ -921,7 +917,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureFESE.0\ConfigSpFrontend"
-ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -DefaultZoneMustBeHttps $DefaultZoneMustBeHttps -SharePointConfigurationLevel $SharePointConfigurationLevel -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
