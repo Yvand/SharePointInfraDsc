@@ -23,7 +23,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSuperReaderCreds,
         [Parameter(Mandatory = $false)] [Boolean] $DefaultZoneMustBeHttps, #not used, present to allow parameter to be passed
         [Parameter(Mandatory = $false)] [String] $SharePointConfigurationLevel, #not used, present to allow parameter to be passed
-        [Parameter(Mandatory = $false)] [String] $CustomSharePointConfiguration #not used, present to allow parameter to be passed
+        [Parameter(Mandatory = $false)] [System.Object[]] $CustomSharePointConfiguration #not used, present to allow parameter to be passed
     )
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
