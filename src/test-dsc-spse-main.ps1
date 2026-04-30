@@ -1,7 +1,9 @@
 ﻿#Requires -PSEdition Desktop
 
-$randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | % { [char] $_ })
-$password = ConvertTo-SecureString -String "$randomChars" -AsPlainText -Force
+$randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | ForEach-Object { [char] $_ })
+$password = New-Object -TypeName System.Security.SecureString
+$randomChars.ToCharArray() | ForEach-Object { $password.AppendChar($_) }
+$password.MakeReadOnly()
 
 $DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
 $SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
