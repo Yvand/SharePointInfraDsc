@@ -1,4 +1,4 @@
-name: Reject zip files in pull requests
+name: Validate content
 
 on:
   pull_request:
@@ -10,23 +10,21 @@ env:
   vm_name: ""
 
 jobs:
-  reject-zip-files:
-    if: github.event_name == 'pull_request'
+  validate-content:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       
-      - name: Build DSC archives
+      - name: Fail if DSC files cannot create a MOF file
         shell: powershell
         env:
           scripts_folder: "setup"
         run: |
           ${{ env.scripts_folder }}/Test-DscFiles.ps1 -vmName "${{ env.vm_name }}" -dscFolderPath "${{ env.dsc_folder }}"
       
-      - name: Fail if the pull request contains zip files
+      - name: Fail if the src folder contains zip files
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
