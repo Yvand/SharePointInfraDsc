@@ -6,12 +6,12 @@ param(
     [Parameter(Mandatory=$false)] [string] $vmName = "*"
 )
 
+$dscFolderPath = Join-Path -Path $localProjectPath -ChildPath "src"
+$scritpsFolderPath = Join-Path -Path $localProjectPath -ChildPath "setup"
+
 if (-not (Test-Path -PathType Container -Path $dscFolderPath)) {
     throw "folder '$dscFolderPath' not found"
 }
-
-$dscFolderPath = Join-Path -Path $localProjectPath -ChildPath "src"
-$scritpsFolderPath = Join-Path -Path $localProjectPath -ChildPath "setup"
 
 # Ensure DSC file can successfully generate the MOF file before generating the archive
 & "$($scritpsFolderPath)/Test-DscFiles.ps1" -vmName $vmName
