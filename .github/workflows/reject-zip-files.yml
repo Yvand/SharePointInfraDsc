@@ -1,0 +1,30 @@
+name: Reject zip files in pull requests
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  reject-zip-files:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      
+      - name: Fail if the pull request contains zip files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          zip_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -Ei '^src/.*\.zip$' || true)
+
+          if [ -n "$zip_files" ]; then
+            echo "Zip files are not allowed in the src folder for pull requests."
+            echo "$zip_files"
+            exit 1
+          fi
+
+          echo "No zip files detected in the src folder for pull request changes."
