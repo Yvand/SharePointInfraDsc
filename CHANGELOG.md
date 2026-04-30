@@ -2,19 +2,21 @@
 
 ## Unreleased
 
+## [3.0.0] - 2026-04-30
+
 ### Added
 
 - DSC for SharePoint
-  - Added parameter CustomSharePointConfiguration
+  - **BREAKING CHANGE**: Added parameter CustomSharePointConfiguration
 - DSC for DC
-  - Added parameter GlobalConfiguration
+  - **BREAKING CHANGE**: Added parameter GlobalConfiguration
 
 ### Changed
 
 - DSC for SharePoint
-  - Renamed parameter ConfigurationLevel to SharePointConfigurationLevel
+  - **BREAKING CHANGE**: Renamed parameter ConfigurationLevel to SharePointConfigurationLevel
+  - **BREAKING CHANGE**: Removed unnecessary parameters in the frontend config
   - Changed the name of the SPTrustedIdentityTokenIssuer config, in SharePoint, to 'trusted'
-  - Removed unnecessary parameters in the frontend config
   - Multiple optimizations
 
 ### Fixed

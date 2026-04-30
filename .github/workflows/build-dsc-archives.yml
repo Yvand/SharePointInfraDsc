@@ -75,4 +75,4 @@ jobs:
             *.ps1
             *.zip
           draft: true
-          make_latest: true
+          prerelease: true
