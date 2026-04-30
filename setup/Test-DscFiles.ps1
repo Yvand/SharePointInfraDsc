@@ -27,5 +27,4 @@ foreach ($dscSourceFilePath in $dscSourceFilePaths) {
         Write-Error "test '$testFileName' failed: $($_.Exception.Message)"
         return
     }
-    Write-Host "Success." -ForegroundColor Cyan
 }

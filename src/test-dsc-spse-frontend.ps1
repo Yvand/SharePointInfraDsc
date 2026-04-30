@@ -1,4 +1,6 @@
-﻿$randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | % { [char] $_ })
+﻿#Requires -PSEdition Desktop
+
+$randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | % { [char] $_ })
 $password = ConvertTo-SecureString -String "$randomChars" -AsPlainText -Force
 
 $DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
@@ -28,15 +30,15 @@ $SharePointBits = @(
     }
 )
 
-$configFileName = (Split-Path $PSCommandPath -Leaf).Substring(5)
+$configFileName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath).Substring(5)
 $functionName = "ConfigSpFrontend"
-$outputPath = "."
+$outputPath = ".\$configFileName"
 Push-Location $PSScriptRoot
 try
 {
-    . ".\$configFileName"
+    . ".\$configFileName.ps1"
     & $functionName -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
-    Remove-Item -Path "$outputPath\$functionName" -Recurse
+    Remove-Item -Path $outputPath -Recurse
 }
 finally
 {
