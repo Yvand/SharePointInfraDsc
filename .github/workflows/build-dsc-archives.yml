@@ -34,7 +34,7 @@ jobs:
           scripts_folder: "setup"
         run: |
           Remove-Item "${{ env.dsc_folder }}/*.zip" -ErrorAction SilentlyContinue
-          ${{ env.scripts_folder }}/New-DscArchive.ps1 -vmName "${{ env.vm_name }}" -dscFolderPath "${{ env.dsc_folder }}"
+          ${{ env.scripts_folder }}/New-DscArchive.ps1 -localProjectPath "${{ github.workspace }}" -vmName "${{ env.vm_name }}"
 
       - uses: actions/upload-artifact@v7
         with:

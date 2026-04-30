@@ -6,12 +6,12 @@
         {
             "label": "generate all dsc archives",
             "type": "shell",
-            "command": "${workspaceFolder}${/}setup${/}New-DSCArchive.ps1",
+            "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [
                 "-vmName",
                 "*",
-                "-dscFolderPath",
-                "'${workspaceFolder}${/}sharepoint-adfs-full'"
+                "-localProjectPath",
+                "'${workspaceFolder}'"
             ],
             "group": "build",
             "problemMatcher": []
@@ -19,24 +19,24 @@
         {
             "label": "generate dsc archive for current file",
             "type": "shell",
-            "command": "${workspaceFolder}${/}setup${/}New-DSCArchive.ps1",
+            "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [
                 "-vmName",
                 "${fileBasenameNoExtension}",
-                "-dscFolderPath",
-                "'${fileWorkspaceFolder}'"
+                "-localProjectPath",
+                "'${workspaceFolder}'"
             ],
             "problemMatcher": []
         },
         {
             "label": "generate dsc archive for specified file",
             "type": "shell",
-            "command": "${workspaceFolder}${/}setup${/}New-DSCArchive.ps1",
+            "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [
                 "-vmName",
                 "${input:vmName}",
-                "-dscFolderPath",
-                "'${fileWorkspaceFolder}'"
+                "-localProjectPath",
+                "'${workspaceFolder}'"
             ],
             "problemMatcher": []
         },
