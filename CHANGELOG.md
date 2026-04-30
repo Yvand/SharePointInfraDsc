@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### Added
+
+- DSC for SharePoint
+  - Added parameter CustomSharePointConfiguration
+- DSC for DC
+  - Added parameter GlobalConfiguration
+
+### Changed
+
+- DSC for SharePoint
+  - Renamed parameter ConfigurationLevel to SharePointConfigurationLevel
+  - Changed the name of the SPTrustedIdentityTokenIssuer config, in SharePoint, to 'trusted'
+  - Removed unnecessary parameters in the frontend config
+  - Multiple optimizations
+
+### Fixed
+
+- DSC for SharePoint
+  - Only call the resource SPSiteUrl if needed
+  - Fix dependencies on CreateTeamSite
+- Customized Modules
+  - SharePointDSC: Improved reliability by bypassing the logging to the event viewer, which randomly threw an error and caused deployment to fail
+
 ## [2.3.0] - 2026-04-15
 
 ### Changed

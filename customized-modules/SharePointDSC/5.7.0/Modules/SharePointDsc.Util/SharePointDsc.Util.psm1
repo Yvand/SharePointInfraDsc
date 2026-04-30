@@ -21,6 +21,9 @@ function Add-SPDscEvent
         $EventID = 1
     )
 
+    # YVAND workaround to avoid random error "The registry key for the log "SPDsc" for source "MSFT_SPFarm" could not be opened"
+    return;
+
     $LogName = 'SPDsc'
 
     if ([System.Diagnostics.EventLog]::SourceExists($Source))
