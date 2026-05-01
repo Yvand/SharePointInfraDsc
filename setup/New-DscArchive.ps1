@@ -2,12 +2,13 @@
 #Requires -Module Az.Compute
 
 param(
-    [Parameter(Mandatory=$true)] [string] $localProjectPath,
     [Parameter(Mandatory=$false)] [string] $vmName = "*"
 )
 
-$dscFolderPath = Join-Path -Path $localProjectPath -ChildPath "src"
-$scritpsFolderPath = Join-Path -Path $localProjectPath -ChildPath "setup"
+$ErrorActionPreference = "Stop"
+
+$dscFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../src" | Resolve-Path
+$scritpsFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../setup" | Resolve-Path
 
 if (-not (Test-Path -PathType Container -Path $dscFolderPath)) {
     throw "folder '$dscFolderPath' not found"

@@ -26,7 +26,7 @@ jobs:
         shell: powershell
         env:
           scripts_folder: "setup"
-        run: ${{ env.scripts_folder }}/Install-DscModules.ps1 -localProjectPath "${{ github.workspace }}" -vmName "${{ env.vm_name }}" -copyCustomizedModules $true
+        run: ${{ env.scripts_folder }}/Install-DscModules.ps1 -vmName "${{ env.vm_name }}" -copyCustomizedModules $true
 
       - name: Build DSC archives
         shell: powershell
@@ -34,7 +34,7 @@ jobs:
           scripts_folder: "setup"
         run: |
           Remove-Item "${{ env.dsc_folder }}/*.zip" -ErrorAction SilentlyContinue
-          ${{ env.scripts_folder }}/New-DscArchive.ps1 -localProjectPath "${{ github.workspace }}" -vmName "${{ env.vm_name }}"
+          ${{ env.scripts_folder }}/New-DscArchive.ps1 -vmName "${{ env.vm_name }}"
 
       - uses: actions/upload-artifact@v7
         with:

@@ -34,7 +34,7 @@ jobs:
 
       - name: Install DSC modules
         shell: powershell
-        run: setup/Install-DscModules.ps1 -localProjectPath "${{ github.workspace }}" -copyCustomizedModules $true
+        run: setup/Install-DscModules.ps1 -copyCustomizedModules $true
 
       - name: Run PSScriptAnalyzer
         uses: microsoft/psscriptanalyzer-action@v1.1
