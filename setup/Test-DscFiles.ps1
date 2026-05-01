@@ -23,13 +23,34 @@ function Invoke-Test {
     $configFileName = $testFileName.Substring(5)
     $configFilePath = Get-ChildItem $dscFolderPath -File -Filter "$configFileName.ps1" | Resolve-Path
     $outputPath = Join-Path -Path $testFolderPath -ChildPath "$functionName"
+    $functionArgsPath = [System.IO.Path]::ChangeExtension([System.IO.Path]::GetTempFileName(), ".clixml")
+    $runnerScriptPath = [System.IO.Path]::ChangeExtension([System.IO.Path]::GetTempFileName(), ".ps1")
 
     try {
-        . "$configFilePath"
-        & $functionName @functionArgs -outputPath $outputPath -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })}
+        $functionArgs | Export-Clixml -Path $functionArgsPath
+
+        @'
+param(
+    [Parameter(Mandatory = $true)] [string] $ConfigFilePath,
+    [Parameter(Mandatory = $true)] [string] $FunctionName,
+    [Parameter(Mandatory = $true)] [string] $FunctionArgsPath,
+    [Parameter(Mandatory = $true)] [string] $OutputPath
+)
+
+$functionArgs = Import-Clixml -Path $FunctionArgsPath
+. $ConfigFilePath
+& $FunctionName @functionArgs -OutputPath $OutputPath -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })}
+'@ | Set-Content -Path $runnerScriptPath
+
+        & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runnerScriptPath -ConfigFilePath $configFilePath -FunctionName $functionName -FunctionArgsPath $functionArgsPath -OutputPath $outputPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "DSC test '$testFileName' failed in isolated PowerShell session with exit code $LASTEXITCODE."
+        }
     }
     finally {
-        Remove-Item -Path $outputPath -Recurse
+        if (Test-Path -Path $functionArgsPath) { Remove-Item -Path $functionArgsPath -Force }
+        if (Test-Path -Path $runnerScriptPath) { Remove-Item -Path $runnerScriptPath -Force }
+        if (Test-Path -Path $outputPath) { Remove-Item -Path $outputPath -Recurse -Force }
     }
 }
 
