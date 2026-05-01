@@ -1,27 +1,25 @@
 ﻿#Requires -PSEdition Desktop
 
-$randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | ForEach-Object { [char] $_ })
-$password = New-Object -TypeName System.Security.SecureString
-$randomChars.ToCharArray() | ForEach-Object { $password.AppendChar($_) }
-$password.MakeReadOnly()
+param(
+    [Parameter(Mandatory = $true)] [System.Security.SecureString] $password
+)
 
+$functionName = "ConfigSql"
 $DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
 $SqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "sqlsvc", $password
 $DNSServerIP = "10.1.1.100"
 $DomainFQDN = "contoso.local"
 $SPSetupUserName = "spsetup"
 
-$configFileName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath).Substring(5)
-$functionName = "ConfigSql"
-$outputPath = ".\$configFileName"
-Push-Location $PSScriptRoot
-try
-{
-    . ".\$configFileName.ps1"
-    & $functionName -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupUserName $SPSetupUserName -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
-    Remove-Item -Path $outputPath -Recurse
+$functionArgs = @{
+    "DomainAdminCreds" = $DomainAdminCreds
+    "SqlSvcCreds" = $SqlSvcCreds
+    "DNSServerIP" = $DNSServerIP
+    "DomainFQDN" = $DomainFQDN
+    "SPSetupUserName" = $SPSetupUserName
 }
-finally
-{
-    Pop-Location
+
+return @{
+    "functionName" = $functionName
+    "functionArgs" = $functionArgs
 }

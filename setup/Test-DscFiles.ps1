@@ -6,6 +6,12 @@ param(
 
 $dscFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../src" | Resolve-Path
 $testFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../tests" | Resolve-Path
+if ($vmName.StartsWith("dsc-")) { $vmName = $vmName.Substring(4) }
+
+$randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | ForEach-Object { [char] $_ })
+$password = New-Object -TypeName System.Security.SecureString
+$randomChars.ToCharArray() | ForEach-Object { $password.AppendChar($_) }
+$password.MakeReadOnly()
 
 function Invoke-Test {
     param(
@@ -20,26 +26,21 @@ function Invoke-Test {
 
     try {
         . "$configFilePath"
-        & $functionName @functionArgs -outputPath $outputPath
+        & $functionName @functionArgs -outputPath $outputPath -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })}
     }
     finally {
         Remove-Item -Path $outputPath -Recurse
     }
 }
 
-
-
 $testFileNamePattern = "test-{0}"
-if ($vmName.StartsWith("dsc-")) { $vmName = $vmName.Substring(4) }
-
 $dscSourceFilesPath = Get-ChildItem $dscFolderPath -File -Filter "dsc-$vmName*.ps1"
 foreach ($dscSourceFilePath in $dscSourceFilesPath) {
     $testFileName = [string]::Format($testFileNamePattern, $dscSourceFilePath.BaseName)
     $testFilePath = Join-Path -Path $testFolderPath -ChildPath "$testFileName.ps1" -Resolve
     Write-Host "Run test '$testFileName'..." -ForegroundColor Cyan
-    #. $testFilePath
 
-    $testParameters = . $testFilePath
+    $testParameters = . $testFilePath -password $password
     Invoke-Test -testFileName "$testFileName" -functionName $testParameters.functionName -functionArgs $testParameters.functionArgs
 
 
