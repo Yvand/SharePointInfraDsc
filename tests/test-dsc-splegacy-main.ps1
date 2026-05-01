@@ -23,6 +23,9 @@ $SharePointVersion = "2019"
 $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
+$DefaultZoneMustBeHttps = $false
+$SharePointConfigurationLevel = ""
+$CustomSharePointConfiguration = @()
 $SharePointBits = @()
 
 $functionArgs = @{
@@ -44,6 +47,9 @@ $functionArgs = @{
     "SharePointSitesAuthority" = $SharePointSitesAuthority
     "SharePointCentralAdminPort" = $SharePointCentralAdminPort
     "EnableAnalysis" = $EnableAnalysis
+    "DefaultZoneMustBeHttps" = $DefaultZoneMustBeHttps
+    "SharePointConfigurationLevel" = $SharePointConfigurationLevel
+    "CustomSharePointConfiguration" = $CustomSharePointConfiguration
     "SharePointBits" = $SharePointBits
 }
 
