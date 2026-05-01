@@ -24,7 +24,22 @@ $SharePointCentralAdminPort = 5000
 try
 {
     . "$configFilePath"
-    & $functionName -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -SPServerName $SPServerName -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+    
+    $functionArgs = @{
+        "Admincreds" = $Admincreds
+        "AdfsSvcCreds" = $AdfsSvcCreds
+        "SqlSvcCreds" = $SqlSvcCreds
+        "SPSetupCreds" = $SPSetupCreds
+        "DomainFQDN" = $DomainFQDN
+        "PrivateIP" = $PrivateIP
+        "SPServerName" = $SPServerName
+        "SharePointSitesAuthority" = $SharePointSitesAuthority
+        "SharePointCentralAdminPort" = $SharePointCentralAdminPort
+        "ConfigurationData" = @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })}
+        "OutputPath" = $outputPath
+    }
+
+    & $functionName @functionArgs
 }
 finally
 {
