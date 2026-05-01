@@ -23,7 +23,7 @@ if (-not (Get-InstalledModule -Name "Az.Compute" -ErrorAction SilentlyContinue))
 
 $dscFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../src" | Resolve-Path
 $scritpsFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../setup" | Resolve-Path
-$customizedModulesPath = Join-Path -Path $PSScriptRoot -ChildPath "../src/customized-modules" | Resolve-Path
+$customizedModulesPath = Join-Path -Path $PSScriptRoot -ChildPath "../customized-modules" | Resolve-Path
 
 Write-Host "Get DSC files in folder '$dscFolderPath'" -ForegroundColor Cyan
 $dscFilesPath = Get-ChildItem "$dscFolderPath" -File -Filter "dsc-$vmName*.ps1"
