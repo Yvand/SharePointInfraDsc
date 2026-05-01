@@ -23,10 +23,14 @@ function Invoke-Test {
     $configFileName = $testFileName.Substring(5)
     $configFilePath = Get-ChildItem $dscFolderPath -File -Filter "$configFileName.ps1" | Resolve-Path
     $outputPath = Join-Path -Path $testFolderPath -ChildPath "$functionName"
+
     $functionArgsPath = [System.IO.Path]::ChangeExtension([System.IO.Path]::GetTempFileName(), ".clixml")
     $runnerScriptPath = [System.IO.Path]::ChangeExtension([System.IO.Path]::GetTempFileName(), ".ps1")
-
     try {
+        # Simple version: Run the test in the current session instead of a new PowerShell session, which is faster and allows debugging if needed.
+        # . "$configFilePath"
+        # & $functionName @functionArgs -outputPath $outputPath -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })}
+
         $functionArgs | Export-Clixml -Path $functionArgsPath
 
         @'
@@ -63,38 +67,4 @@ foreach ($dscSourceFilePath in $dscSourceFilesPath) {
 
     $testParameters = . $testFilePath -password $password
     Invoke-Test -testFileName "$testFileName" -functionName $testParameters.functionName -functionArgs $testParameters.functionArgs
-
-
-    # $randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | ForEach-Object { [char] $_ })
-    # $password = New-Object -TypeName System.Security.SecureString
-    # $randomChars.ToCharArray() | ForEach-Object { $password.AppendChar($_) }
-    # $password.MakeReadOnly()
-
-    # $functionName = "ConfigDc"
-    # $Admincreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
-    # $AdfsSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "adfssvc", $password
-    # $SqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "sqlsvc", $password
-    # $SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
-    # $DomainFQDN = "contoso.local"
-    # $PrivateIP = "10.1.1.100"
-    # $SPServerName = "SP"
-    # $SharePointSitesAuthority = "spsites"
-    # $SharePointCentralAdminPort = 5000
-
-    # $functionArgs = @{
-    #     "Admincreds"                 = $Admincreds
-    #     "AdfsSvcCreds"               = $AdfsSvcCreds
-    #     "SqlSvcCreds"                = $SqlSvcCreds
-    #     "SPSetupCreds"               = $SPSetupCreds
-    #     "DomainFQDN"                 = $DomainFQDN
-    #     "PrivateIP"                  = $PrivateIP
-    #     "SPServerName"               = $SPServerName
-    #     "SharePointSitesAuthority"   = $SharePointSitesAuthority
-    #     "SharePointCentralAdminPort" = $SharePointCentralAdminPort
-    #     "ConfigurationData"          = @{AllNodes = @(@{ NodeName = "localhost"; PSDscAllowPlainTextPassword = $true }) }
-    #     #"OutputPath"                 = $outputPath
-    # }
-    # Invoke-Test -testFileName "$testFileName" -functionName $functionName -functionArgs $functionArgs
-    
 }
-

@@ -8,14 +8,14 @@ param(
 $ErrorActionPreference = "Stop"
 
 $dscFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../src" | Resolve-Path
-$scritpsFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../setup" | Resolve-Path
+$scriptsFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../setup" | Resolve-Path
 
 if (-not (Test-Path -PathType Container -Path $dscFolderPath)) {
     throw "folder '$dscFolderPath' not found"
 }
 
 # Ensure DSC file can successfully generate the MOF file before generating the archive
-& "$($scritpsFolderPath)/Test-DscFiles.ps1" -vmName $vmName
+& "$($scriptsFolderPath)/Test-DscFiles.ps1" -vmName $vmName
 
 if ($vmName.StartsWith("dsc-")) { $vmName = $vmName.Substring(4) }
 $dscSourceFilePaths = Get-ChildItem $dscFolderPath -File -Filter "dsc-$vmName*.ps1"

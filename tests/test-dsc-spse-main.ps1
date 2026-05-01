@@ -24,7 +24,7 @@ $SharePointSitesAuthority = "spsites"
 $SharePointCentralAdminPort = 5000
 $EnableAnalysis = $true
 $DefaultZoneMustBeHttps = $false
-$SharePointConfigurationLevel = "Light"
+$SharePointConfigurationLevel = "Full"
 $CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService", "ExtendedWebApplication", "Addins", "AdditionalSiteCollections", "StateService")
 $SharePointBits = @(
     @{
