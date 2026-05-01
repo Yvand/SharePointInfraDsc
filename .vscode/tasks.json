@@ -43,7 +43,7 @@
         {
             "label": "install missing modules locally",
             "type": "shell",
-            "command": "${workspaceFolder}${/}setup${/}Install-Modules.ps1",
+            "command": "${workspaceFolder}${/}setup${/}Install-DscModules.ps1",
             "args": [
                 "-localProjectPath",
                 "'${workspaceFolder}'",
