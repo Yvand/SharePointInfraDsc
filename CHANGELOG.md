@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- SharePointInfraDsc
+  - Test the DSC files to ensure they can create a MOF file
+
 ## [3.0.0] - 2026-04-30
 
 ### Added
