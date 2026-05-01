@@ -1,10 +1,10 @@
 ﻿#Requires -PSEdition Desktop
 
-$randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | ForEach-Object { [char] $_ })
-$password = New-Object -TypeName System.Security.SecureString
-$randomChars.ToCharArray() | ForEach-Object { $password.AppendChar($_) }
-$password.MakeReadOnly()
+param(
+    [Parameter(Mandatory = $true)] [System.Security.SecureString] $password
+)
 
+$functionName = "ConfigSpFrontend"
 $DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
 $SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
 $SPFarmCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spfarm", $password
@@ -19,17 +19,23 @@ $SharePointSitesAuthority = "spsites"
 $EnableAnalysis = $false
 $SharePointBits = @()
 
-$configFileName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath).Substring(5)
-$functionName = "ConfigSpFrontend"
-$outputPath = ".\$configFileName"
-Push-Location $PSScriptRoot
-try
-{
-    . ".\$configFileName.ps1"
-    & $functionName -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
-    Remove-Item -Path $outputPath -Recurse
+$functionArgs = @{
+    "DomainAdminCreds" = $DomainAdminCreds
+    "SPSetupCreds" = $SPSetupCreds
+    "SPFarmCreds" = $SPFarmCreds
+    "SPPassphraseCreds" = $SPPassphraseCreds
+    "DNSServerIP" = $DNSServerIP
+    "DomainFQDN" = $DomainFQDN
+    "DCServerName" = $DCServerName
+    "SQLServerName" = $SQLServerName
+    "SQLAlias" = $SQLAlias
+    "SharePointVersion" = $SharePointVersion
+    "SharePointSitesAuthority" = $SharePointSitesAuthority
+    "EnableAnalysis" = $EnableAnalysis
+    "SharePointBits" = $SharePointBits
 }
-finally
-{
-    Pop-Location
+
+return @{
+    "functionName" = $functionName
+    "functionArgs" = $functionArgs
 }
