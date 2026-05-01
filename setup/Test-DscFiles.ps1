@@ -7,6 +7,28 @@ param(
 $dscFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../src" | Resolve-Path
 $testFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../tests" | Resolve-Path
 
+function Invoke-Test {
+    param(
+        [Parameter(Mandatory = $true)] [string] $testFileName,
+        [Parameter(Mandatory = $true)] [string] $functionName,
+        [Parameter(Mandatory = $true)] [hashtable] $functionArgs
+    )
+    
+    $configFileName = $testFileName.Substring(5)
+    $configFilePath = Get-ChildItem $dscFolderPath -File -Filter "$configFileName.ps1" | Resolve-Path
+    $outputPath = Join-Path -Path $testFolderPath -ChildPath "$functionName"
+
+    try {
+        . "$configFilePath"
+        & $functionName @functionArgs -outputPath $outputPath
+    }
+    finally {
+        Remove-Item -Path $outputPath -Recurse
+    }
+}
+
+
+
 $testFileNamePattern = "test-{0}"
 if ($vmName.StartsWith("dsc-")) { $vmName = $vmName.Substring(4) }
 
@@ -15,5 +37,42 @@ foreach ($dscSourceFilePath in $dscSourceFilesPath) {
     $testFileName = [string]::Format($testFileNamePattern, $dscSourceFilePath.BaseName)
     $testFilePath = Join-Path -Path $testFolderPath -ChildPath "$testFileName.ps1" -Resolve
     Write-Host "Run test '$testFileName'..." -ForegroundColor Cyan
-    . $testFilePath
+    #. $testFilePath
+
+    $testParameters = . $testFilePath
+    Invoke-Test -testFileName "$testFileName" -functionName $testParameters.functionName -functionArgs $testParameters.functionArgs
+
+
+    # $randomChars = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 8 | ForEach-Object { [char] $_ })
+    # $password = New-Object -TypeName System.Security.SecureString
+    # $randomChars.ToCharArray() | ForEach-Object { $password.AppendChar($_) }
+    # $password.MakeReadOnly()
+
+    # $functionName = "ConfigDc"
+    # $Admincreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
+    # $AdfsSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "adfssvc", $password
+    # $SqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "sqlsvc", $password
+    # $SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
+    # $DomainFQDN = "contoso.local"
+    # $PrivateIP = "10.1.1.100"
+    # $SPServerName = "SP"
+    # $SharePointSitesAuthority = "spsites"
+    # $SharePointCentralAdminPort = 5000
+
+    # $functionArgs = @{
+    #     "Admincreds"                 = $Admincreds
+    #     "AdfsSvcCreds"               = $AdfsSvcCreds
+    #     "SqlSvcCreds"                = $SqlSvcCreds
+    #     "SPSetupCreds"               = $SPSetupCreds
+    #     "DomainFQDN"                 = $DomainFQDN
+    #     "PrivateIP"                  = $PrivateIP
+    #     "SPServerName"               = $SPServerName
+    #     "SharePointSitesAuthority"   = $SharePointSitesAuthority
+    #     "SharePointCentralAdminPort" = $SharePointCentralAdminPort
+    #     "ConfigurationData"          = @{AllNodes = @(@{ NodeName = "localhost"; PSDscAllowPlainTextPassword = $true }) }
+    #     #"OutputPath"                 = $outputPath
+    # }
+    # Invoke-Test -testFileName "$testFileName" -functionName $functionName -functionArgs $functionArgs
+    
 }
+
