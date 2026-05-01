@@ -9,9 +9,7 @@
             "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [
                 "-vmName",
-                "*",
-                "-localProjectPath",
-                "'${workspaceFolder}'"
+                "*"
             ],
             "group": "build",
             "problemMatcher": []
@@ -22,9 +20,7 @@
             "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [
                 "-vmName",
-                "${fileBasenameNoExtension}",
-                "-localProjectPath",
-                "'${workspaceFolder}'"
+                "${fileBasenameNoExtension}"
             ],
             "problemMatcher": []
         },
@@ -34,9 +30,7 @@
             "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [
                 "-vmName",
-                "${input:vmName}",
-                "-localProjectPath",
-                "'${workspaceFolder}'"
+                "${input:vmName}"
             ],
             "problemMatcher": []
         },
@@ -45,8 +39,6 @@
             "type": "shell",
             "command": "${workspaceFolder}${/}setup${/}Install-DscModules.ps1",
             "args": [
-                "-localProjectPath",
-                "'${workspaceFolder}'",
                 "-vmName",
                 "*",
                 "-copyCustomizedModules",

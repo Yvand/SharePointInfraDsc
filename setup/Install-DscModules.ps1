@@ -2,7 +2,6 @@
 #Requires -RunAsAdministrator #reason: Install-Module with -Scope AllUsers requires admin privileges
 
 param(
-    [Parameter(Mandatory=$true)] [string] $localProjectPath,
     [Parameter(Mandatory=$false)] [string] $vmName,
     [Parameter(Mandatory=$false)] [bool] $copyCustomizedModules = $false
 )
@@ -22,9 +21,9 @@ if (-not (Get-InstalledModule -Name "Az.Compute" -ErrorAction SilentlyContinue))
     Install-Module Az.Compute -Scope AllUsers
 }
 
-$dscFolderPath = Join-Path -Path $localProjectPath -ChildPath "src"
-$scritpsFolderPath = Join-Path -Path $localProjectPath -ChildPath "setup"
-$customizedModulesPath = Join-Path -Path $localProjectPath -ChildPath "customized-modules"
+$dscFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../src" | Resolve-Path
+$scritpsFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../setup" | Resolve-Path
+$customizedModulesPath = Join-Path -Path $PSScriptRoot -ChildPath "../customized-modules" | Resolve-Path
 
 Write-Host "Get DSC files in folder '$dscFolderPath'" -ForegroundColor Cyan
 $dscFilesPath = Get-ChildItem "$dscFolderPath" -File -Filter "dsc-$vmName*.ps1"
