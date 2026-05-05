@@ -1819,9 +1819,15 @@ configuration ConfigSpMain
                     # Could not enqueue creation of personal site for 'i:0#.w|contoso\yvand': Exception calling "CreatePersonalSiteEnque" with "1" argument(s): "Attempted to perform an unauthorized operation."
                     $jobBlock = {
                         $webAppUrl = $args[0]
-                        $accountPattern_WinClaims = $args[1]
-                        $accountPattern_Trusted = $args[2]
+                        # $accountPattern_WinClaims = $args[1]
+                        # $accountPattern_Trusted = $args[2]
                         $directoryBase = $args[3]
+
+                        $provisionTrustedAuthentication = $using:ProvisionTrustedAuthentication
+                        $accountPattern_WinClaims = $using:WindowsAccountPattern
+                        if ($provisionTrustedAuthentication) {
+                            $accountPattern_Trusted = $using:TrustedAccountPattern -f "{0}@$($using:DomainFQDN)"
+                        }
 
                         try {
                             $site = Get-SPSite -Identity $webAppUrl -ErrorAction SilentlyContinue
@@ -1841,23 +1847,26 @@ configuration ConfigSpMain
                             @{
                                 "AccountName"   = $accountPattern_WinClaims -f $env:UserName;
                                 "PreferredName" = $env:UserName;
-                            },
-                            @{
+                            }
+                        )
+                        if ($provisionTrustedAuthentication) {
+                            $accounts += @{
                                 "AccountName"   = $accountPattern_Trusted -f $env:UserName;
                                 "PreferredName" = $env:UserName;
                             }
-                        )
+                        }
                     
                         $directoryUsers = Get-ADUser -Filter "objectClass -like 'user'" -Properties @("SamAccountName", "displayName") -SearchBase $directoryBase #-ResultSetSize 5
                         foreach ($directoryUser in $directoryUsers) {
-                            $accounts += 
-                            @{
+                            $accounts += @{
                                 "AccountName"   = $accountPattern_WinClaims -f $directoryUser.SamAccountName;
                                 "PreferredName" = $directoryUser["displayName"];
-                            },
-                            @{
-                                "AccountName"   = $accountPattern_Trusted -f $directoryUser.SamAccountName;
-                                "PreferredName" = $directoryUser["displayName"];
+                            }
+                            if ($provisionTrustedAuthentication) {
+                                $accounts += @{
+                                    "AccountName"   = $accountPattern_Trusted -f $directoryUser.SamAccountName;
+                                    "PreferredName" = $directoryUser["displayName"];
+                                }
                             }
                         }
 
@@ -1925,8 +1934,8 @@ configuration ConfigSpMain
                         }
                     }
                     $webAppUrl = $using:WebApplicationUrl
-                    $accountPattern_Trusted = $using:TrustedAccountPattern -f "{0}@$($using:DomainFQDN)"
-                    $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $using:WindowsAccountPattern, $accountPattern_Trusted, $using:AdditionalUsersPath)
+                    # $accountPattern_Trusted = $using:TrustedAccountPattern -f "{0}@$($using:DomainFQDN)"
+                    $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $using:AdditionalUsersPath)
                     Receive-Job -Job $job -AutoRemoveJob -Wait
                 }
                 GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.

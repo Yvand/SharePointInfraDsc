@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- DSC for SharePoint
+  - Fix script CreatePersonalSites if ProvisionTrustedAuthentication is false
+
 ### Added
 
 - SharePointInfraDsc
