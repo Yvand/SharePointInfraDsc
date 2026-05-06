@@ -6,6 +6,8 @@
 
 - DSC for SharePoint
   - Fix script CreatePersonalSites if ProvisionTrustedAuthentication is false
+- Customized Modules
+  - SharePointDSC: Instead of bypassing the logging to the event viewer, set ErrorAction to SilentlyContinue in `Write-EventLog`
 
 ### Added
 
