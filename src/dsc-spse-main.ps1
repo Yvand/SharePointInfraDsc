@@ -1841,23 +1841,26 @@ configuration ConfigSpMain
                             @{
                                 "AccountName"   = $accountPattern_WinClaims -f $env:UserName;
                                 "PreferredName" = $env:UserName;
-                            },
-                            @{
+                            }
+                        )
+                        if ([string]::IsNullOrWhiteSpace($accountPattern_Trusted) -eq $false) {
+                            $accounts += @{
                                 "AccountName"   = $accountPattern_Trusted -f $env:UserName;
                                 "PreferredName" = $env:UserName;
                             }
-                        )
+                        }
                     
                         $directoryUsers = Get-ADUser -Filter "objectClass -like 'user'" -Properties @("SamAccountName", "displayName") -SearchBase $directoryBase #-ResultSetSize 5
                         foreach ($directoryUser in $directoryUsers) {
-                            $accounts += 
-                            @{
+                            $accounts += @{
                                 "AccountName"   = $accountPattern_WinClaims -f $directoryUser.SamAccountName;
                                 "PreferredName" = $directoryUser["displayName"];
-                            },
-                            @{
-                                "AccountName"   = $accountPattern_Trusted -f $directoryUser.SamAccountName;
-                                "PreferredName" = $directoryUser["displayName"];
+                            }
+                            if ([string]::IsNullOrWhiteSpace($accountPattern_Trusted) -eq $false) {
+                                $accounts += @{
+                                    "AccountName"   = $accountPattern_Trusted -f $directoryUser.SamAccountName;
+                                    "PreferredName" = $directoryUser["displayName"];
+                                }
                             }
                         }
 
@@ -1925,8 +1928,14 @@ configuration ConfigSpMain
                         }
                     }
                     $webAppUrl = $using:WebApplicationUrl
-                    $accountPattern_Trusted = $using:TrustedAccountPattern -f "{0}@$($using:DomainFQDN)"
-                    $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $using:WindowsAccountPattern, $accountPattern_Trusted, $using:AdditionalUsersPath)
+
+                    $accountPattern_WinClaims = $using:WindowsAccountPattern
+                    $accountPattern_Trusted = [string]::Empty
+                    $provisionTrustedAuthentication = $using:ProvisionTrustedAuthentication
+                    if ($provisionTrustedAuthentication) {
+                        $accountPattern_Trusted = $using:TrustedAccountPattern -f "{0}@$($using:DomainFQDN)"
+                    }
+                    $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($webAppUrl, $accountPattern_WinClaims, $accountPattern_Trusted, $using:AdditionalUsersPath)
                     Receive-Job -Job $job -AutoRemoveJob -Wait
                 }
                 GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
