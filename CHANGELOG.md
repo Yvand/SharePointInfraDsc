@@ -4,6 +4,8 @@
 
 ### Fixed
 
+## [3.0.1] - 2026-05-07
+
 - DSC for SharePoint
   - Fix script CreatePersonalSites if ProvisionTrustedAuthentication is false
 - Customized Modules
