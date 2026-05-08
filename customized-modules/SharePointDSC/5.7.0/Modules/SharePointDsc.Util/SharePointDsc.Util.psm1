@@ -47,9 +47,9 @@ function Add-SPDscEvent
 
     try
     {
-        # YVAND SilentlyContinue to avoid random error "The registry key for the log "SPDsc" for source "MSFT_SPFarm" could not be opened"
+        # YVAND https://github.com/dsccommunity/SharePointDsc/pull/1473
         Write-EventLog -LogName $LogName -Source $Source `
-            -EventId $EventID -Message $Message -EntryType $EntryType -ErrorAction SilentlyContinue
+            -EventId $EventID -Message $Message -EntryType $EntryType -ErrorAction Stop
     }
     catch
     {
