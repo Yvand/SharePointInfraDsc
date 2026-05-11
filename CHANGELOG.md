@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Customized Modules
+  - SharePointDSC: Set ErrorAction to `Stop` instead of `SilentlyContinue` in `Write-EventLog`, which is the same change as https://github.com/dsccommunity/SharePointDsc/pull/1473
+
 ## [3.0.1] - 2026-05-07
 
 ### Fixed
