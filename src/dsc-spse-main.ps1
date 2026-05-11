@@ -960,6 +960,15 @@ configuration ConfigSpMain
             }
         }
 
+        if ($ProjectServerService) {
+            SPServiceInstance StartProjectServerServiceInstance {
+                Name                 = "Project Server Application Service"
+                Ensure               = "Present"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[Script]RestartSPTimerAfterCreateSPFarm"
+            }
+        }
+
         SPServiceAppPool MainServiceAppPool {
             Name                 = $ServiceAppPoolName
             ServiceAccount       = $SPSvcCredsQualified.UserName
@@ -1597,29 +1606,35 @@ configuration ConfigSpMain
         }
 
         if ($ProjectServerService) {
+            SPProjectServerLicense ProjectLicense {
+                IsSingleInstance     = "Yes"
+                ProductKey           = "WD6NX-PGRBH-3FQ88-BRBVC-8XFTV"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+            }
+
             SPProjectServerServiceApp CreateProjectServerServiceApp {
                 Name                 = "Project Server Service Application"
                 ApplicationPool      = $ServiceAppPoolName
                 PsDscRunAsCredential = $DomainAdminCredsQualified
-                DependsOn            = "[SPServiceAppPool]MainServiceAppPool"
+                DependsOn            = "[SPServiceAppPool]MainServiceAppPool", "[SPServiceInstance]StartProjectServerServiceInstance"
             }
 
             SPSite PWASite {
-                Url                      = "$WebApplicationUrl/sites/PWA/"
-                OwnerAlias               = $WindowsDomainAdminAccountName
-                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
-                Name                     = "PWA Site"
-                Template                 = "PWA#0"
-                PsDscRunAsCredential     = $DomainAdminCredsQualified
+                Url                  = "$WebApplicationUrl/sites/PWA"
+                OwnerAlias           = $WindowsDomainAdminAccountName
+                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
+                Name                 = "PWA Site"
+                Template             = "PWA#0"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPProjectServerServiceApp]CreateProjectServerServiceApp", "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
             }
 
             SPFeature PWASiteFeature {
-                Url                  = "$WebApplicationUrl/sites/PWA/"
+                Url                  = "$WebApplicationUrl/sites/PWA"
                 Name                 = "PWASITE"
                 FeatureScope         = "Site"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
-                DependsOn            = "[SPSite]PWASite"
+                DependsOn            = "[SPSite]PWASite", "[SPProjectServerLicense]ProjectLicense"
             }
         }
 
