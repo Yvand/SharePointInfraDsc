@@ -63,7 +63,7 @@ configuration ConfigSpMain
     [Boolean] $ProvisionAddins = $false
     [Boolean] $ProvisionAdditionalSiteCollections = $false
     [Boolean] $ProvisionExtendedZone = $false
-    [Boolean] $ProjectServerService = $false
+    [Boolean] $ProvisionProjectServer = $false
     
     if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
         $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
@@ -72,7 +72,7 @@ configuration ConfigSpMain
         $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
         $ProvisionAdditionalSiteCollections = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::AdditionalSiteCollections
         $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedWebApplication
-        $ProjectServerService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ProjectServerService
+        $ProvisionProjectServer = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ProjectServer
     }
     else {
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
@@ -87,7 +87,7 @@ configuration ConfigSpMain
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
             $ProvisionAddins = $true
             $ProvisionAdditionalSiteCollections = $true
-            $ProjectServerService = $true
+            $ProvisionProjectServer = $true
         }
     }
 
@@ -960,7 +960,7 @@ configuration ConfigSpMain
             }
         }
 
-        if ($ProjectServerService) {
+        if ($ProvisionProjectServer) {
             SPServiceInstance StartProjectServerServiceInstance {
                 Name                 = "Project Server Application Service"
                 Ensure               = "Present"
@@ -1605,7 +1605,7 @@ configuration ConfigSpMain
             }
         }
 
-        if ($ProjectServerService) {
+        if ($ProvisionProjectServer) {
             SPProjectServerLicense ProjectLicense {
                 IsSingleInstance     = "Yes"
                 ProductKey           = "WD6NX-PGRBH-3FQ88-BRBVC-8XFTV"
@@ -2150,7 +2150,7 @@ enum SharePointConfigurations {
     Addins
     AdditionalSiteCollections
     StateService
-    ProjectServerService
+    ProjectServer
 }
 
 <#

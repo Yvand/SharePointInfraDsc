@@ -5,7 +5,7 @@
 ### Added
 
 - DSC for SharePoint
-  - Added `ProjectServerService` to `SharePointConfigurations`, to deploy Project Server
+  - Added `ProjectServer` to `SharePointConfigurations`, to deploy Project Server
 
 ### Changed
 
