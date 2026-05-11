@@ -1649,8 +1649,8 @@ configuration ConfigSpMain
             }
 
             SPFeature PWASiteFeature {
-                Url                  = "$WebApplicationUrl/sites/PWA"
-                Name                 = "PWASITE"
+                Url                  = "$WebApplicationUrl/sites/pwa"
+                Name                 = "PWA"
                 FeatureScope         = "Site"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPSite]PWASite", "[SPProjectServerLicense]ProjectLicense"
@@ -1663,7 +1663,7 @@ configuration ConfigSpMain
                 OwnerAlias           = $WindowsDomainAdminAccountName
                 SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
                 Name                 = "Search"
-                Template             = "SEARCH#0"
+                Template             = "SRCHCEN#0"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
             }
