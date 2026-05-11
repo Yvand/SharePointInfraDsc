@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- DSC for SharePoint
+  - Added `ProjectServer` to `SharePointConfigurations`, to deploy Project Server
+
+### Changed
+
 - Customized Modules
   - SharePointDSC: Set ErrorAction to `Stop` instead of `SilentlyContinue` in `Write-EventLog`, which is the same change as https://github.com/dsccommunity/SharePointDsc/pull/1473
 
