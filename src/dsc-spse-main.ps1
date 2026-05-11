@@ -63,6 +63,8 @@ configuration ConfigSpMain
     [Boolean] $ProvisionAddins = $false
     [Boolean] $ProvisionAdditionalSiteCollections = $false
     [Boolean] $ProvisionExtendedZone = $false
+    [Boolean] $ProjectServerService = $false
+    
     if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
         $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
         $ProvisionTrustedAuthentication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::TrustedAuthentication
@@ -70,6 +72,7 @@ configuration ConfigSpMain
         $ProvisionAddins = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Addins
         $ProvisionAdditionalSiteCollections = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::AdditionalSiteCollections
         $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedWebApplication
+        $ProjectServerService = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ProjectServerService
     }
     else {
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
@@ -84,6 +87,7 @@ configuration ConfigSpMain
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
             $ProvisionAddins = $true
             $ProvisionAdditionalSiteCollections = $true
+            $ProjectServerService = $true
         }
     }
 
@@ -1592,6 +1596,33 @@ configuration ConfigSpMain
             }
         }
 
+        if ($ProjectServerService) {
+            SPProjectServerServiceApp CreateProjectServerServiceApp {
+                Name                 = "Project Server Service Application"
+                ApplicationPool      = $ServiceAppPoolName
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[SPServiceAppPool]MainServiceAppPool"
+            }
+
+            SPSite PWASite {
+                Url                      = "$WebApplicationUrl/sites/PWA/"
+                OwnerAlias               = $WindowsDomainAdminAccountName
+                SecondaryOwnerAlias      = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
+                Name                     = "PWA Site"
+                Template                 = "PWA#0"
+                PsDscRunAsCredential     = $DomainAdminCredsQualified
+                DependsOn            = "[SPProjectServerServiceApp]CreateProjectServerServiceApp", "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
+            }
+
+            SPFeature PWASiteFeature {
+                Url                  = "$WebApplicationUrl/sites/PWA/"
+                Name                 = "PWASITE"
+                FeatureScope         = "Site"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[SPSite]PWASite"
+            }
+        }
+
         # Move this op after all databases were created (instead of just after psconfig.exe as documented), but before other servers can join, to fix SQL permission errors thrown at step 10/10 in SPS config wizard, when installing a CU post-provisionning
         Script AddRequiredDatabasesPermissions {
             SetScript            =
@@ -2104,6 +2135,7 @@ enum SharePointConfigurations {
     Addins
     AdditionalSiteCollections
     StateService
+    ProjectServerService
 }
 
 <#
