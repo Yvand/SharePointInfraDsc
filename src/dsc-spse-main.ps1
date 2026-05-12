@@ -55,6 +55,7 @@ configuration ConfigSpMain
     [System.Management.Automation.PSCredential] $SPSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPSvcCreds.UserName)", $SPSvcCreds.Password)
     [System.Management.Automation.PSCredential] $SPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPAppPoolCreds.UserName)", $SPAppPoolCreds.Password)
     [System.Management.Automation.PSCredential] $SPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPADDirSyncCreds.UserName)", $SPADDirSyncCreds.Password)
+    [System.Management.Automation.PSCredential] $SPSuperReaderCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPSuperReaderCreds.UserName)", $SPSuperReaderCreds.Password)
     
     # Provisioning options
     [Boolean] $ProvisionStateServiceApplication = $false
@@ -1673,7 +1674,7 @@ configuration ConfigSpMain
                 ApplicationPool             = $ServiceAppPoolName
                 DatabaseName                = "$($SPDBPrefix)Search"
                 SearchCenterUrl             = "$WebApplicationUrl/sites/search"
-                DefaultContentAccessAccount = "$($DomainNetbiosName)\$($SPSuperReaderCreds.UserName)"
+                DefaultContentAccessAccount = $SPSuperReaderCredsQualified
                 Ensure                      = "Present"
                 PsDscRunAsCredential        = $DomainAdminCredsQualified
                 DependsOn                   = "[SPServiceAppPool]MainServiceAppPool", "[SPServiceInstance]StartSearchServiceInstance_Controller", "[SPServiceInstance]StartSearchServiceInstance_Query", "[SPSite]SearchSite"
