@@ -636,36 +636,6 @@ configuration ConfigSpFrontend
             DependsOn                          = "[Script]WaitToAvoidServersJoiningFarmSimultaneously"
         }
 
-        DnsRecordCname UpdateDNSAliasSPSites {
-            Name                 = (Get-SPWebApplication)[0].Url
-            ZoneName             = $DomainFQDN
-            DnsServer            = $DCServerName
-            HostNameAlias        = "$ComputerName.$DomainFQDN"
-            Ensure               = "Present"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SPFarm]JoinSPFarm"
-        }
-
-        DnsRecordCname UpdateDNSAliasOhMy {
-            Name                 = $MySiteHostAlias
-            ZoneName             = $DomainFQDN
-            DnsServer            = $DCServerName
-            HostNameAlias        = "$ComputerName.$DomainFQDN"
-            Ensure               = "Present"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SPFarm]JoinSPFarm"
-        }
-
-        DnsRecordCname UpdateDNSAliasHNSC1 {
-            Name                 = $HNSC1Alias
-            ZoneName             = $DomainFQDN
-            DnsServer            = $DCServerName
-            HostNameAlias        = "$ComputerName.$DomainFQDN"
-            Ensure               = "Present"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SPFarm]JoinSPFarm"
-        }
-
         Script SetFarmPropertiesForOIDC {
             SetScript            = 
             {
