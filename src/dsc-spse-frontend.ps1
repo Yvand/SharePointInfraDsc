@@ -8,7 +8,6 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [String]$SQLServerName,
         [Parameter(Mandatory)] [String]$SQLAlias,
         [Parameter(Mandatory)] [SharePointBuild] $SharePointVersion,
-        [Parameter(Mandatory)] [String]$SharePointSitesAuthority,
         [Parameter(Mandatory)] [Boolean]$EnableAnalysis,
         [Parameter(Mandatory)] [SharePointBuildInfo[]] $SharePointBits,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
@@ -638,7 +637,7 @@ configuration ConfigSpFrontend
         }
 
         DnsRecordCname UpdateDNSAliasSPSites {
-            Name                 = $SharePointSitesAuthority
+            Name                 = (Get-SPWebApplication)[0].Url
             ZoneName             = $DomainFQDN
             DnsServer            = $DCServerName
             HostNameAlias        = "$ComputerName.$DomainFQDN"
@@ -665,41 +664,6 @@ configuration ConfigSpFrontend
             Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[SPFarm]JoinSPFarm"
-        }
-
-        Script WarmupSites {
-            SetScript            =
-            {
-                $jobBlock = {
-                    $uri = $args[0]
-                    try {
-                        Write-Verbose -Verbose -Message "Connecting to $uri..."
-                        # -UseDefaultCredentials: Does NTLM authN
-                        # -UseBasicParsing: Avoid exception because IE was not first launched yet
-                        # Expected traffic is HTTP 401/302/200, and $Response.StatusCode is 200
-                        Invoke-WebRequest -UseBasicParsing -Uri $uri -UseDefaultCredentials -TimeoutSec 40 -ErrorAction SilentlyContinue
-                        Write-Verbose -Verbose -Message "Connected successfully to $uri"
-                    }
-                    catch [System.Exception] {
-                        Write-Verbose -Verbose -Message "Unexpected error while connecting to '$uri': $_"
-                    }
-                    catch {
-                        # It may typically be a System.Management.Automation.ErrorRecord, which does not inherit System.Exception
-                        Write-Verbose -Verbose -Message "Unexpected error while connecting to '$uri'"
-                    }
-                }
-                [System.Management.Automation.Job[]] $jobs = @()
-                $uri = (Get-SPWebApplication)[0].Url
-                Write-Verbose -Verbose -Message "Warming up '$uri'..."
-                $jobs += Start-Job -ScriptBlock $jobBlock -ArgumentList @($uri)
-
-                # Must wait for the jobs to complete, otherwise they do not actually run
-                Receive-Job -Job $jobs -AutoRemoveJob -Wait
-            }
-            GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[DnsRecordCname]UpdateDNSAliasSPSites"
         }
 
         Script SetFarmPropertiesForOIDC {
@@ -892,7 +856,6 @@ $DCServerName = "DC"
 $SQLServerName = "SQL"
 $SQLAlias = "SQLAlias"
 $SharePointVersion = "SPRTM" #"SPLatest"
-$SharePointSitesAuthority = "spsites"
 $EnableAnalysis = $true
 $SharePointBits = @(
     @{
@@ -917,7 +880,7 @@ $SharePointBits = @(
 )
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureFESE.0\ConfigSpFrontend"
-ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 

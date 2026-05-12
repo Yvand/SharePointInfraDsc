@@ -8,7 +8,7 @@ configuration ConfigSpFrontend
         [Parameter(Mandatory)] [String]$SQLServerName,
         [Parameter(Mandatory)] [String]$SQLAlias,
         [Parameter(Mandatory)] [String]$SharePointVersion,
-        [Parameter(Mandatory)] [String]$SharePointSitesAuthority,
+        [Parameter(Mandatory=$false)] [String]$SharePointSitesAuthority = "spsites",
         [Parameter(Mandatory)] [Boolean]$EnableAnalysis,
         [Parameter()] [System.Object[]] $SharePointBits,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
