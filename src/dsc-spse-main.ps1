@@ -1650,7 +1650,7 @@ configuration ConfigSpMain
 
             SPFeature PWASiteFeature {
                 Url                  = "$WebApplicationUrl/sites/pwa"
-                Name                 = "PWA"
+                Name                 = "PWASITE"
                 FeatureScope         = "Site"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPSite]PWASite", "[SPProjectServerLicense]ProjectLicense"
