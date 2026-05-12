@@ -21,7 +21,6 @@ configuration ConfigSpFrontend
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.1
     Import-DscResource -ModuleName WebAdministrationDsc -ModuleVersion 4.2.1
     Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.7.0 # Custom workaround on Add-SPDscEvent and SPInstallPrereqs
-    Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.3
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 6.0.0
     Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 17.5.1 # Custom workaround on SqlSecureConnection
     Import-DscResource -ModuleName cChoco -ModuleVersion 2.6.0.0    # With custom changes to implement retry on package downloads

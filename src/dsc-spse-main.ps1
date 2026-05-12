@@ -80,15 +80,15 @@ configuration ConfigSpMain
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Light) {
             $ProvisionStateServiceApplication = $true
-            $ProvisionTrustedAuthentication = $true
+            $ProvisionAdditionalSiteCollections = $true
+            $ProvisionUserProfilesService = $true
         }
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Medium) {
-            $ProvisionUserProfilesService = $true
             $ProvisionExtendedZone = $true
+            $ProvisionTrustedAuthentication = $true
+            $ProvisionAddins = $true
         }
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
-            $ProvisionAddins = $true
-            $ProvisionAdditionalSiteCollections = $true
             $ProvisionProjectServer = $true
             $ProvisionSearch = $true
         }
@@ -1669,13 +1669,14 @@ configuration ConfigSpMain
             }
 
             SPSearchServiceApp CreateSearchServiceApp {
-                Name                       = "Search Service Application"
-                ApplicationPool            = $ServiceAppPoolName
-                DatabaseName               = "$($SPDBPrefix)Search"
-                SearchCenterUrl            = "$WebApplicationUrl/sites/search"
-                Ensure                     = "Present"
-                PsDscRunAsCredential       = $DomainAdminCredsQualified
-                DependsOn                  = "[SPServiceAppPool]MainServiceAppPool", "[SPServiceInstance]StartSearchServiceInstance_Controller", "[SPServiceInstance]StartSearchServiceInstance_Query", "[SPSite]SearchSite"
+                Name                        = "Search Service Application"
+                ApplicationPool             = $ServiceAppPoolName
+                DatabaseName                = "$($SPDBPrefix)Search"
+                SearchCenterUrl             = "$WebApplicationUrl/sites/search"
+                DefaultContentAccessAccount = "$($DomainNetbiosName)\$($SPSuperReaderCreds.UserName)"
+                Ensure                      = "Present"
+                PsDscRunAsCredential        = $DomainAdminCredsQualified
+                DependsOn                   = "[SPServiceAppPool]MainServiceAppPool", "[SPServiceInstance]StartSearchServiceInstance_Controller", "[SPServiceInstance]StartSearchServiceInstance_Query", "[SPSite]SearchSite"
             }
         }
 
