@@ -1639,7 +1639,7 @@ configuration ConfigSpMain
             }
 
             SPSite PWASite {
-                Url                  = "$WebApplicationUrl/sites/PWA"
+                Url                  = "$WebApplicationUrl/sites/pwa"
                 OwnerAlias           = $WindowsDomainAdminAccountName
                 SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
                 Name                 = "PWA"
