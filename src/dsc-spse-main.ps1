@@ -82,11 +82,11 @@ configuration ConfigSpMain
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Light) {
             $ProvisionStateServiceApplication = $true
             $ProvisionAdditionalSiteCollections = $true
-            $ProvisionUserProfilesService = $true
+            $ProvisionTrustedAuthentication = $true
         }
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Medium) {
             $ProvisionExtendedZone = $true
-            $ProvisionTrustedAuthentication = $true
+            $ProvisionUserProfilesService = $true
             $ProvisionAddins = $true
         }
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
