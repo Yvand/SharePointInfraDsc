@@ -4,11 +4,18 @@
 
 ### Added
 
-- DSC for SharePoint
+- DSC for SharePoint main
   - Added `ProjectServer` to `SharePointConfigurations`, to deploy Project Server
+  - Added `Search` to `SharePointConfigurations`, to deploy the Search Service Application
 
 ### Changed
 
+- DSC for SharePoint main
+  - Changed what is provisioned when `SharePointConfigurationLevel` is set to `Light`, `Medium` or `Full`
+- DSC for SharePoint frontend
+  - Removed parameter `SharePointSitesAuthority`
+  - Removed the warm-up script of sites
+  - Removed the resources which updated the DNS entries to the current frontend. Now, DNS entries always point to the SharePoint main VM, regardless if frontend(s) are deployed or not
 - Customized Modules
   - SharePointDSC: Set ErrorAction to `Stop` instead of `SilentlyContinue` in `Write-EventLog`, which is the same change as https://github.com/dsccommunity/SharePointDsc/pull/1473
 

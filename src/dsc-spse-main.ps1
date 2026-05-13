@@ -55,6 +55,7 @@ configuration ConfigSpMain
     [System.Management.Automation.PSCredential] $SPSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPSvcCreds.UserName)", $SPSvcCreds.Password)
     [System.Management.Automation.PSCredential] $SPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPAppPoolCreds.UserName)", $SPAppPoolCreds.Password)
     [System.Management.Automation.PSCredential] $SPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPADDirSyncCreds.UserName)", $SPADDirSyncCreds.Password)
+    [System.Management.Automation.PSCredential] $SPSuperReaderCredsQualified = New-Object System.Management.Automation.PSCredential ("$($DomainNetbiosName)\$($SPSuperReaderCreds.UserName)", $SPSuperReaderCreds.Password)
     
     # Provisioning options
     [Boolean] $ProvisionStateServiceApplication = $false
@@ -64,6 +65,7 @@ configuration ConfigSpMain
     [Boolean] $ProvisionAdditionalSiteCollections = $false
     [Boolean] $ProvisionExtendedZone = $false
     [Boolean] $ProvisionProjectServer = $false
+    [Boolean] $ProvisionSearch = $false
     
     if ($SharePointConfigurationLevel -eq [SharePointConfigurationLevels]::Custom) {
         $ProvisionStateServiceApplication = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::StateService
@@ -73,21 +75,23 @@ configuration ConfigSpMain
         $ProvisionAdditionalSiteCollections = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::AdditionalSiteCollections
         $ProvisionExtendedZone = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ExtendedWebApplication
         $ProvisionProjectServer = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::ProjectServer
+        $ProvisionSearch = $CustomSharePointConfiguration -ccontains [SharePointConfigurations]::Search
     }
     else {
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Minimum) {}
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Light) {
             $ProvisionStateServiceApplication = $true
+            $ProvisionAdditionalSiteCollections = $true
             $ProvisionTrustedAuthentication = $true
         }
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Medium) {
-            $ProvisionUserProfilesService = $true
             $ProvisionExtendedZone = $true
+            $ProvisionUserProfilesService = $true
+            $ProvisionAddins = $true
         }
         if ($SharePointConfigurationLevel -ge [SharePointConfigurationLevels]::Full) {
-            $ProvisionAddins = $true
-            $ProvisionAdditionalSiteCollections = $true
             $ProvisionProjectServer = $true
+            $ProvisionSearch = $true
         }
     }
 
@@ -969,6 +973,22 @@ configuration ConfigSpMain
             }
         }
 
+        if ($ProvisionSearch) {
+            SPServiceInstance StartSearchServiceInstance_Controller {
+                Name                 = "Search Host Controller Service"
+                Ensure               = "Present"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[Script]RestartSPTimerAfterCreateSPFarm"
+            }
+
+            SPServiceInstance StartSearchServiceInstance_Query {
+                Name                 = "Search Query and Site Settings Service"
+                Ensure               = "Present"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[Script]RestartSPTimerAfterCreateSPFarm"
+            }
+        }
+
         SPServiceAppPool MainServiceAppPool {
             Name                 = $ServiceAppPoolName
             ServiceAccount       = $SPSvcCredsQualified.UserName
@@ -1620,21 +1640,44 @@ configuration ConfigSpMain
             }
 
             SPSite PWASite {
-                Url                  = "$WebApplicationUrl/sites/PWA"
+                Url                  = "$WebApplicationUrl/sites/pwa"
                 OwnerAlias           = $WindowsDomainAdminAccountName
                 SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
-                Name                 = "PWA Site"
+                Name                 = "PWA"
                 Template             = "PWA#0"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPProjectServerServiceApp]CreateProjectServerServiceApp", "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
             }
 
             SPFeature PWASiteFeature {
-                Url                  = "$WebApplicationUrl/sites/PWA"
+                Url                  = "$WebApplicationUrl/sites/pwa"
                 Name                 = "PWASITE"
                 FeatureScope         = "Site"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
                 DependsOn            = "[SPSite]PWASite", "[SPProjectServerLicense]ProjectLicense"
+            }
+        }
+
+        if ($ProvisionSearch) {
+            SPSite SearchSite {
+                Url                  = "$WebApplicationUrl/sites/search"
+                OwnerAlias           = $WindowsDomainAdminAccountName
+                SecondaryOwnerAlias  = if ($ProvisionTrustedAuthentication) { $TrustedDomainAdminAccountName } else { $WindowsDomainAdminAccountName }
+                Name                 = "Search"
+                Template             = "SRCHCEN#0"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
+            }
+
+            SPSearchServiceApp CreateSearchServiceApp {
+                Name                        = "Search Service Application"
+                ApplicationPool             = $ServiceAppPoolName
+                DatabaseName                = "$($SPDBPrefix)Search"
+                SearchCenterUrl             = "$WebApplicationUrl/sites/search"
+                DefaultContentAccessAccount = $SPSuperReaderCredsQualified
+                Ensure                      = "Present"
+                PsDscRunAsCredential        = $DomainAdminCredsQualified
+                DependsOn                   = "[SPServiceAppPool]MainServiceAppPool", "[SPServiceInstance]StartSearchServiceInstance_Controller", "[SPServiceInstance]StartSearchServiceInstance_Query", "[SPSite]SearchSite"
             }
         }
 
@@ -2151,6 +2194,7 @@ enum SharePointConfigurations {
     AdditionalSiteCollections
     StateService
     ProjectServer
+    Search
 }
 
 <#

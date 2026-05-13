@@ -15,7 +15,6 @@ $DCServerName = "DC"
 $SQLServerName = "SQL"
 $SQLAlias = "SQLAlias"
 $SharePointVersion = "SPRTM" #"SPLatest"
-$SharePointSitesAuthority = "spsites"
 $EnableAnalysis = $true
 $SharePointBits = @(
     @{
@@ -43,7 +42,6 @@ $functionArgs = @{
     "SQLServerName" = $SQLServerName
     "SQLAlias" = $SQLAlias
     "SharePointVersion" = $SharePointVersion
-    "SharePointSitesAuthority" = $SharePointSitesAuthority
     "EnableAnalysis" = $EnableAnalysis
     "SharePointBits" = $SharePointBits
 }
