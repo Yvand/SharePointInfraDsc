@@ -396,8 +396,7 @@
         }
 
         Script ExportCertificates {
-            SetScript  = 
-            {
+            SetScript = {
                 $destinationPath = $using:SetupPath
                 $adfsSigningCertName = "ADFS Signing.cer"
                 $adfsSigningIssuerCertName = "ADFS Signing issuer.cer"
@@ -408,13 +407,11 @@
                 Get-ChildItem -Path "cert:\LocalMachine\Root\" | Where-Object { $_.Subject -eq $signingCert.Issuer } | Select-Object -First 1 | Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertName))
                 Write-Verbose -Verbose -Message "Public key of ADFS signing / signing issuer certificates successfully exported"
             }
-            GetScript  =  
-            {
+            GetScript = {
                 # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
                 return @{ "Result" = "false" }
             }
-            TestScript = 
-            {
+            TestScript = {
                 # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                 return $false
             }
