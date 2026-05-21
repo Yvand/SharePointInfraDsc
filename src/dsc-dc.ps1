@@ -14,6 +14,7 @@
         [Parameter(Mandatory = $false)] [GlobalConfigurations[]] $GlobalConfiguration = @("ApplyBrowserPolicies")
     )
 
+    Import-DscResource -ModuleName PSDscResources -ModuleVersion 2.12.0.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.1
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.1.0
     Import-DscResource -ModuleName ActiveDirectoryCSDsc -ModuleVersion 5.0.0

@@ -1,4 +1,4 @@
-#Requires -PSEdition Desktop
+# #Requires -PSEdition Desktop
 
 param(
     [Parameter(Mandatory = $false)] [string] $vmName = "*"
@@ -54,7 +54,7 @@ $functionArgs = Import-Clixml -Path $FunctionArgsPath
     finally {
         if (Test-Path -Path $functionArgsPath) { Remove-Item -Path $functionArgsPath -Force }
         if (Test-Path -Path $runnerScriptPath) { Remove-Item -Path $runnerScriptPath -Force }
-        if (Test-Path -Path $outputPath) { Remove-Item -Path $outputPath -Recurse -Force }
+        # if (Test-Path -Path $outputPath) { Remove-Item -Path $outputPath -Recurse -Force }
     }
 }
 

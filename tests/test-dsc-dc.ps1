@@ -1,4 +1,4 @@
-﻿#Requires -PSEdition Desktop
+﻿# #Requires -PSEdition Desktop
 
 param(
     [Parameter(Mandatory = $true)] [System.Security.SecureString] $password
