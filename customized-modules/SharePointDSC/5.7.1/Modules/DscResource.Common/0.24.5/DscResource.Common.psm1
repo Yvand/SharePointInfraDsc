@@ -120,12 +120,7 @@ function Assert-RequiredCommandParameter
                         }
 
                         $PSCmdlet.ThrowTerminatingError(
-                            [System.Management.Automation.ErrorRecord]::new(
-                                $errorMessage,
-                                'ARCP0001', # cspell: disable-line
-                                [System.Management.Automation.ErrorCategory]::InvalidOperation,
-                                'Command parameters'
-                            )
+                            (New-ErrorRecord -Exception $errorMessage -ErrorId 'ARCP0001' -ErrorCategory ([System.Management.Automation.ErrorCategory]::InvalidOperation) -TargetObject 'Command parameters')
                         )
                     }
                 }
@@ -151,12 +146,7 @@ function Assert-RequiredCommandParameter
                     }
 
                     $PSCmdlet.ThrowTerminatingError(
-                        [System.Management.Automation.ErrorRecord]::new(
-                            $errorMessage,
-                            'ARCP0002', # cspell: disable-line
-                            [System.Management.Automation.ErrorCategory]::InvalidOperation,
-                            'Command parameters'
-                        )
+                        (New-ErrorRecord -Exception $errorMessage -ErrorId 'ARCP0002' -ErrorCategory ([System.Management.Automation.ErrorCategory]::InvalidOperation) -TargetObject 'Command parameters')
                     )
                 }
 
@@ -165,16 +155,16 @@ function Assert-RequiredCommandParameter
         }
     }
 }
-#EndRegion './Private/Assert-RequiredCommandParameter.ps1' 140
+#EndRegion './Private/Assert-RequiredCommandParameter.ps1' 130
 #Region './Private/Clear-ZeroedEnumPropertyValue.ps1' -1
 
 <#
     .SYNOPSIS
-        Removes any properties from a hashable which have values that are
+        Removes any properties from a hashtable which have values that are
         type [System.Enum] and have an [System.Int32] value of 0.
 
     .DESCRIPTION
-        Removes any properties from a hashable which have values that are
+        Removes any properties from a hashtable which have values that are
         type [System.Enum] and have an [System.Int32] value of 0.
 
     .PARAMETER InputObject
@@ -191,7 +181,8 @@ function Clear-ZeroedEnumPropertyValue
 {
     [CmdletBinding()]
     [OutputType([System.Collections.Hashtable])]
-    param (
+    param
+    (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [System.Collections.Hashtable]
         $InputObject
@@ -221,7 +212,7 @@ function Clear-ZeroedEnumPropertyValue
         return $result
     }
 }
-#EndRegion './Private/Clear-ZeroedEnumPropertyValue.ps1' 54
+#EndRegion './Private/Clear-ZeroedEnumPropertyValue.ps1' 55
 #Region './Private/Test-DscObjectHasProperty.ps1' -1
 
 <#
@@ -918,16 +909,11 @@ function Assert-ElevatedUser
     if (-not $isElevated)
     {
         $PSCmdlet.ThrowTerminatingError(
-            [System.Management.Automation.ErrorRecord]::new(
-                $ErrorMessage,
-                'UserNotElevated',
-                [System.Management.Automation.ErrorCategory]::InvalidOperation,
-                'Command parameters'
-            )
+            (New-ErrorRecord -Exception $ErrorMessage -ErrorId 'UserNotElevated' -ErrorCategory ([System.Management.Automation.ErrorCategory]::InvalidOperation) -TargetObject 'Command parameters')
         )
     }
 }
-#EndRegion './Public/Assert-ElevatedUser.ps1' 68
+#EndRegion './Public/Assert-ElevatedUser.ps1' 63
 #Region './Public/Assert-IPAddress.ps1' -1
 
 <#
@@ -1479,7 +1465,7 @@ function Compare-DscParameterState
         }
         #endregion TestType
         #region Check if the value of Current and desired state is the same but only if they are not an array
-        if ($currentValue -eq $desiredValue -and -not $desiredType.IsArray)
+        if ($currentValue -eq $desiredValue -and -not $desiredType.IsArray -and -not $currentType.IsArray)
         {
             Write-Debug -Message ($script:localizedData.MatchValueMessage -f $desiredType.FullName, $key, $currentValue, $desiredValue)
             continue # pass to the next key
@@ -1770,7 +1756,7 @@ function Compare-DscParameterState
         We use .foreach() method as we are sure that $returnValue is an array.
     #>
     [Array]$returnValue = @(
-        $returnValue.foreach(
+        $returnValue.ForEach(
             {
                 if ($_ -is [System.Collections.Hashtable])
                 {
@@ -2956,6 +2942,14 @@ function Get-EnvironmentVariable
         Get-FileProductVersion -Path 'C:\Temp\setup.exe'
 
         Returns the product version of the file setup.exe as a System.Version object.
+
+    .INPUTS
+        None.
+
+    .OUTPUTS
+        `System.Version`
+
+        Returns the product version as a System.Version object.
 #>
 function Get-FileProductVersion
 {
@@ -2970,18 +2964,104 @@ function Get-FileProductVersion
 
     try
     {
-        $fileItem = Get-Item -Path $Path -ErrorAction 'Stop'
-
-        return [System.Version] $fileItem.VersionInfo.ProductVersion
+        $fileVersionInfo = Get-FileVersion -Path $Path -ErrorAction 'Stop'
     }
     catch
     {
         $errorMessage = $script:localizedData.Get_FileProductVersion_GetFileProductVersionError -f $Path, $_.Exception.Message
+        $exception = New-Exception -Message $errorMessage -ErrorRecord $_
 
-        Write-Error -Message $errorMessage
+        $PSCmdlet.ThrowTerminatingError(
+            (New-ErrorRecord -Exception $exception -ErrorId 'GFPV0001' -ErrorCategory ([System.Management.Automation.ErrorCategory]::ReadError) -TargetObject $Path) # cSpell: disable-line
+        )
+    }
+
+    $productVersionString = $fileVersionInfo.ProductVersion
+
+    $parsedVersion = $null
+    if (-not [System.Version]::TryParse($productVersionString, [ref] $parsedVersion))
+    {
+        $errorMessage = $script:localizedData.Get_FileProductVersion_InvalidVersionFormat -f $productVersionString, $Path
+        $exception = New-Exception -Message $errorMessage
+
+        $PSCmdlet.ThrowTerminatingError(
+            (New-ErrorRecord -Exception $exception -ErrorId 'GFPV0002' -ErrorCategory ([System.Management.Automation.ErrorCategory]::InvalidData) -TargetObject $Path) # cSpell: disable-line
+        )
+    }
+
+    return $parsedVersion
+}
+#EndRegion './Public/Get-FileProductVersion.ps1' 65
+#Region './Public/Get-FileVersion.ps1' -1
+
+<#
+    .SYNOPSIS
+        Returns the version information for a file.
+
+    .DESCRIPTION
+        Returns the version information for a file including the product version,
+        file version, and other version-related metadata.
+
+    .PARAMETER Path
+        Specifies the file for which to return the version information.
+
+    .EXAMPLE
+        Get-FileVersion -Path 'E:\setup.exe'
+
+        Returns the version information for the file setup.exe.
+
+    .EXAMPLE
+        Get-Item -Path 'E:\setup.exe' | Get-FileVersion
+
+        Returns the version information for the file setup.exe using pipeline input.
+
+    .EXAMPLE
+        'E:\setup.exe' | Get-FileVersion
+
+        Returns the version information for the file setup.exe using pipeline input.
+
+    .INPUTS
+        System.IO.FileInfo
+
+        Accepts a file path via the pipeline.
+
+    .INPUTS
+        System.String
+
+        Accepts a string path via the pipeline.
+
+    .OUTPUTS
+        System.Diagnostics.FileVersionInfo
+
+        Returns the file version information.
+#>
+function Get-FileVersion
+{
+    [OutputType([System.Diagnostics.FileVersionInfo])]
+    [CmdletBinding()]
+    param
+    (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+        [Alias('FullName')]
+        [System.IO.FileInfo]
+        $Path
+    )
+
+    process
+    {
+        $file = Get-Item -Path $Path -ErrorAction 'Stop'
+
+        if ($file.PSIsContainer)
+        {
+            $PSCmdlet.ThrowTerminatingError(
+                (New-ErrorRecord -Exception ($script:localizedData.Get_FileVersion_PathIsNotFile -f $file.FullName) -ErrorId 'GFV0001' -ErrorCategory ([System.Management.Automation.ErrorCategory]::InvalidArgument) -TargetObject $file.FullName) # cSpell: disable-line
+            )
+        }
+
+        $file.VersionInfo
     }
 }
-#EndRegion './Public/Get-FileProductVersion.ps1' 41
+#EndRegion './Public/Get-FileVersion.ps1' 68
 #Region './Public/Get-LocalizedData.ps1' -1
 
 <#
@@ -3585,7 +3665,14 @@ function Get-LocalizedDataForInvariantCulture
 
         if ([string]::IsNullOrEmpty($languageFile))
         {
-            throw ($script:localizedData.Get_LocalizedDataForInvariantCulture_FileNotFoundInFolder -f ($localizedFileNamesToTry -join ','), $localizedFolder)
+            $message = ($script:localizedData.Get_LocalizedDataForInvariantCulture_FileNotFoundInFolder -f ($localizedFileNamesToTry -join ','), $localizedFolder)
+            $errorSplat = @{
+                Exception     = [System.IO.FileNotFoundException]::new($message)
+                ErrorId       = 'MachineStateIncorrect'
+                ErrorCategory = [System.Management.Automation.ErrorCategory]::ObjectNotFound
+            }
+
+            $PSCmdlet.ThrowTerminatingError((New-ErrorRecord @errorSplat))
         }
         else
         {
@@ -3654,7 +3741,7 @@ function Get-LocalizedDataForInvariantCulture
             }
             catch
             {
-                throw $_
+                $PSCmdlet.ThrowTerminatingError($_)
             }
 
             # Check for non-terminating errors.
@@ -3679,7 +3766,7 @@ function Get-LocalizedDataForInvariantCulture
         $constrainedRunspace.Dispose()
     }
 }
-#EndRegion './Public/Get-LocalizedDataForInvariantCulture.ps1' 229
+#EndRegion './Public/Get-LocalizedDataForInvariantCulture.ps1' 236
 #Region './Public/Get-PSModulePath.ps1' -1
 
 <#
@@ -3819,12 +3906,7 @@ function Get-PSModulePath
                     if ([System.String]::IsNullOrEmpty($documentsFolder))
                     {
                         $PSCmdlet.ThrowTerminatingError(
-                            [System.Management.Automation.ErrorRecord]::new(
-                                ($script:localizedData.PSModulePath_MissingMyDocumentsPath -f (Get-UserName)),
-                                'MissingMyDocumentsPath',
-                                [System.Management.Automation.ErrorCategory]::ResourceUnavailable,
-                                (Get-UserName)
-                            )
+                            (New-ErrorRecord -Exception ($script:localizedData.PSModulePath_MissingMyDocumentsPath -f (Get-UserName)) -ErrorId 'MissingMyDocumentsPath' -ErrorCategory ([System.Management.Automation.ErrorCategory]::ResourceUnavailable) -TargetObject (Get-UserName))
                         )
                     }
 
@@ -3867,7 +3949,7 @@ function Get-PSModulePath
 
     return $modulePath
 }
-#EndRegion './Public/Get-PSModulePath.ps1' 186
+#EndRegion './Public/Get-PSModulePath.ps1' 181
 #Region './Public/Get-RegistryPropertyValue.ps1' -1
 
 <#
@@ -4144,7 +4226,7 @@ function New-ArgumentException
             [System.Management.Automation.ErrorCategory]::InvalidOperation,
             $null
         )
-        $newException = [System.Exception]::new('New error')
+        $newException = New-Exception -Message 'New error'
         $newErrorRecord = New-ErrorRecord -ErrorRecord $existingErrorRecord -Exception $newException
         $newErrorRecord.Exception.Message
 
@@ -4317,7 +4399,7 @@ function New-InvalidDataException
         ErrorCategory = [System.Management.Automation.ErrorCategory]::InvalidData
     }
 
-    throw (New-ErrorRecord @errorSplat)
+    $PSCmdlet.ThrowTerminatingError((New-ErrorRecord @errorSplat))
 }
 #EndRegion './Public/New-InvalidDataException.ps1' 47
 #Region './Public/New-InvalidOperationException.ps1' -1
@@ -4340,7 +4422,7 @@ function New-InvalidDataException
         The error record containing the exception that is causing this terminating error.
 
     .PARAMETER PassThru
-        If specified, returns the error record instead of throwing it.
+        If specified, returns the exception instead of throwing it.
 
     .EXAMPLE
         try
@@ -4384,23 +4466,29 @@ function New-InvalidOperationException
 
     if ($null -eq $ErrorRecord)
     {
-        $invalidOperationException = [System.InvalidOperationException]::new($Message)
+        $exception = [System.InvalidOperationException]::new($Message)
     }
     else
     {
-        $invalidOperationException = [System.InvalidOperationException]::new($Message, $ErrorRecord.Exception)
+        $exception = [System.InvalidOperationException]::new($Message, $ErrorRecord.Exception)
     }
 
     if ($PassThru.IsPresent)
     {
-        return $invalidOperationException
+        return $exception
     }
     else
     {
-        throw (New-ErrorRecord -Exception $invalidOperationException.ToString() -ErrorId 'MachineStateIncorrect' -ErrorCategory 'InvalidOperation')
+        $errorSplat = @{
+            Exception     = $exception.ToString()
+            ErrorId       = 'MachineStateIncorrect'
+            ErrorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation
+        }
+
+        $PSCmdlet.ThrowTerminatingError((New-ErrorRecord @errorSplat))
     }
 }
-#EndRegion './Public/New-InvalidOperationException.ps1' 79
+#EndRegion './Public/New-InvalidOperationException.ps1' 85
 #Region './Public/New-InvalidResultException.ps1' -1
 
 <#
@@ -4460,9 +4548,15 @@ function New-InvalidResultException
 
     $exception = New-Exception @PSBoundParameters
 
-    throw (New-ErrorRecord -Exception $exception.ToString() -ErrorId 'MachineStateIncorrect' -ErrorCategory 'InvalidResult')
+    $errorSplat = @{
+        Exception     = $exception.ToString()
+        ErrorId       = 'MachineStateIncorrect'
+        ErrorCategory = [System.Management.Automation.ErrorCategory]::InvalidResult
+    }
+
+    $PSCmdlet.ThrowTerminatingError((New-ErrorRecord @errorSplat))
 }
-#EndRegion './Public/New-InvalidResultException.ps1' 60
+#EndRegion './Public/New-InvalidResultException.ps1' 66
 #Region './Public/New-NotImplementedException.ps1' -1
 
 <#
@@ -4479,7 +4573,7 @@ function New-InvalidResultException
         The error record containing the exception that is causing this terminating error.
 
     .PARAMETER PassThru
-        If specified, returns the error record instead of throwing it.
+        If specified, returns the exception instead of throwing it.
 
     .OUTPUTS
         None
@@ -4524,23 +4618,29 @@ function New-NotImplementedException
 
     if ($null -eq $ErrorRecord)
     {
-        $notImplementedException = [System.NotImplementedException]::new($Message)
+        $exception = [System.NotImplementedException]::new($Message)
     }
     else
     {
-        $notImplementedException = [System.NotImplementedException]::new($Message, $ErrorRecord.Exception)
+        $exception = [System.NotImplementedException]::new($Message, $ErrorRecord.Exception)
     }
 
     if ($PassThru.IsPresent)
     {
-        return $notImplementedException
+        return $exception
     }
     else
     {
-        throw (New-ErrorRecord -Exception $notImplementedException.ToString() -ErrorId 'MachineStateIncorrect' -ErrorCategory 'NotImplemented')
+        $errorSplat = @{
+            Exception     = $exception.ToString()
+            ErrorId       = 'MachineStateIncorrect'
+            ErrorCategory = [System.Management.Automation.ErrorCategory]::NotImplemented
+        }
+
+        $PSCmdlet.ThrowTerminatingError((New-ErrorRecord @errorSplat))
     }
 }
-#EndRegion './Public/New-NotImplementedException.ps1' 76
+#EndRegion './Public/New-NotImplementedException.ps1' 82
 #Region './Public/New-ObjectNotFoundException.ps1' -1
 
 <#
@@ -4594,9 +4694,15 @@ function New-ObjectNotFoundException
 
     $exception = New-Exception @PSBoundParameters
 
-    throw (New-ErrorRecord -Exception $exception.ToString() -ErrorId 'MachineStateIncorrect' -ErrorCategory 'ObjectNotFound')
+    $errorSplat = @{
+        Exception     = $exception.ToString()
+        ErrorId       = 'MachineStateIncorrect'
+        ErrorCategory = [System.Management.Automation.ErrorCategory]::ObjectNotFound
+    }
+
+    $PSCmdlet.ThrowTerminatingError((New-ErrorRecord @errorSplat))
 }
-#EndRegion './Public/New-ObjectNotFoundException.ps1' 54
+#EndRegion './Public/New-ObjectNotFoundException.ps1' 60
 #Region './Public/Remove-CommonParameter.ps1' -1
 
 <#

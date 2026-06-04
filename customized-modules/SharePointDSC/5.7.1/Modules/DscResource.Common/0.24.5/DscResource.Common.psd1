@@ -3,7 +3,7 @@
     RootModule        = 'DscResource.Common.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '0.24.4'
+    ModuleVersion     = '0.24.5'
 
     # ID used to uniquely identify this module
     GUID              = '9c9daa5b-5c00-472d-a588-c96e8e498450'
@@ -24,7 +24,7 @@
     PowerShellVersion = '5.0'
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @('Assert-BoundParameter','Assert-ElevatedUser','Assert-IPAddress','Assert-Module','Compare-DscParameterState','Compare-ResourcePropertyState','ConvertFrom-DscResourceInstance','ConvertTo-CimInstance','ConvertTo-HashTable','Find-Certificate','Format-Path','Get-ComputerName','Get-DscProperty','Get-EnvironmentVariable','Get-FileProductVersion','Get-LocalizedData','Get-LocalizedDataForInvariantCulture','Get-PSModulePath','Get-RegistryPropertyValue','Get-TemporaryFolder','Get-UserName','New-ArgumentException','New-ErrorRecord','New-Exception','New-InvalidDataException','New-InvalidOperationException','New-InvalidResultException','New-NotImplementedException','New-ObjectNotFoundException','Remove-CommonParameter','Set-DscMachineRebootRequired','Set-PSModulePath','Test-AccountRequirePassword','Test-DscParameterState','Test-DscProperty','Test-IsNanoServer','Test-IsNumericType','Test-ModuleExist','Test-PendingRestart')
+    FunctionsToExport = @('Assert-BoundParameter','Assert-ElevatedUser','Assert-IPAddress','Assert-Module','Compare-DscParameterState','Compare-ResourcePropertyState','ConvertFrom-DscResourceInstance','ConvertTo-CimInstance','ConvertTo-HashTable','Find-Certificate','Format-Path','Get-ComputerName','Get-DscProperty','Get-EnvironmentVariable','Get-FileProductVersion','Get-FileVersion','Get-LocalizedData','Get-LocalizedDataForInvariantCulture','Get-PSModulePath','Get-RegistryPropertyValue','Get-TemporaryFolder','Get-UserName','New-ArgumentException','New-ErrorRecord','New-Exception','New-InvalidDataException','New-InvalidOperationException','New-InvalidResultException','New-NotImplementedException','New-ObjectNotFoundException','Remove-CommonParameter','Set-DscMachineRebootRequired','Set-PSModulePath','Test-AccountRequirePassword','Test-DscParameterState','Test-DscProperty','Test-IsNanoServer','Test-IsNumericType','Test-ModuleExist','Test-PendingRestart')
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport   = @()
@@ -52,7 +52,31 @@
             IconUri      = 'https://dsccommunity.org/images/DSC_Logo_300p.png'
 
             # ReleaseNotes of this module
-            ReleaseNotes = ''
+            ReleaseNotes = '## [0.24.5] - 2025-12-19
+
+### Added
+
+- `Get-FileVersion`
+  - New public command to return the version information for a file. This command
+    returns the full `System.Diagnostics.FileVersionInfo` object.
+
+### Changed
+
+- Updated build scripts to Sampler 0.119.0-preview0005.
+- `Get-FileProductVersion`
+  - Changed to use the new `Get-FileVersion` command internally instead of
+    directly accessing `Get-Item` and `VersionInfo`.
+
+### Fixed
+
+- New-*Exception
+  - Use `ThrowTerminatingError` instead of `throw`. Fixes [#177](https://github.com/dsccommunity/DscResource.Common/issues/177).
+- Compare-DscParameterState
+  - Fixed a bug comparing single-valued arrays in the desired state when
+    TurnOffTypeChecking is used [#184](https://github.com/dsccommunity/DscResource.Common/issues/184).
+- Fix typo in `Clear-ZeroedEnumPropertyValue` help text. Fixes [#181](https://github.com/dsccommunity/DscResource.Common/issues/181).
+
+'
 
             Prerelease   = ''
         } # End of PSData hashtable

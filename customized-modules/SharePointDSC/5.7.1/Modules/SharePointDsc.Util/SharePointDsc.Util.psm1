@@ -47,7 +47,6 @@ function Add-SPDscEvent
 
     try
     {
-        # YVAND https://github.com/dsccommunity/SharePointDsc/pull/1473
         Write-EventLog -LogName $LogName -Source $Source `
             -EventId $EventID -Message $Message -EntryType $EntryType -ErrorAction Stop
     }

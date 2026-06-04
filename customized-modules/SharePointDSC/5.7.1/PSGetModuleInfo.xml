@@ -1,0 +1,381 @@
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04">
+  <Obj RefId="0">
+    <TN RefId="0">
+      <T>Microsoft.PowerShell.Commands.PSRepositoryItemInfo</T>
+      <T>System.Management.Automation.PSCustomObject</T>
+      <T>System.Object</T>
+    </TN>
+    <MS>
+      <S N="Name">SharePointDSC</S>
+      <S N="Version">5.7.1-preview0003</S>
+      <S N="Type">Module</S>
+      <S N="Description">This DSC module is used to deploy and configure SharePoint Server 2013, 2016 and 2019, and covers a wide range of areas including web apps, service apps and farm configuration.</S>
+      <S N="Author">DSC Community</S>
+      <Obj N="CompanyName" RefId="1">
+        <TN RefId="1">
+          <T>System.Object[]</T>
+          <T>System.Array</T>
+          <T>System.Object</T>
+        </TN>
+        <LST>
+          <S>PowerShellTeam</S>
+          <S>gaelcolas</S>
+          <S>dsccommunity</S>
+        </LST>
+      </Obj>
+      <S N="Copyright">Copyright the DSC Community contributors. All rights reserved.</S>
+      <DT N="PublishedDate">2026-06-03T09:41:47+02:00</DT>
+      <Obj N="InstalledDate" RefId="2">
+        <DT>2026-06-04T09:37:27.2414272+02:00</DT>
+        <MS>
+          <Obj N="DisplayHint" RefId="3">
+            <TN RefId="2">
+              <T>Microsoft.PowerShell.Commands.DisplayHintType</T>
+              <T>System.Enum</T>
+              <T>System.ValueType</T>
+              <T>System.Object</T>
+            </TN>
+            <ToString>DateTime</ToString>
+            <I32>2</I32>
+          </Obj>
+        </MS>
+      </Obj>
+      <Nil N="UpdatedDate" />
+      <URI N="LicenseUri">https://github.com/dsccommunity/SharePointDsc/blob/master/LICENSE</URI>
+      <URI N="ProjectUri">https://github.com/dsccommunity/SharePointDsc</URI>
+      <URI N="IconUri">https://dsccommunity.org/images/DSC_Logo_300p.png</URI>
+      <Obj N="Tags" RefId="4">
+        <TNRef RefId="1" />
+        <LST>
+          <S>DesiredStateConfiguration</S>
+          <S>DSC</S>
+          <S>DSCResourceKit</S>
+          <S>DSCResource</S>
+          <S>PSModule</S>
+        </LST>
+      </Obj>
+      <Obj N="Includes" RefId="5">
+        <TN RefId="3">
+          <T>System.Collections.Hashtable</T>
+          <T>System.Object</T>
+        </TN>
+        <DCT>
+          <En>
+            <S N="Key">Function</S>
+            <Obj N="Value" RefId="6">
+              <TNRef RefId="1" />
+              <LST>
+                <S>Add-SPDscEvent</S>
+                <S>Add-SPDscUserToLocalAdmin</S>
+                <S>Clear-SPDscKerberosToken</S>
+                <S>Compare-PSCustomObjectArrays</S>
+                <S>Convert-SPDscADGroupIDToName</S>
+                <S>Convert-SPDscADGroupNameToID</S>
+                <S>Convert-SPDscHashtableToString</S>
+                <S>ConvertTo-ReverseString</S>
+                <S>ConvertTo-TwoDigitFlipString</S>
+                <S>Export-SPConfiguration</S>
+                <S>Export-SPDscDiagnosticData</S>
+                <S>Format-OfficePatchGUID</S>
+                <S>Get-SPDscDBForAlias</S>
+                <S>Get-SPDscAllServersPatchStatus</S>
+                <S>Get-SPDscAssemblyVersion</S>
+                <S>Get-SPDscBuildVersion</S>
+                <S>Get-SPDscClaimTypeMapping</S>
+                <S>Get-SPDscContentService</S>
+                <S>Get-SPDscFarmAccount</S>
+                <S>Get-SPDscFarmAccountName</S>
+                <S>Get-SPDscFarmProductsInfo</S>
+                <S>Get-SPDscFarmVersionInfo</S>
+                <S>Get-SPDscInstalledProductVersion</S>
+                <S>Get-SPDscOSVersion</S>
+                <S>Get-SPDscRegistryKey</S>
+                <S>Get-SPDscRegProductsInfo</S>
+                <S>Get-SPDscServerPatchStatus</S>
+                <S>Get-SPDscServiceAppSecurityMembers</S>
+                <S>Get-SPDscServiceContext</S>
+                <S>Get-SPDscUserProfileSubTypeManager</S>
+                <S>Get-SPDscWebAppHappyHour</S>
+                <S>Get-SPWebPolicyPermissions</S>
+                <S>Invoke-SPDscCommand</S>
+                <S>Read-TargetResource</S>
+                <S>Remove-SPDscGenericObject</S>
+                <S>Remove-SPDscUserToLocalAdmin</S>
+                <S>Remove-SPDscZoneMap</S>
+                <S>Rename-SPDscParamValue</S>
+                <S>Repair-Credentials</S>
+                <S>Resolve-SPDscSecurityIdentifier</S>
+                <S>Set-SPDscObjectPropertyIfValuePresent</S>
+                <S>Set-SPDscZoneMap</S>
+                <S>Set-SPFarmAdministrators</S>
+                <S>Set-SPFarmAdministratorsBlock</S>
+                <S>Set-SPDscTermStoreAdministrators</S>
+                <S>Set-SPDscTermStoreAdministratorsBlock</S>
+                <S>Test-SPDscIsADUser</S>
+                <S>Test-SPDscObjectHasProperty</S>
+                <S>Test-SPDscParameterState</S>
+                <S>Test-SPDscRunningAsFarmAccount</S>
+                <S>Test-SPDscUserIsLocalAdmin</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">DscResource</S>
+            <Obj N="Value" RefId="7">
+              <TNRef RefId="1" />
+              <LST>
+                <S>SPAccessServiceApp</S>
+                <S>SPAccessServices2010</S>
+                <S>SPAlternateUrl</S>
+                <S>SPAntivirusSettings</S>
+                <S>SPAppCatalog</S>
+                <S>SPAppDomain</S>
+                <S>SPAppManagementServiceApp</S>
+                <S>SPAppStoreSettings</S>
+                <S>SPAuthenticationRealm</S>
+                <S>SPAzureAccessControlServiceAppProxy</S>
+                <S>SPBCSServiceApp</S>
+                <S>SPBlobCacheSettings</S>
+                <S>SPCacheAccounts</S>
+                <S>SPCertificate</S>
+                <S>SPCertificateSettings</S>
+                <S>SPConfigWizard</S>
+                <S>SPContentDatabase</S>
+                <S>SPDatabaseAAG</S>
+                <S>SPDesignerSettings</S>
+                <S>SPDiagnosticLoggingSettings</S>
+                <S>SPDiagnosticsProvider</S>
+                <S>SPDistributedCacheClientSettings</S>
+                <S>SPDistributedCacheService</S>
+                <S>SPDocIcon</S>
+                <S>SPExcelServiceApp</S>
+                <S>SPFarm</S>
+                <S>SPFarmAdministrators</S>
+                <S>SPFarmPropertyBag</S>
+                <S>SPFarmSolution</S>
+                <S>SPFeature</S>
+                <S>SPHealthAnalyzerRuleState</S>
+                <S>SPIncomingEmailSettings</S>
+                <S>SPInfoPathFormsServiceConfig</S>
+                <S>SPInstall</S>
+                <S>SPInstallLanguagePack</S>
+                <S>SPInstallPrereqs</S>
+                <S>SPIrmSettings</S>
+                <S>SPLogLevel</S>
+                <S>SPMachineTranslationServiceApp</S>
+                <S>SPManagedAccount</S>
+                <S>SPManagedMetadataServiceApp</S>
+                <S>SPManagedMetadataServiceAppDefault</S>
+                <S>SPManagedPath</S>
+                <S>SPMinRoleCompliance</S>
+                <S>SPOAppPrincipalMgmtServiceAppProxy</S>
+                <S>SPOfficeOnlineServerBinding</S>
+                <S>SPOutgoingEmailSettings</S>
+                <S>SPPasswordChangeSettings</S>
+                <S>SPPerformancePointServiceApp</S>
+                <S>SPPowerPointAutomationServiceApp</S>
+                <S>SPProductUpdate</S>
+                <S>SPProjectServerAdditionalSettings</S>
+                <S>SPProjectServerADResourcePoolSync</S>
+                <S>SPProjectServerGlobalPermissions</S>
+                <S>SPProjectServerGroup</S>
+                <S>SPProjectServerLicense</S>
+                <S>SPProjectServerPermissionMode</S>
+                <S>SPProjectServerServiceApp</S>
+                <S>SPProjectServerTimeSheetSettings</S>
+                <S>SPProjectServerUserSyncSettings</S>
+                <S>SPProjectServerWssSettings</S>
+                <S>SPPublishServiceApplication</S>
+                <S>SPQuotaTemplate</S>
+                <S>SPRemoteFarmTrust</S>
+                <S>SPSearchAuthoritativePage</S>
+                <S>SPSearchContentSource</S>
+                <S>SPSearchCrawlerImpactRule</S>
+                <S>SPSearchCrawlMapping</S>
+                <S>SPSearchCrawlRule</S>
+                <S>SPSearchFileType</S>
+                <S>SPSearchIndexPartition</S>
+                <S>SPSearchManagedProperty</S>
+                <S>SPSearchMetadataCategory</S>
+                <S>SPSearchResultSource</S>
+                <S>SPSearchServiceApp</S>
+                <S>SPSearchServiceSettings</S>
+                <S>SPSearchTopology</S>
+                <S>SPSecureStoreServiceApp</S>
+                <S>SPSecurityTokenServiceConfig</S>
+                <S>SPSelfServiceSiteCreation</S>
+                <S>SPServiceAppPool</S>
+                <S>SPServiceAppProxyGroup</S>
+                <S>SPServiceAppSecurity</S>
+                <S>SPServiceIdentity</S>
+                <S>SPServiceInstance</S>
+                <S>SPSessionStateService</S>
+                <S>SPShellAdmins</S>
+                <S>SPSite</S>
+                <S>SPSitePropertyBag</S>
+                <S>SPSiteUrl</S>
+                <S>SPStateServiceApp</S>
+                <S>SPSubscriptionSettingsServiceApp</S>
+                <S>SPTimerJobState</S>
+                <S>SPTrustedIdentityTokenIssuer</S>
+                <S>SPTrustedIdentityTokenIssuerProviderRealms</S>
+                <S>SPTrustedRootAuthority</S>
+                <S>SPTrustedSecurityTokenIssuer</S>
+                <S>SPUsageApplication</S>
+                <S>SPUserProfileProperty</S>
+                <S>SPUserProfileSection</S>
+                <S>SPUserProfileServiceApp</S>
+                <S>SPUserProfileServiceAppPermissions</S>
+                <S>SPUserProfileSyncConnection</S>
+                <S>SPUserProfileSyncService</S>
+                <S>SPVisioServiceApp</S>
+                <S>SPWeb</S>
+                <S>SPWebAppAuthentication</S>
+                <S>SPWebAppBlockedFileTypes</S>
+                <S>SPWebAppClientCallableSettings</S>
+                <S>SPWebAppGeneralSettings</S>
+                <S>SPWebApplication</S>
+                <S>SPWebApplicationAppDomain</S>
+                <S>SPWebApplicationExtension</S>
+                <S>SPWebAppPeoplePickerSettings</S>
+                <S>SPWebAppPermissions</S>
+                <S>SPWebAppPolicy</S>
+                <S>SPWebAppPropertyBag</S>
+                <S>SPWebAppProxyGroup</S>
+                <S>SPWebAppSiteUseAndDeletion</S>
+                <S>SPWebAppSuiteBar</S>
+                <S>SPWebAppThrottlingSettings</S>
+                <S>SPWebAppWorkflowSettings</S>
+                <S>SPWordAutomationServiceApp</S>
+                <S>SPWorkflowService</S>
+                <S>SPWorkManagementServiceApp</S>
+                <S>SPManagedMetaDataServiceApp</S>
+                <S>SPManagedMetaDataServiceAppDefault</S>
+                <S>SPOfficeOnlineServerSupressionSettings</S>
+                <S>SPSearchCrawlDatabase</S>
+                <S>SPService</S>
+                <S>SPUsageDefinition</S>
+                <S>SPWebAppHttpThrottlingMonitor</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Cmdlet</S>
+            <Obj N="Value" RefId="8">
+              <TNRef RefId="1" />
+              <LST />
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">RoleCapability</S>
+            <Ref N="Value" RefId="8" />
+          </En>
+          <En>
+            <S N="Key">Command</S>
+            <Obj N="Value" RefId="9">
+              <TNRef RefId="1" />
+              <LST>
+                <S>Add-SPDscEvent</S>
+                <S>Add-SPDscUserToLocalAdmin</S>
+                <S>Clear-SPDscKerberosToken</S>
+                <S>Compare-PSCustomObjectArrays</S>
+                <S>Convert-SPDscADGroupIDToName</S>
+                <S>Convert-SPDscADGroupNameToID</S>
+                <S>Convert-SPDscHashtableToString</S>
+                <S>ConvertTo-ReverseString</S>
+                <S>ConvertTo-TwoDigitFlipString</S>
+                <S>Export-SPConfiguration</S>
+                <S>Export-SPDscDiagnosticData</S>
+                <S>Format-OfficePatchGUID</S>
+                <S>Get-SPDscDBForAlias</S>
+                <S>Get-SPDscAllServersPatchStatus</S>
+                <S>Get-SPDscAssemblyVersion</S>
+                <S>Get-SPDscBuildVersion</S>
+                <S>Get-SPDscClaimTypeMapping</S>
+                <S>Get-SPDscContentService</S>
+                <S>Get-SPDscFarmAccount</S>
+                <S>Get-SPDscFarmAccountName</S>
+                <S>Get-SPDscFarmProductsInfo</S>
+                <S>Get-SPDscFarmVersionInfo</S>
+                <S>Get-SPDscInstalledProductVersion</S>
+                <S>Get-SPDscOSVersion</S>
+                <S>Get-SPDscRegistryKey</S>
+                <S>Get-SPDscRegProductsInfo</S>
+                <S>Get-SPDscServerPatchStatus</S>
+                <S>Get-SPDscServiceAppSecurityMembers</S>
+                <S>Get-SPDscServiceContext</S>
+                <S>Get-SPDscUserProfileSubTypeManager</S>
+                <S>Get-SPDscWebAppHappyHour</S>
+                <S>Get-SPWebPolicyPermissions</S>
+                <S>Invoke-SPDscCommand</S>
+                <S>Read-TargetResource</S>
+                <S>Remove-SPDscGenericObject</S>
+                <S>Remove-SPDscUserToLocalAdmin</S>
+                <S>Remove-SPDscZoneMap</S>
+                <S>Rename-SPDscParamValue</S>
+                <S>Repair-Credentials</S>
+                <S>Resolve-SPDscSecurityIdentifier</S>
+                <S>Set-SPDscObjectPropertyIfValuePresent</S>
+                <S>Set-SPDscZoneMap</S>
+                <S>Set-SPFarmAdministrators</S>
+                <S>Set-SPFarmAdministratorsBlock</S>
+                <S>Set-SPDscTermStoreAdministrators</S>
+                <S>Set-SPDscTermStoreAdministratorsBlock</S>
+                <S>Test-SPDscIsADUser</S>
+                <S>Test-SPDscObjectHasProperty</S>
+                <S>Test-SPDscParameterState</S>
+                <S>Test-SPDscRunningAsFarmAccount</S>
+                <S>Test-SPDscUserIsLocalAdmin</S>
+              </LST>
+            </Obj>
+          </En>
+          <En>
+            <S N="Key">Workflow</S>
+            <Ref N="Value" RefId="8" />
+          </En>
+        </DCT>
+      </Obj>
+      <Nil N="PowerShellGetFormatVersion" />
+      <S N="ReleaseNotes">## [5.7.1-preview0003] - 2026-06-03_x000D__x000A__x000D__x000A_### Fixed_x000D__x000A__x000D__x000A_- SPInstallPrereqs_x000D__x000A_  - Trigger a machine reboot when the installer returns error -1 (download of a package failed), to allow a retry._x000D__x000A_- SPProjectServerLicense_x000D__x000A_  - Update the regex to correctly detect Project Server Subscription Edition._x000D__x000A_- SharePointDsc_x000D__x000A_  - Prevent random error "The registry key for the log "SPDsc" for source "MSFT_SPFarm" could not be opened" when_x000D__x000A_    running cmdlet `Write-EventLog` in function `Add-SPDscEvent`. It happens randomly in Windows Server 2025_x000D__x000A__x000D__x000A_### Changed_x000D__x000A__x000D__x000A_- Pinned ModuleBuilder to v3.1.8 due to a Build issue</S>
+      <Obj N="Dependencies" RefId="10">
+        <TNRef RefId="1" />
+        <LST />
+      </Obj>
+      <S N="RepositorySourceLocation">https://www.powershellgallery.com/api/v2</S>
+      <S N="Repository">PSGallery</S>
+      <S N="PackageManagementProvider">NuGet</S>
+      <Obj N="AdditionalMetadata" RefId="11">
+        <TN RefId="4">
+          <T>System.Management.Automation.PSCustomObject</T>
+          <T>System.Object</T>
+        </TN>
+        <MS>
+          <S N="copyright">Copyright the DSC Community contributors. All rights reserved.</S>
+          <S N="description">This DSC module is used to deploy and configure SharePoint Server 2013, 2016 and 2019, and covers a wide range of areas including web apps, service apps and farm configuration.</S>
+          <S N="requireLicenseAcceptance">False</S>
+          <S N="releaseNotes">## [5.7.1-preview0003] - 2026-06-03_x000D__x000A__x000D__x000A_### Fixed_x000D__x000A__x000D__x000A_- SPInstallPrereqs_x000D__x000A_  - Trigger a machine reboot when the installer returns error -1 (download of a package failed), to allow a retry._x000D__x000A_- SPProjectServerLicense_x000D__x000A_  - Update the regex to correctly detect Project Server Subscription Edition._x000D__x000A_- SharePointDsc_x000D__x000A_  - Prevent random error "The registry key for the log "SPDsc" for source "MSFT_SPFarm" could not be opened" when_x000D__x000A_    running cmdlet `Write-EventLog` in function `Add-SPDscEvent`. It happens randomly in Windows Server 2025_x000D__x000A__x000D__x000A_### Changed_x000D__x000A__x000D__x000A_- Pinned ModuleBuilder to v3.1.8 due to a Build issue</S>
+          <S N="isLatestVersion">False</S>
+          <S N="isAbsoluteLatestVersion">True</S>
+          <S N="versionDownloadCount">0</S>
+          <S N="downloadCount">439388</S>
+          <S N="packageSize">1336568</S>
+          <S N="published">6/3/2026 9:41:47 AM +02:00</S>
+          <S N="created">6/3/2026 9:41:47 AM +02:00</S>
+          <S N="lastUpdated">6/3/2026 9:41:47 AM +02:00</S>
+          <S N="tags">DesiredStateConfiguration DSC DSCResourceKit DSCResource PSModule PSFunction_Add-SPDscEvent PSCommand_Add-SPDscEvent PSFunction_Add-SPDscUserToLocalAdmin PSCommand_Add-SPDscUserToLocalAdmin PSFunction_Clear-SPDscKerberosToken PSCommand_Clear-SPDscKerberosToken PSFunction_Compare-PSCustomObjectArrays PSCommand_Compare-PSCustomObjectArrays PSFunction_Convert-SPDscADGroupIDToName PSCommand_Convert-SPDscADGroupIDToName PSFunction_Convert-SPDscADGroupNameToID PSCommand_Convert-SPDscADGroupNameToID PSFunction_Convert-SPDscHashtableToString PSCommand_Convert-SPDscHashtableToString PSFunction_ConvertTo-ReverseString PSCommand_ConvertTo-ReverseString PSFunction_ConvertTo-TwoDigitFlipString PSCommand_ConvertTo-TwoDigitFlipString PSFunction_Export-SPConfiguration PSCommand_Export-SPConfiguration PSFunction_Export-SPDscDiagnosticData PSCommand_Export-SPDscDiagnosticData PSFunction_Format-OfficePatchGUID PSCommand_Format-OfficePatchGUID PSFunction_Get-SPDscDBForAlias PSCommand_Get-SPDscDBForAlias PSFunction_Get-SPDscAllServersPatchStatus PSCommand_Get-SPDscAllServersPatchStatus PSFunction_Get-SPDscAssemblyVersion PSCommand_Get-SPDscAssemblyVersion PSFunction_Get-SPDscBuildVersion PSCommand_Get-SPDscBuildVersion PSFunction_Get-SPDscClaimTypeMapping PSCommand_Get-SPDscClaimTypeMapping PSFunction_Get-SPDscContentService PSCommand_Get-SPDscContentService PSFunction_Get-SPDscFarmAccount PSCommand_Get-SPDscFarmAccount PSFunction_Get-SPDscFarmAccountName PSCommand_Get-SPDscFarmAccountName PSFunction_Get-SPDscFarmProductsInfo PSCommand_Get-SPDscFarmProductsInfo PSFunction_Get-SPDscFarmVersionInfo PSCommand_Get-SPDscFarmVersionInfo PSFunction_Get-SPDscInstalledProductVersion PSCommand_Get-SPDscInstalledProductVersion PSFunction_Get-SPDscOSVersion PSCommand_Get-SPDscOSVersion PSFunction_Get-SPDscRegistryKey PSCommand_Get-SPDscRegistryKey PSFunction_Get-SPDscRegProductsInfo PSCommand_Get-SPDscRegProductsInfo PSFunction_Get-SPDscServerPatchStatus PSCommand_Get-SPDscServerPatchStatus PSFunction_Get-SPDscServiceAppSecurityMembers PSCommand_Get-SPDscServiceAppSecurityMembers PSFunction_Get-SPDscServiceContext PSCommand_Get-SPDscServiceContext PSFunction_Get-SPDscUserProfileSubTypeManager PSCommand_Get-SPDscUserProfileSubTypeManager PSFunction_Get-SPDscWebAppHappyHour PSCommand_Get-SPDscWebAppHappyHour PSFunction_Get-SPWebPolicyPermissions PSCommand_Get-SPWebPolicyPermissions PSFunction_Invoke-SPDscCommand PSCommand_Invoke-SPDscCommand PSFunction_Read-TargetResource PSCommand_Read-TargetResource PSFunction_Remove-SPDscGenericObject PSCommand_Remove-SPDscGenericObject PSFunction_Remove-SPDscUserToLocalAdmin PSCommand_Remove-SPDscUserToLocalAdmin PSFunction_Remove-SPDscZoneMap PSCommand_Remove-SPDscZoneMap PSFunction_Rename-SPDscParamValue PSCommand_Rename-SPDscParamValue PSFunction_Repair-Credentials PSCommand_Repair-Credentials PSFunction_Resolve-SPDscSecurityIdentifier PSCommand_Resolve-SPDscSecurityIdentifier PSFunction_Set-SPDscObjectPropertyIfValuePresent PSCommand_Set-SPDscObjectPropertyIfValuePresent PSFunction_Set-SPDscZoneMap PSCommand_Set-SPDscZoneMap PSFunction_Set-SPFarmAdministrators PSCommand_Set-SPFarmAdministrators PSFunction_Set-SPFarmAdministratorsBlock PSCommand_Set-SPFarmAdministratorsBlock PSFunction_Set-SPDscTermStoreAdministrators PSCommand_Set-SPDscTermStoreAdministrators PSFunction_Set-SPDscTermStoreAdministratorsBlock PSCommand_Set-SPDscTermStoreAdministratorsBlock PSFunction_Test-SPDscIsADUser PSCommand_Test-SPDscIsADUser PSFunction_Test-SPDscObjectHasProperty PSCommand_Test-SPDscObjectHasProperty PSFunction_Test-SPDscParameterState PSCommand_Test-SPDscParameterState PSFunction_Test-SPDscRunningAsFarmAccount PSCommand_Test-SPDscRunningAsFarmAccount PSFunction_Test-SPDscUserIsLocalAdmin PSCommand_Test-SPDscUserIsLocalAdmin PSIncludes_Function PSDscResource_SPAccessServiceApp PSDscResource_SPAccessServices2010 PSDscResource_SPAlternateUrl PSDscResource_SPAntivirusSettings PSDscResource_SPAppCatalog PSDscResource_SPAppDomain PSDscResource_SPAppManagementServiceApp PSDscResource_SPAppStoreSettings PSDscResource_SPAuthenticationRealm PSDscResource_SPAzureAccessControlServiceAppProxy PSDscResource_SPBCSServiceApp PSDscResource_SPBlobCacheSettings PSDscResource_SPCacheAccounts PSDscResource_SPCertificate PSDscResource_SPCertificateSettings PSDscResource_SPConfigWizard PSDscResource_SPContentDatabase PSDscResource_SPDatabaseAAG PSDscResource_SPDesignerSettings PSDscResource_SPDiagnosticLoggingSettings PSDscResource_SPDiagnosticsProvider PSDscResource_SPDistributedCacheClientSettings PSDscResource_SPDistributedCacheService PSDscResource_SPDocIcon PSDscResource_SPExcelServiceApp PSDscResource_SPFarm PSDscResource_SPFarmAdministrators PSDscResource_SPFarmPropertyBag PSDscResource_SPFarmSolution PSDscResource_SPFeature PSDscResource_SPHealthAnalyzerRuleState PSDscResource_SPIncomingEmailSettings PSDscResource_SPInfoPathFormsServiceConfig PSDscResource_SPInstall PSDscResource_SPInstallLanguagePack PSDscResource_SPInstallPrereqs PSDscResource_SPIrmSettings PSDscResource_SPLogLevel PSDscResource_SPMachineTranslationServiceApp PSDscResource_SPManagedAccount PSDscResource_SPManagedMetadataServiceApp PSDscResource_SPManagedMetadataServiceAppDefault PSDscResource_SPManagedPath PSDscResource_SPMinRoleCompliance PSDscResource_SPOAppPrincipalMgmtServiceAppProxy PSDscResource_SPOfficeOnlineServerBinding PSDscResource_SPOutgoingEmailSettings PSDscResource_SPPasswordChangeSettings PSDscResource_SPPerformancePointServiceApp PSDscResource_SPPowerPointAutomationServiceApp PSDscResource_SPProductUpdate PSDscResource_SPProjectServerAdditionalSettings PSDscResource_SPProjectServerADResourcePoolSync PSDscResource_SPProjectServerGlobalPermissions PSDscResource_SPProjectServerGroup PSDscResource_SPProjectServerLicense PSDscResource_SPProjectServerPermissionMode PSDscResource_SPProjectServerServiceApp PSDscResource_SPProjectServerTimeSheetSettings PSDscResource_SPProjectServerUserSyncSettings PSDscResource_SPProjectServerWssSettings PSDscResource_SPPublishServiceApplication PSDscResource_SPQuotaTemplate PSDscResource_SPRemoteFarmTrust PSDscResource_SPSearchAuthoritativePage PSDscResource_SPSearchContentSource PSDscResource_SPSearchCrawlerImpactRule PSDscResource_SPSearchCrawlMapping PSDscResource_SPSearchCrawlRule PSDscResource_SPSearchFileType PSDscResource_SPSearchIndexPartition PSDscResource_SPSearchManagedProperty PSDscResource_SPSearchMetadataCategory PSDscResource_SPSearchResultSource PSDscResource_SPSearchServiceApp PSDscResource_SPSearchServiceSettings PSDscResource_SPSearchTopology PSDscResource_SPSecureStoreServiceApp PSDscResource_SPSecurityTokenServiceConfig PSDscResource_SPSelfServiceSiteCreation PSDscResource_SPServiceAppPool PSDscResource_SPServiceAppProxyGroup PSDscResource_SPServiceAppSecurity PSDscResource_SPServiceIdentity PSDscResource_SPServiceInstance PSDscResource_SPSessionStateService PSDscResource_SPShellAdmins PSDscResource_SPSite PSDscResource_SPSitePropertyBag PSDscResource_SPSiteUrl PSDscResource_SPStateServiceApp PSDscResource_SPSubscriptionSettingsServiceApp PSDscResource_SPTimerJobState PSDscResource_SPTrustedIdentityTokenIssuer PSDscResource_SPTrustedIdentityTokenIssuerProviderRealms PSDscResource_SPTrustedRootAuthority PSDscResource_SPTrustedSecurityTokenIssuer PSDscResource_SPUsageApplication PSDscResource_SPUserProfileProperty PSDscResource_SPUserProfileSection PSDscResource_SPUserProfileServiceApp PSDscResource_SPUserProfileServiceAppPermissions PSDscResource_SPUserProfileSyncConnection PSDscResource_SPUserProfileSyncService PSDscResource_SPVisioServiceApp PSDscResource_SPWeb PSDscResource_SPWebAppAuthentication PSDscResource_SPWebAppBlockedFileTypes PSDscResource_SPWebAppClientCallableSettings PSDscResource_SPWebAppGeneralSettings PSDscResource_SPWebApplication PSDscResource_SPWebApplicationAppDomain PSDscResource_SPWebApplicationExtension PSDscResource_SPWebAppPeoplePickerSettings PSDscResource_SPWebAppPermissions PSDscResource_SPWebAppPolicy PSDscResource_SPWebAppPropertyBag PSDscResource_SPWebAppProxyGroup PSDscResource_SPWebAppSiteUseAndDeletion PSDscResource_SPWebAppSuiteBar PSDscResource_SPWebAppThrottlingSettings PSDscResource_SPWebAppWorkflowSettings PSDscResource_SPWordAutomationServiceApp PSDscResource_SPWorkflowService PSDscResource_SPWorkManagementServiceApp PSDscResource_SPManagedMetaDataServiceApp PSDscResource_SPManagedMetaDataServiceAppDefault PSDscResource_SPOfficeOnlineServerSupressionSettings PSDscResource_SPSearchCrawlDatabase PSDscResource_SPService PSDscResource_SPUsageDefinition PSDscResource_SPWebAppHttpThrottlingMonitor PSIncludes_DscResource</S>
+          <S N="developmentDependency">False</S>
+          <S N="updated">2026-06-03T09:41:47Z</S>
+          <S N="NormalizedVersion">5.7.1-preview0003</S>
+          <S N="Authors">DSC Community</S>
+          <S N="IsPrerelease">true</S>
+          <S N="ItemType">Module</S>
+          <S N="FileList">SharePointDsc.nuspec|DSCResources\MSFT_SPOfficeOnlineServerBinding\readme.md|DSCResources\MSFT_SPBCSServiceApp\MSFT_SPBCSServiceApp.psm1|SharePointDsc.psd1|DSCResources\MSFT_SPBCSServiceApp\MSFT_SPBCSServiceApp.schema.mof|en-US\about_SharePointDsc.help.txt|DSCResources\MSFT_SPBCSServiceApp\readme.md|Modules\SharePointDsc.ShellAdmin\SPShellAdmin.psm1|DSCResources\MSFT_SPProjectServerTimeSheetSettings\MSFT_SPProjectServerTimeSheetSettings.psm1|Modules\SharePointDsc.ProjectServerConnector\SharePointDsc.ProjectServerConnector.psm1|DSCResources\MSFT_SPProjectServerTimeSheetSettings\readme.md|Modules\SharePointDsc.ProjectServerConnector\ProjectServerServices.dll|DSCResources\MSFT_SPProjectServerTimeSheetSettings\MSFT_SPProjectServerTimeSheetSettings.schema.mof|Modules\SharePointDsc.Util\SharePointDsc.Util.psd1|DSCResources\MSFT_SPUsageApplication\readme.md|Modules\SharePointDsc.Util\SharePointDsc.Util.psm1|DSCResources\MSFT_SPUsageApplication\MSFT_SPUsageApplication.psm1|Modules\SharePointDsc.Farm\SPFarm.psm1|DSCResources\MSFT_SPUsageApplication\MSFT_SPUsageApplication.schema.mof|Modules\SharePointDsc.Search\SPSearchContentSource.Schedules.psm1|DSCResources\MSFT_SPFarmPropertyBag\MSFT_SPFarmPropertyBag.psm1|Modules\SharePointDsc.Search\SPSearchServiceApp.psm1|DSCResources\MSFT_SPFarmPropertyBag\readme.md|Modules\SharePointDsc.ServiceAppSecurity\SPServiceAppSecurity.psm1|DSCResources\MSFT_SPFarmPropertyBag\MSFT_SPFarmPropertyBag.schema.mof|Modules\SharePointDsc.Reverse\Import-SPPowerShellSnapIn.ps1|DSCResources\MSFT_SPMachineTranslationServiceApp\MSFT_SPMachineTranslationServiceApp.psm1|Modules\SharePointDsc.Reverse\SharePointDsc.Reverse.psm1|DSCResources\MSFT_SPMachineTranslationServiceApp\readme.md|Modules\SharePointDsc.WebAppPolicy\SPWebAppPolicy.psm1|DSCResources\MSFT_SPMachineTranslationServiceApp\MSFT_SPMachineTranslationServiceApp.schema.mof|Modules\SharePointDsc.WebApplication\SPWebApplication.Workflow.psm1|DSCResources\MSFT_SPServiceIdentity\MSFT_SPServiceIdentity.schema.mof|Modules\SharePointDsc.WebApplication\SPWebApplication.BlockedFileTypes.psm1|DSCResources\MSFT_SPServiceIdentity\MSFT_SPServiceIdentity.psm1|Modules\SharePointDsc.WebApplication\SPWebApplication.GeneralSettings.psm1|DSCResources\MSFT_SPServiceIdentity\readme.md|Modules\SharePointDsc.WebApplication\SPWebApplication.Throttling.psm1|DSCResources\MSFT_SPWebAppThrottlingSettings\MSFT_SPWebAppThrottlingSettings.schema.mof|Modules\SharePointDsc.ContentDatabase\SPContentDatabase.psm1|DSCResources\MSFT_SPWebAppThrottlingSettings\MSFT_SPWebAppThrottlingSettings.psm1|DSCResources\MSFT_SPBlobCacheSettings\MSFT_SPBlobCacheSettings.schema.mof|DSCResources\MSFT_SPWebAppThrottlingSettings\readme.md|DSCResources\MSFT_SPBlobCacheSettings\MSFT_SPBlobCacheSettings.psm1|DSCResources\MSFT_SPTimerJobState\MSFT_SPTimerJobState.schema.mof|DSCResources\MSFT_SPBlobCacheSettings\Readme.md|DSCResources\MSFT_SPTimerJobState\MSFT_SPTimerJobState.psm1|DSCResources\MSFT_SPManagedMetadataServiceApp\readme.md|DSCResources\MSFT_SPTimerJobState\readme.md|DSCResources\MSFT_SPManagedMetadataServiceApp\MSFT_SPManagedMetaDataServiceApp.psm1|DSCResources\MSFT_SPInstallPrereqs\MSFT_SPInstallPrereqs.schema.mof|DSCResources\MSFT_SPManagedMetadataServiceApp\MSFT_SPManagedMetaDataServiceApp.schema.mof|DSCResources\MSFT_SPInstallPrereqs\Readme.md|DSCResources\MSFT_SPIncomingEmailSettings\MSFT_SPIncomingEmailSettings.schema.mof|DSCResources\MSFT_SPInstallPrereqs\MSFT_SPInstallPrereqs.psm1|DSCResources\MSFT_SPIncomingEmailSettings\Readme.md|DSCResources\MSFT_SPSubscriptionSettingsServiceApp\MSFT_SPSubscriptionSettingsServiceApp.psm1|DSCResources\MSFT_SPIncomingEmailSettings\MSFT_SPIncomingEmailSettings.psm1|DSCResources\MSFT_SPSubscriptionSettingsServiceApp\MSFT_SPSubscriptionSettingsServiceApp.schema.mof|DSCResources\MSFT_SPWebAppGeneralSettings\MSFT_SPWebAppGeneralSettings.psm1|DSCResources\MSFT_SPSubscriptionSettingsServiceApp\readme.md|DSCResources\MSFT_SPWebAppGeneralSettings\readme.md|DSCResources\MSFT_SPProjectServerAdditionalSettings\MSFT_SPProjectServerAdditionalSettings.psm1|DSCResources\MSFT_SPWebAppGeneralSettings\MSFT_SPWebAppGeneralSettings.schema.mof|DSCResources\MSFT_SPProjectServerAdditionalSettings\readme.md|DSCResources\MSFT_SPMinRoleCompliance\MSFT_SPMinRoleCompliance.schema.mof|DSCResources\MSFT_SPProjectServerAdditionalSettings\MSFT_SPProjectServerAdditionalSettings.schema.mof|DSCResources\MSFT_SPMinRoleCompliance\readme.md|DSCResources\MSFT_SPWebAppPermissions\MSFT_SPWebAppPermissions.psm1|DSCResources\MSFT_SPMinRoleCompliance\MSFT_SPMinRoleCompliance.psm1|DSCResources\MSFT_SPWebAppPermissions\MSFT_SPWebAppPermissions.schema.mof|DSCResources\MSFT_SPDiagnosticsProvider\MSFT_SPDiagnosticsProvider.psm1|DSCResources\MSFT_SPWebAppPermissions\readme.md|DSCResources\MSFT_SPDiagnosticsProvider\readme.md|DSCResources\MSFT_SPPasswordChangeSettings\MSFT_SPPasswordChangeSettings.psm1|DSCResources\MSFT_SPDiagnosticsProvider\MSFT_SPDiagnosticsProvider.schema.mof|DSCResources\MSFT_SPPasswordChangeSettings\readme.md|DSCResources\MSFT_SPConfigWizard\MSFT_SPConfigWizard.schema.mof|DSCResources\MSFT_SPPasswordChangeSettings\MSFT_SPPasswordChangeSettings.schema.mof|DSCResources\MSFT_SPConfigWizard\MSFT_SPConfigWizard.psm1|DSCResources\MSFT_SPDatabaseAAG\Readme.md|DSCResources\MSFT_SPConfigWizard\readme.md|DSCResources\MSFT_SPDatabaseAAG\MSFT_SPDatabaseAAG.psm1|DSCResources\MSFT_SPVisioServiceApp\MSFT_SPVisioServiceApp.psm1|DSCResources\MSFT_SPDatabaseAAG\MSFT_SPDatabaseAAG.schema.mof|DSCResources\MSFT_SPVisioServiceApp\MSFT_SPVisioServiceApp.schema.mof|DSCResources\MSFT_SPFarm\MSFT_SPFarm.schema.mof|DSCResources\MSFT_SPVisioServiceApp\readme.md|DSCResources\MSFT_SPFarm\Readme.md|DSCResources\MSFT_SPProjectServerUserSyncSettings\MSFT_SPProjectServerUserSyncSettings.schema.mof|DSCResources\MSFT_SPFarm\MSFT_SPFarm.psm1|DSCResources\MSFT_SPProjectServerUserSyncSettings\readme.md|DSCResources\MSFT_SPDesignerSettings\MSFT_SPDesignerSettings.psm1|DSCResources\MSFT_SPProjectServerUserSyncSettings\MSFT_SPProjectServerUserSyncSettings.psm1|DSCResources\MSFT_SPDesignerSettings\Readme.md|DSCResources\MSFT_SPFeature\MSFT_SPFeature.schema.mof|DSCResources\MSFT_SPDesignerSettings\MSFT_SPDesignerSettings.schema.mof|DSCResources\MSFT_SPFeature\MSFT_SPFeature.psm1|DSCResources\MSFT_SPFarmSolution\Readme.md|DSCResources\MSFT_SPFeature\Readme.md|DSCResources\MSFT_SPFarmSolution\MSFT_SPFarmSolution.psm1|DSCResources\MSFT_SPUserProfileServiceApp\MSFT_SPUserProfileServiceApp.schema.mof|DSCResources\MSFT_SPFarmSolution\MSFT_SPFarmSolution.schema.mof|DSCResources\MSFT_SPUserProfileServiceApp\readme.md|DSCResources\MSFT_SPWebAppHttpThrottlingMonitor\MSFT_SPWebAppHttpThrottlingMonitor.psm1|DSCResources\MSFT_SPUserProfileServiceApp\MSFT_SPUserProfileServiceApp.psm1|DSCResources\MSFT_SPWebAppHttpThrottlingMonitor\MSFT_SPWebAppHttpThrottlingMonitor.schema.mof|DSCResources\MSFT_SPWorkManagementServiceApp\MSFT_SPWorkManagementServiceApp.schema.mof|DSCResources\MSFT_SPWebAppHttpThrottlingMonitor\readme.md|DSCResources\MSFT_SPWorkManagementServiceApp\readme.md|DSCResources\MSFT_SPWeb\MSFT_SPWeb.psm1|DSCResources\MSFT_SPWorkManagementServiceApp\MSFT_SPWorkManagementServiceApp.psm1|DSCResources\MSFT_SPWeb\MSFT_SPWeb.schema.mof|DSCResources\MSFT_SPProjectServerPermissionMode\MSFT_SPProjectServerPermissionMode.schema.mof|DSCResources\MSFT_SPWeb\readme.md|DSCResources\MSFT_SPProjectServerPermissionMode\MSFT_SPProjectServerPermissionMode.psm1|DSCResources\MSFT_SPServiceAppSecurity\MSFT_SPServiceAppSecurity.psm1|DSCResources\MSFT_SPProjectServerPermissionMode\readme.md|DSCResources\MSFT_SPServiceAppSecurity\MSFT_SPServiceAppSecurity.schema.mof|DSCResources\MSFT_SPProductUpdate\MSFT_SPProductUpdate.schema.mof|DSCResources\MSFT_SPServiceAppSecurity\readme.md|DSCResources\MSFT_SPProductUpdate\MSFT_SPProductUpdate.psm1|DSCResources\MSFT_SPDistributedCacheClientSettings\MSFT_SPDistributedCacheClientSettings.psm1|DSCResources\MSFT_SPProductUpdate\readme.md|DSCResources\MSFT_SPDistributedCacheClientSettings\MSFT_SPDistributedCacheClientSettings.schema.mof|DSCResources\MSFT_SPAntivirusSettings\readme.md|DSCResources\MSFT_SPDistributedCacheClientSettings\Readme.md|DSCResources\MSFT_SPAntivirusSettings\MSFT_SPAntivirusSettings.schema.mof|DSCResources\MSFT_SPSearchCrawlerImpactRule\MSFT_SPSearchCrawlerImpactRule.schema.mof|DSCResources\MSFT_SPAntivirusSettings\MSFT_SPAntivirusSettings.psm1|DSCResources\MSFT_SPSearchCrawlerImpactRule\readme.md|DSCResources\MSFT_SPInstall\MSFT_SPInstall.psm1|DSCResources\MSFT_SPSearchCrawlerImpactRule\MSFT_SPSearchCrawlerImpactRule.psm1|DSCResources\MSFT_SPInstall\MSFT_SPInstall.schema.mof|DSCResources\MSFT_SPProjectServerWssSettings\MSFT_SPProjectServerWssSettings.psm1|DSCResources\MSFT_SPInstall\Readme.md|DSCResources\MSFT_SPProjectServerWssSettings\MSFT_SPProjectServerWssSettings.schema.mof|DSCResources\MSFT_SPUserProfileServiceAppPermissions\MSFT_SPUserProfileServiceAppPermissions.schema.mof|DSCResources\MSFT_SPProjectServerWssSettings\readme.md|DSCResources\MSFT_SPUserProfileServiceAppPermissions\readme.md|DSCResources\MSFT_SPAzureAccessControlServiceAppProxy\MSFT_SPAzureAccessControlServiceAppProxy.psm1|DSCResources\MSFT_SPUserProfileServiceAppPermissions\MSFT_SPUserProfileServiceAppPermissions.psm1|DSCResources\MSFT_SPAzureAccessControlServiceAppProxy\MSFT_SPAzureAccessControlServiceAppProxy.schema.mof|DSCResources\MSFT_SPPublishServiceApplication\MSFT_SPPublishServiceApplication.schema.mof|DSCResources\MSFT_SPAzureAccessControlServiceAppProxy\readme.md|DSCResources\MSFT_SPPublishServiceApplication\MSFT_SPPublishServiceApplication.psm1|DSCResources\MSFT_SPProjectServerServiceApp\MSFT_SPProjectServerServiceApp.schema.mof|DSCResources\MSFT_SPPublishServiceApplication\readme.md|DSCResources\MSFT_SPProjectServerServiceApp\MSFT_SPProjectServerServiceApp.psm1|DSCResources\MSFT_SPAuthenticationRealm\MSFT_SPAuthenticationRealm.psm1|DSCResources\MSFT_SPProjectServerServiceApp\readme.md|DSCResources\MSFT_SPAuthenticationRealm\MSFT_SPAuthenticationRealm.schema.mof|DSCResources\MSFT_SPInfoPathFormsServiceConfig\MSFT_SPInfoPathFormsServiceConfig.schema.mof|DSCResources\MSFT_SPAuthenticationRealm\readme.md|DSCResources\MSFT_SPInfoPathFormsServiceConfig\MSFT_SPInfoPathFormsServiceConfig.psm1|DSCResources\MSFT_SPSite\MSFT_SPSite.schema.mof|DSCResources\MSFT_SPInfoPathFormsServiceConfig\readme.md|DSCResources\MSFT_SPSite\MSFT_SPSite.psm1|DSCResources\MSFT_SPManagedAccount\MSFT_SPManagedAccount.psm1|DSCResources\MSFT_SPSite\readme.md|DSCResources\MSFT_SPManagedAccount\MSFT_SPManagedAccount.schema.mof|DSCResources\MSFT_SPTrustedIdentityTokenIssuer\readme.md|DSCResources\MSFT_SPManagedAccount\readme.md|DSCResources\MSFT_SPTrustedIdentityTokenIssuer\MSFT_SPTrustedIdentityTokenIssuer.psm1|DSCResources\MSFT_SPAlternateUrl\MSFT_SPAlternateUrl.psm1|DSCResources\MSFT_SPTrustedIdentityTokenIssuer\MSFT_SPTrustedIdentityTokenIssuer.schema.mof|DSCResources\MSFT_SPAlternateUrl\MSFT_SPAlternateUrl.schema.mof|DSCResources\MSFT_SPServiceAppProxyGroup\MSFT_SPServiceAppProxyGroup.psm1|DSCResources\MSFT_SPAlternateUrl\readme.md|DSCResources\MSFT_SPServiceAppProxyGroup\MSFT_SPServiceAppProxyGroup.schema.mof|DSCResources\MSFT_SPDistributedCacheService\MSFT_SPDistributedCacheService.schema.mof|DSCResources\MSFT_SPServiceAppProxyGroup\readme.md|DSCResources\MSFT_SPDistributedCacheService\MSFT_SPDistributedCacheService.psm1|DSCResources\MSFT_SPSearchAuthoritativePage\MSFT_SPSearchAuthoritativePage.psm1|DSCResources\MSFT_SPDistributedCacheService\Readme.md|DSCResources\MSFT_SPSearchAuthoritativePage\MSFT_SPSearchAuthoritativePage.schema.mof|DSCResources\MSFT_SPPerformancePointServiceApp\MSFT_SPPerformancePointServiceApp.schema.mof|DSCResources\MSFT_SPSearchAuthoritativePage\readme.md|DSCResources\MSFT_SPPerformancePointServiceApp\MSFT_SPPerformancePointServiceApp.psm1|DSCResources\MSFT_SPIrmSettings\MSFT_SPIrmSettings.psm1|DSCResources\MSFT_SPPerformancePointServiceApp\readme.md|DSCResources\MSFT_SPIrmSettings\Readme.md|DSCResources\MSFT_SPTrustedIdentityTokenIssuerProviderRealms\MSFT_SPTrustedIdentityTokenIssuerProviderRealms.schema.mof|DSCResources\MSFT_SPIrmSettings\MSFT_SPIrmSettings.schema.mof|DSCResources\MSFT_SPTrustedIdentityTokenIssuerProviderRealms\MSFT_SPTrustedIdentityTokenIssuerProviderRealms.psm1|DSCResources\MSFT_SPDiagnosticLoggingSettings\MSFT_SPDiagnosticLoggingSettings.schema.mof|DSCResources\MSFT_SPTrustedIdentityTokenIssuerProviderRealms\readme.md|DSCResources\MSFT_SPDiagnosticLoggingSettings\MSFT_SPDiagnosticLoggingSettings.psm1|DSCResources\MSFT_SPAppStoreSettings\MSFT_SPAppStoreSettings.schema.mof|DSCResources\MSFT_SPDiagnosticLoggingSettings\Readme.md|DSCResources\MSFT_SPAppStoreSettings\readme.md|DSCResources\MSFT_SPWebAppSuiteBar\MSFT_SPWebAppSuiteBar.schema.mof|DSCResources\MSFT_SPAppStoreSettings\MSFT_SPAppStoreSettings.psm1|DSCResources\MSFT_SPWebAppSuiteBar\MSFT_SPWebAppSuiteBar.psm1|DSCResources\MSFT_SPStateServiceApp\MSFT_SPStateServiceApp.schema.mof|DSCResources\MSFT_SPWebAppSuiteBar\readme.md|DSCResources\MSFT_SPStateServiceApp\MSFT_SPStateServiceApp.psm1|DSCResources\MSFT_SPSearchServiceSettings\MSFT_SPSearchServiceSettings.schema.mof|DSCResources\MSFT_SPStateServiceApp\readme.md|DSCResources\MSFT_SPSearchServiceSettings\MSFT_SPSearchServiceSettings.psm1|DSCResources\MSFT_SPOutgoingEmailSettings\MSFT_SPOutgoingEmailSettings.schema.mof|DSCResources\MSFT_SPSearchServiceSettings\readme.md|DSCResources\MSFT_SPOutgoingEmailSettings\MSFT_SPOutgoingEmailSettings.psm1|DSCResources\MSFT_SPWebApplicationExtension\MSFT_SPWebApplicationExtension.schema.mof|DSCResources\MSFT_SPOutgoingEmailSettings\readme.md|DSCResources\MSFT_SPWebApplicationExtension\readme.md|DSCResources\MSFT_SPCertificate\MSFT_SPCertificate.schema.mof|DSCResources\MSFT_SPWebApplicationExtension\MSFT_SPWebApplicationExtension.psm1|DSCResources\MSFT_SPCertificate\readme.md|DSCResources\MSFT_SPSearchCrawlMapping\MSFT_SPSearchCrawlMapping.psm1|DSCResources\MSFT_SPCertificate\MSFT_SPCertificate.psm1|DSCResources\MSFT_SPSearchCrawlMapping\MSFT_SPSearchCrawlMapping.schema.mof|DSCResources\MSFT_SPDocIcon\readme.md|DSCResources\MSFT_SPSearchCrawlMapping\readme.md|DSCResources\MSFT_SPDocIcon\MSFT_SPDocIcon.psm1|DSCResources\MSFT_SPProjectServerGroup\MSFT_SPProjectServerGroup.psm1|DSCResources\MSFT_SPDocIcon\MSFT_SPDocIcon.schema.mof|DSCResources\MSFT_SPProjectServerGroup\readme.md|DSCResources\MSFT_SPSiteUrl\MSFT_SPSiteUrl.psm1|DSCResources\MSFT_SPProjectServerGroup\MSFT_SPProjectServerGroup.schema.mof|DSCResources\MSFT_SPSiteUrl\MSFT_SPSiteUrl.schema.mof|DSCResources\MSFT_SPWordAutomationServiceApp\MSFT_SPWordAutomationServiceApp.psm1|DSCResources\MSFT_SPSiteUrl\readme.md|DSCResources\MSFT_SPWordAutomationServiceApp\readme.md|DSCResources\MSFT_SPSearchContentSource\MSFT_SPSearchContentSource.schema.mof|DSCResources\MSFT_SPWordAutomationServiceApp\MSFT_SPWordAutomationServiceApp.schema.mof|DSCResources\MSFT_SPSearchContentSource\readme.md|DSCResources\MSFT_SPServiceAppPool\MSFT_SPServiceAppPool.psm1|DSCResources\MSFT_SPSearchContentSource\MSFT_SPSearchContentSource.psm1|DSCResources\MSFT_SPServiceAppPool\MSFT_SPServiceAppPool.schema.mof|DSCResources\MSFT_SPAppCatalog\readme.md|DSCResources\MSFT_SPServiceAppPool\readme.md|DSCResources\MSFT_SPAppCatalog\MSFT_SPAppCatalog.schema.mof|DSCResources\MSFT_SPQuotaTemplate\MSFT_SPQuotaTemplate.schema.mof|DSCResources\MSFT_SPAppCatalog\MSFT_SPAppCatalog.psm1|DSCResources\MSFT_SPQuotaTemplate\readme.md|DSCResources\MSFT_SPExcelServiceApp\MSFT_SPExcelServiceApp.psm1|DSCResources\MSFT_SPQuotaTemplate\MSFT_SPQuotaTemplate.psm1|DSCResources\MSFT_SPExcelServiceApp\MSFT_SPExcelServiceApp.schema.mof|DSCResources\MSFT_SPAppDomain\MSFT_SPAppDomain.schema.mof|DSCResources\MSFT_SPExcelServiceApp\Readme.md|DSCResources\MSFT_SPAppDomain\MSFT_SPAppDomain.psm1|DSCResources\MSFT_SPWebApplication\MSFT_SPWebApplication.schema.mof|DSCResources\MSFT_SPAppDomain\readme.md|DSCResources\MSFT_SPWebApplication\MSFT_SPWebApplication.psm1|DSCResources\MSFT_SPCacheAccounts\MSFT_SPCacheAccounts.psm1|DSCResources\MSFT_SPWebApplication\readme.md|DSCResources\MSFT_SPCacheAccounts\Readme.md|DSCResources\MSFT_SPUserProfileProperty\readme.md|DSCResources\MSFT_SPCacheAccounts\MSFT_SPCacheAccounts.schema.mof|DSCResources\MSFT_SPUserProfileProperty\MSFT_SPUserProfileProperty.psm1|DSCResources\MSFT_SPWebAppPropertyBag\MSFT_SPWebAppPropertyBag.schema.mof|DSCResources\MSFT_SPUserProfileProperty\MSFT_SPUserProfileProperty.schema.mof|DSCResources\MSFT_SPWebAppPropertyBag\readme.md|DSCResources\MSFT_SPAppManagementServiceApp\MSFT_SPAppManagementServiceApp.schema.mof|DSCResources\MSFT_SPWebAppPropertyBag\MSFT_SPWebAppPropertyBag.psm1|DSCResources\MSFT_SPAppManagementServiceApp\MSFT_SPAppManagementServiceApp.psm1|DSCResources\MSFT_SPWorkflowService\readme.md|DSCResources\MSFT_SPAppManagementServiceApp\readme.md|DSCResources\MSFT_SPWorkflowService\MSFT_SPWorkflowService.schema.mof|DSCResources\MSFT_SPWebAppPeoplePickerSettings\readme.md|DSCResources\MSFT_SPWorkflowService\MSFT_SPWorkflowService.psm1|DSCResources\MSFT_SPWebAppPeoplePickerSettings\MSFT_SPWebAppPeoplePickerSettings.psm1|DSCResources\MSFT_SPSecurityTokenServiceConfig\readme.md|DSCResources\MSFT_SPWebAppPeoplePickerSettings\MSFT_SPWebAppPeoplePickerSettings.schema.mof|DSCResources\MSFT_SPSecurityTokenServiceConfig\MSFT_SPSecurityTokenServiceConfig.psm1|DSCResources\MSFT_SPWebApplicationAppDomain\MSFT_SPWebApplicationAppDomain.psm1|DSCResources\MSFT_SPSecurityTokenServiceConfig\MSFT_SPSecurityTokenServiceConfig.schema.mof|DSCResources\MSFT_SPWebApplicationAppDomain\readme.md|DSCResources\MSFT_SPAccessServices2010\MSFT_SPAccessServices2010.psm1|DSCResources\MSFT_SPWebApplicationAppDomain\MSFT_SPWebApplicationAppDomain.schema.mof|DSCResources\MSFT_SPAccessServices2010\MSFT_SPAccessServices2010.schema.mof|DSCResources\MSFT_SPSecureStoreServiceApp\MSFT_SPSecureStoreServiceApp.schema.mof|DSCResources\MSFT_SPAccessServices2010\readme.md|DSCResources\MSFT_SPSecureStoreServiceApp\MSFT_SPSecureStoreServiceApp.psm1|DSCResources\MSFT_SPOAppPrincipalMgmtServiceAppProxy\MSFT_SPOAppPrincipalMgmtServiceAppProxy.psm1|DSCResources\MSFT_SPSecureStoreServiceApp\readme.md|DSCResources\MSFT_SPOAppPrincipalMgmtServiceAppProxy\MSFT_SPOAppPrincipalMgmtServiceAppProxy.schema.mof|DSCResources\MSFT_SPProjectServerADResourcePoolSync\MSFT_SPProjectServerADResourcePoolSync.psm1|DSCResources\MSFT_SPOAppPrincipalMgmtServiceAppProxy\readme.md|DSCResources\MSFT_SPProjectServerADResourcePoolSync\readme.md|DSCResources\MSFT_SPWebAppAuthentication\MSFT_SPWebAppAuthentication.psm1|DSCResources\MSFT_SPProjectServerADResourcePoolSync\MSFT_SPProjectServerADResourcePoolSync.schema.mof|DSCResources\MSFT_SPWebAppAuthentication\readme.md|DSCResources\MSFT_SPRemoteFarmTrust\MSFT_SPRemoteFarmTrust.psm1|DSCResources\MSFT_SPWebAppAuthentication\MSFT_SPWebAppAuthentication.schema.mof|DSCResources\MSFT_SPRemoteFarmTrust\readme.md|DSCResources\MSFT_SPSearchServiceApp\MSFT_SPSearchServiceApp.schema.mof|DSCResources\MSFT_SPRemoteFarmTrust\MSFT_SPRemoteFarmTrust.schema.mof|DSCResources\MSFT_SPSearchServiceApp\readme.md|DSCResources\MSFT_SPContentDatabase\Readme.md|DSCResources\MSFT_SPSearchServiceApp\MSFT_SPSearchServiceApp.psm1|DSCResources\MSFT_SPContentDatabase\MSFT_SPContentDatabase.schema.mof|DSCResources\MSFT_SPService\MSFT_SPService.schema.mof|DSCResources\MSFT_SPContentDatabase\MSFT_SPContentDatabase.psm1|DSCResources\MSFT_SPService\readme.md|DSCResources\MSFT_SPSearchFileType\readme.md|DSCResources\MSFT_SPService\MSFT_SPService.psm1|DSCResources\MSFT_SPSearchFileType\MSFT_SPSearchFileType.schema.mof|DSCResources\MSFT_SPSearchIndexPartition\MSFT_SPSearchIndexPartition.psm1|DSCResources\MSFT_SPSearchFileType\MSFT_SPSearchFileType.psm1|DSCResources\MSFT_SPSearchIndexPartition\readme.md|DSCResources\MSFT_SPTrustedRootAuthority\MSFT_SPTrustedRootAuthority.schema.mof|DSCResources\MSFT_SPSearchIndexPartition\MSFT_SPSearchIndexPartition.schema.mof|DSCResources\MSFT_SPTrustedRootAuthority\readme.md|DSCResources\MSFT_SPUserProfileSyncConnection\MSFT_SPUserProfileSyncConnection.psm1|DSCResources\MSFT_SPTrustedRootAuthority\MSFT_SPTrustedRootAuthority.psm1|DSCResources\MSFT_SPUserProfileSyncConnection\readme.md|DSCResources\MSFT_SPInstallLanguagePack\MSFT_SPInstallLanguagePack.schema.mof|DSCResources\MSFT_SPUserProfileSyncConnection\MSFT_SPUserProfileSyncConnection.schema.mof|DSCResources\MSFT_SPInstallLanguagePack\MSFT_SPInstallLanguagePack.psm1|DSCResources\MSFT_SPWebAppSiteUseAndDeletion\MSFT_SPWebAppSiteUseAndDeletion.schema.mof|DSCResources\MSFT_SPInstallLanguagePack\Readme.md|DSCResources\MSFT_SPWebAppSiteUseAndDeletion\readme.md|DSCResources\MSFT_SPUserProfileSyncService\MSFT_SPUserProfileSyncService.psm1|DSCResources\MSFT_SPWebAppSiteUseAndDeletion\MSFT_SPWebAppSiteUseAndDeletion.psm1|DSCResources\MSFT_SPUserProfileSyncService\readme.md|DSCResources\MSFT_SPOfficeOnlineServerSupressionSettings\MSFT_SPOfficeOnlineServerSupressionSettings.psm1|DSCResources\MSFT_SPUserProfileSyncService\MSFT_SPUserProfileSyncService.schema.mof|DSCResources\MSFT_SPOfficeOnlineServerSupressionSettings\MSFT_SPOfficeOnlineServerSupressionSettings.schema.mof|DSCResources\MSFT_SPSearchResultSource\MSFT_SPSearchResultSource.psm1|DSCResources\MSFT_SPOfficeOnlineServerSupressionSettings\readme.md|DSCResources\MSFT_SPSearchResultSource\MSFT_SPSearchResultSource.schema.mof|DSCResources\MSFT_SPServiceInstance\MSFT_SPServiceInstance.psm1|DSCResources\MSFT_SPSearchResultSource\readme.md|DSCResources\MSFT_SPServiceInstance\MSFT_SPServiceInstance.schema.mof|DSCResources\MSFT_SPTrustedSecurityTokenIssuer\MSFT_SPTrustedSecurityTokenIssuer.schema.mof|DSCResources\MSFT_SPServiceInstance\readme.md|DSCResources\MSFT_SPTrustedSecurityTokenIssuer\readme.md|DSCResources\MSFT_SPSearchCrawlDatabase\MSFT_SPSearchCrawlDatabase.psm1|DSCResources\MSFT_SPTrustedSecurityTokenIssuer\MSFT_SPTrustedSecurityTokenIssuer.psm1|DSCResources\MSFT_SPSearchCrawlDatabase\readme.md|DSCResources\MSFT_SPShellAdmins\MSFT_SPShellAdmins.schema.mof|DSCResources\MSFT_SPSearchCrawlDatabase\MSFT_SPSearchCrawlDatabase.schema.mof|DSCResources\MSFT_SPShellAdmins\readme.md|DSCResources\MSFT_SPCertificateSettings\MSFT_SPCertificateSettings.psm1|DSCResources\MSFT_SPShellAdmins\MSFT_SPShellAdmins.psm1|DSCResources\MSFT_SPCertificateSettings\MSFT_SPCertificateSettings.schema.mof|DSCResources\MSFT_SPUserProfileSection\MSFT_SPUserProfileSection.psm1|DSCResources\MSFT_SPCertificateSettings\readme.md|DSCResources\MSFT_SPUserProfileSection\readme.md|DSCResources\MSFT_SPProjectServerLicense\MSFT_SPProjectServerLicense.schema.mof|DSCResources\MSFT_SPUserProfileSection\MSFT_SPUserProfileSection.schema.mof|DSCResources\MSFT_SPProjectServerLicense\readme.md|DSCResources\MSFT_SPAccessServiceApp\MSFT_SPAccessServiceApp.psm1|DSCResources\MSFT_SPProjectServerLicense\MSFT_SPProjectServerLicense.psm1|DSCResources\MSFT_SPAccessServiceApp\MSFT_SPAccessServiceApp.schema.mof|DSCResources\MSFT_SPWebAppClientCallableSettings\MSFT_SPWebAppClientCallableSettings.schema.mof|DSCResources\MSFT_SPAccessServiceApp\readme.md|DSCResources\MSFT_SPWebAppClientCallableSettings\MSFT_SPWebAppClientCallableSettings.psm1|DSCResources\MSFT_SPProjectServerGlobalPermissions\MSFT_SPProjectServerGlobalPermissions.psm1|DSCResources\MSFT_SPWebAppClientCallableSettings\readme.md|DSCResources\MSFT_SPProjectServerGlobalPermissions\MSFT_SPProjectServerGlobalPermissions.schema.mof|DSCResources\MSFT_SPFarmAdministrators\MSFT_SPFarmAdministrators.psm1|DSCResources\MSFT_SPProjectServerGlobalPermissions\readme.md|DSCResources\MSFT_SPFarmAdministrators\Readme.md|DSCResources\MSFT_SPManagedPath\MSFT_SPManagedPath.psm1|DSCResources\MSFT_SPFarmAdministrators\MSFT_SPFarmAdministrators.schema.mof|DSCResources\MSFT_SPManagedPath\readme.md|DSCResources\MSFT_SPSearchManagedProperty\MSFT_SPSearchManagedProperty.schema.mof|DSCResources\MSFT_SPManagedPath\MSFT_SPManagedPath.schema.mof|DSCResources\MSFT_SPSearchManagedProperty\MSFT_SPSearchManagedProperty.psm1|DSCResources\MSFT_SPSessionStateService\readme.md|DSCResources\MSFT_SPSearchManagedProperty\readme.md|DSCResources\MSFT_SPSessionStateService\MSFT_SPSessionStateService.psm1|DSCResources\MSFT_SPLogLevel\MSFT_SPLogLevel.schema.mof|DSCResources\MSFT_SPSessionStateService\MSFT_SPSessionStateService.schema.mof|DSCResources\MSFT_SPLogLevel\readme.md|DSCResources\MSFT_SPManagedMetadataServiceAppDefault\MSFT_SPManagedMetadataServiceAppDefault.psm1|DSCResources\MSFT_SPLogLevel\MSFT_SPLogLevel.psm1|DSCResources\MSFT_SPManagedMetadataServiceAppDefault\readme.md|DSCResources\MSFT_SPHealthAnalyzerRuleState\MSFT_SPHealthAnalyzerRuleState.schema.mof|DSCResources\MSFT_SPManagedMetadataServiceAppDefault\MSFT_SPManagedMetadataServiceAppDefault.schema.mof|DSCResources\MSFT_SPHealthAnalyzerRuleState\Readme.md|DSCResources\MSFT_SPWebAppPolicy\MSFT_SPWebAppPolicy.psm1|DSCResources\MSFT_SPHealthAnalyzerRuleState\MSFT_SPHealthAnalyzerRuleState.psm1|DSCResources\MSFT_SPWebAppPolicy\readme.md|DSCResources\MSFT_SPSearchMetadataCategory\MSFT_SPSearchMetadataCategory.psm1|DSCResources\MSFT_SPWebAppPolicy\MSFT_SPWebAppPolicy.schema.mof|DSCResources\MSFT_SPSearchMetadataCategory\readme.md|DSCResources\MSFT_SPUsageDefinition\readme.md|DSCResources\MSFT_SPSearchMetadataCategory\MSFT_SPSearchMetadataCategory.schema.mof|DSCResources\MSFT_SPUsageDefinition\MSFT_SPUsageDefinition.schema.mof|DSCResources\MSFT_SPSearchTopology\MSFT_SPSearchTopology.schema.mof|DSCResources\MSFT_SPUsageDefinition\MSFT_SPUsageDefinition.psm1|DSCResources\MSFT_SPSearchTopology\MSFT_SPSearchTopology.psm1|DSCResources\MSFT_SPSitePropertyBag\MSFT_SPSitePropertyBag.psm1|DSCResources\MSFT_SPSearchTopology\readme.md|DSCResources\MSFT_SPSitePropertyBag\readme.md|DSCResources\MSFT_SPWebAppProxyGroup\readme.md|DSCResources\MSFT_SPSitePropertyBag\MSFT_SPSitePropertyBag.schema.mof|DSCResources\MSFT_SPWebAppProxyGroup\MSFT_SPWebAppProxyGroup.psm1|DSCResources\MSFT_SPSearchCrawlRule\MSFT_SPSearchCrawlRule.psm1|DSCResources\MSFT_SPWebAppProxyGroup\MSFT_SPWebAppProxyGroup.schema.mof|DSCResources\MSFT_SPSearchCrawlRule\MSFT_SPSearchCrawlRule.schema.mof|DSCResources\MSFT_SPWebAppWorkflowSettings\MSFT_SPWebAppWorkflowSettings.schema.mof|DSCResources\MSFT_SPSearchCrawlRule\readme.md|DSCResources\MSFT_SPWebAppWorkflowSettings\MSFT_SPWebAppWorkflowSettings.psm1|DSCResources\MSFT_SPWebAppBlockedFileTypes\MSFT_SPWebAppBlockedFileTypes.psm1|DSCResources\MSFT_SPWebAppWorkflowSettings\readme.md|DSCResources\MSFT_SPWebAppBlockedFileTypes\readme.md|DSCResources\MSFT_SPPowerPointAutomationServiceApp\MSFT_SPPowerPointAutomationServiceApp.schema.mof|DSCResources\MSFT_SPWebAppBlockedFileTypes\MSFT_SPWebAppBlockedFileTypes.schema.mof|DSCResources\MSFT_SPPowerPointAutomationServiceApp\readme.md|Modules\DscResource.Common\0.24.5\DscResource.Common.psm1|DSCResources\MSFT_SPPowerPointAutomationServiceApp\MSFT_SPPowerPointAutomationServiceApp.psm1|Modules\DscResource.Common\0.24.5\DscResource.Common.psd1|DSCResources\MSFT_SPSelfServiceSiteCreation\MSFT_SPSelfServiceSiteCreation.psm1|Modules\DscResource.Common\0.24.5\en-US\about_DscResource.Common.help.txt|DSCResources\MSFT_SPSelfServiceSiteCreation\MSFT_SPSelfServiceSiteCreation.schema.mof|Modules\DscResource.Common\0.24.5\en-US\DscResource.Common-help.xml|DSCResources\MSFT_SPSelfServiceSiteCreation\readme.md|Modules\DscResource.Common\0.24.5\en-US\DscResource.Common.strings.psd1|DSCResources\MSFT_SPOfficeOnlineServerBinding\MSFT_SPOfficeOnlineServerBinding.schema.mof|DSCResources\MSFT_SPOfficeOnlineServerBinding\MSFT_SPOfficeOnlineServerBinding.psm1</S>
+          <S N="GUID">6c1176a0-4fac-4134-8ca2-3fa8a21a7b90</S>
+          <S N="PowerShellVersion">4.0</S>
+          <S N="CompanyName">DSC Community</S>
+        </MS>
+      </Obj>
+      <S N="InstalledLocation">C:\Users\yvand\Documents\PowerShell\Modules\SharePointDSC\5.7.1</S>
+    </MS>
+  </Obj>
+</Objs>

@@ -12,7 +12,7 @@
     # RootModule = ''
 
     # Version number of this module.
-    ModuleVersion        = '5.7.0'
+    ModuleVersion        = '5.7.1'
 
     # ID used to uniquely identify this module
     GUID                 = '6c1176a0-4fac-4134-8ca2-3fa8a21a7b90'
@@ -161,29 +161,26 @@
             IconUri      = 'https://dsccommunity.org/images/DSC_Logo_300p.png'
 
             # ReleaseNotes of this module
-            ReleaseNotes = '## [5.7.0] - 2025-10-22
+            ReleaseNotes = '## [5.7.1-preview0003] - 2026-06-03
 
 ### Fixed
 
-- SPDistributedCacheClientSettings
-  - Resource threw an error on SharePoint Server Subscription Edition with Build >= 16.0.18526.20080.
 - SPInstallPrereqs
-  - Trigger a machine reboot when the installer returns the generic error 0x80004005, to allow a retry
-  - Added Fix for SharePoint Desired State Configuration test for SharePoint SPSE on prerequisite MSVCRT142.
+  - Trigger a machine reboot when the installer returns error -1 (download of a package failed), to allow a retry.
+- SPProjectServerLicense
+  - Update the regex to correctly detect Project Server Subscription Edition.
+- SharePointDsc
+  - Prevent random error "The registry key for the log "SPDsc" for source "MSFT_SPFarm" could not be opened" when
+    running cmdlet `Write-EventLog` in function `Add-SPDscEvent`. It happens randomly in Windows Server 2025
 
 ### Changed
 
-- General
-  - Updates to VS Code workspace configuration
-- SPTrustedIdentityTokenIssuer
-  - Added parameters `MetadataEndPoint`, `OidcScope` and `UseStateToRedirect`.
-- SPFarm
-  - Added parameters `DatabaseConnectionEncryption` and `DatabaseServerCertificateHostName`.
+- Pinned ModuleBuilder to v3.1.8 due to a Build issue
 
 '
 
             # Set to a prerelease string value if the release should be a prerelease.
-            Prerelease   = ''
+            Prerelease   = 'preview0003'
         } # End of PSData hashtable
 
     } # End of PrivateData hashtable
