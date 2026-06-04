@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Customized Modules
+  - SharePointDSC: Test version 5.7.1-preview0003
+
 ## [3.1.0] - 2026-05-13
 
 ### Added
