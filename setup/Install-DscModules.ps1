@@ -17,6 +17,10 @@ if (-not $psGalleryRepo) {
 if ($psGalleryRepo.InstallationPolicy -ne "Trusted") {
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 }
+# Az.Compute is required by Get-MissingDscModules.ps1
+if (-not (Get-InstalledModule -Name "Az.Compute" -ErrorAction SilentlyContinue)) {
+    Install-Module Az.Compute -Scope AllUsers
+}
 if (-not (Get-InstalledModule -Name "GuestConfiguration" -ErrorAction SilentlyContinue)) {
     Install-Module GuestConfiguration -Scope AllUsers
 }
