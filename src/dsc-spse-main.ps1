@@ -26,6 +26,7 @@ configuration ConfigSpMain
         [Parameter(Mandatory = $false)] [SharePointConfigurations[]] $CustomSharePointConfiguration = @("TrustedAuthentication", "UserProfilesService")
     )
 
+    Import-DscResource -ModuleName PSDscResources -ModuleVersion 2.12.0.0
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.1.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.7.1
