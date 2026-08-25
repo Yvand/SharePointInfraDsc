@@ -7,7 +7,7 @@ param(
 )
 
 # Ensure prerequisites are installed
-Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+# Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 $psGalleryRepo = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
 if (-not $psGalleryRepo) {
     # Register the default PSGallery repository if it is not present
