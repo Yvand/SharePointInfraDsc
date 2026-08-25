@@ -34,11 +34,6 @@ configuration ConfigSql
 
     Node localhost
     {
-        LocalConfigurationManager {
-            ConfigurationMode  = 'ApplyOnly'
-            RebootNodeIfNeeded = $true
-        }
-
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
@@ -494,7 +489,6 @@ $SPSetupUserName = "spsetup"
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\dsc-sql.0\ConfigSql"
 ConfigSql -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupUserName $SPSetupUserName -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
-Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
 #>

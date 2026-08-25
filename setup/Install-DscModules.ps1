@@ -1,4 +1,4 @@
-#Requires -PSEdition Desktop #reason: https://github.com/dsccommunity/DnsServerDsc/issues/264 / https://github.com/dsccommunity/DnsServerDsc/issues/268
+#Requires -PSEdition Core
 #Requires -RunAsAdministrator #reason: Install-Module with -Scope AllUsers requires admin privileges
 
 param(
@@ -17,8 +17,11 @@ if (-not $psGalleryRepo) {
 if ($psGalleryRepo.InstallationPolicy -ne "Trusted") {
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 }
-if (-not (Get-InstalledModule -Name "Az.Compute" -ErrorAction SilentlyContinue)) {
-    Install-Module Az.Compute -Scope AllUsers
+if (-not (Get-InstalledModule -Name "GuestConfiguration" -ErrorAction SilentlyContinue)) {
+    Install-Module GuestConfiguration -Scope AllUsers
+}
+if (-not (Get-InstalledModule -Name "PSDesiredStateConfiguration" -RequiredVersion "2.0.7" -ErrorAction SilentlyContinue)) {
+    Install-Module PSDesiredStateConfiguration -RequiredVersion "2.0.7" -Scope AllUsers
 }
 
 $dscFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../src" | Resolve-Path
@@ -40,7 +43,7 @@ if ($copyCustomizedModules) {
     Write-Host "Overwrite DSC modules with the customized ones..." -ForegroundColor Cyan
     $customizedModules = Get-ChildItem -Path $customizedModulesPath -Directory
     foreach ($customizedModule in $customizedModules) {
-        $destinationPath = "$($env:ProgramFiles)\WindowsPowerShell\Modules\$($customizedModule.Name)"
+        $destinationPath = Join-Path -Path $env:ProgramFiles -ChildPath "PowerShell\Modules\$($customizedModule.Name)"
         if (Test-Path -Path $destinationPath) {
             Write-Host "Removing existing module '$($customizedModule.Name)' from '$destinationPath'..." -ForegroundColor Yellow
             Remove-Item -Path $destinationPath -Recurse -Force

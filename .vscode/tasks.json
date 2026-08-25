@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "generate all dsc archives",
+            "label": "generate all machine configuration packages",
             "type": "shell",
             "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [
@@ -15,7 +15,7 @@
             "problemMatcher": []
         },
         {
-            "label": "generate dsc archive for current file",
+            "label": "generate machine configuration package for current file",
             "type": "shell",
             "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [
@@ -25,7 +25,7 @@
             "problemMatcher": []
         },
         {
-            "label": "generate dsc archive for specified file",
+            "label": "generate machine configuration package for specified file",
             "type": "shell",
             "command": "${workspaceFolder}${/}setup${/}New-DscArchive.ps1",
             "args": [

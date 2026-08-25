@@ -1,26 +1,30 @@
-# #Requires -PSEdition Desktop #reason: https://github.com/dsccommunity/DnsServerDsc/issues/264 / https://github.com/dsccommunity/DnsServerDsc/issues/268
-#Requires -Module Az.Compute
+#Requires -PSEdition Core
+#Requires -Modules GuestConfiguration, PSDesiredStateConfiguration
 
 param(
-    [Parameter(Mandatory=$false)] [string] $vmName = "*"
+    [Parameter(Mandatory = $false)] [string] $vmName = "*",
+    [Parameter(Mandatory = $false)] [ValidateSet("Audit", "AuditAndSet")] [string] $packageType = "AuditAndSet",
+    [Parameter(Mandatory = $false)] [string] $mofFolderPath = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 $dscFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../src" | Resolve-Path
-$scriptsFolderPath = Join-Path -Path $PSScriptRoot -ChildPath "../setup" | Resolve-Path
+$mofFolder = if ($mofFolderPath) { Resolve-Path -Path $mofFolderPath } else { $dscFolderPath }
 
 if (-not (Test-Path -PathType Container -Path $dscFolderPath)) {
     throw "folder '$dscFolderPath' not found"
 }
 
-# Ensure DSC file can successfully generate the MOF file before generating the archive
-& "$($scriptsFolderPath)/Test-DscFiles.ps1" -vmName $vmName
-
 if ($vmName.StartsWith("dsc-")) { $vmName = $vmName.Substring(4) }
-$dscSourceFilePaths = Get-ChildItem $dscFolderPath -File -Filter "dsc-$vmName*.ps1"
-foreach ($dscSourceFilePath in $dscSourceFilePaths) {
-    Write-Host "Creating DSC archive for '$($dscSourceFilePath.BaseName)' in folder '$dscFolderPath'..." -ForegroundColor Cyan
-    $dscArchiveFilePath = "$($dscSourceFilePath.DirectoryName)\$($dscSourceFilePath.BaseName).zip"
-    Publish-AzVMDscConfiguration -ConfigurationPath "$dscFolderPath\$($dscSourceFilePath.Name)" -OutputArchivePath $dscArchiveFilePath -Force #-Verbose
+$mofFiles = Get-ChildItem $mofFolder -File -Filter "dsc-$vmName*.mof"
+if (-not $mofFiles) {
+    throw "No compiled MOF files found in '$mofFolder'. Compile the configuration with PowerShell 7.2 first. Machine configuration packages cannot be compiled with secret parameters in this script."
+}
+
+foreach ($mofFile in $mofFiles) {
+    Write-Host "Creating machine configuration package for '$($mofFile.BaseName)'..." -ForegroundColor Cyan
+    $package = New-GuestConfigurationPackage -Name $mofFile.BaseName -Configuration $mofFile.FullName -Type $packageType -Path $mofFile.DirectoryName -Force
+    Test-GuestConfigurationPackage -Path $package.Path
+    Write-Host "Created '$($package.Path)'." -ForegroundColor Green
 }

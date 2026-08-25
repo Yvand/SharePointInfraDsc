@@ -58,11 +58,6 @@ configuration ConfigSpFrontend
 
     Node localhost
     {
-        LocalConfigurationManager {
-            ConfigurationMode  = 'ApplyOnly'
-            RebootNodeIfNeeded = $true
-        }
-
         Script DscStatus_Start {
             SetScript  =
             {
@@ -851,7 +846,6 @@ $SharePointBits = @(
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureFESE.0\ConfigSpFrontend"
 ConfigSpFrontend -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
-Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
 C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.5

@@ -10,6 +10,17 @@ For a very long time, the DSC code was mixed with the Bicep template's code, but
 - Truly ready-to-use virtual machines, where everything a SharePoint administrator needs is already there and up-to-date.
 - A state-of-the-art configuration, that showcases how a well-configured SharePoint farm works.
 
+## Machine configuration packages
+
+The repository produces Azure machine configuration packages rather than Azure DSC extension archives.
+
+1. Use PowerShell 7.2 and run `setup/Install-DscModules.ps1` to install the authoring dependencies.
+2. Compile each configuration to a MOF in a secure, deployment-specific pipeline. The configurations currently require domain and service-account credentials; credentials must not be stored in a package or passed as machine configuration parameters.
+3. Run `setup/New-DscArchive.ps1 -mofFolderPath <folder>` to create `AuditAndSet` packages from the compiled MOFs.
+4. Publish each ZIP to HTTPS-accessible storage and create a `guestConfigurationAssignments` resource with the package URI and SHA-256 hash.
+
+The package builder intentionally does not compile source configurations. Machine configuration uses a different package format from the DSC extension, runs under PowerShell 7.2, and does not support secrets in custom content packages. Reboots and sequencing between machines must be coordinated by the consuming Terraform or Bicep deployment.
+
 <!-- 
 ## Configuration details
 

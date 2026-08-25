@@ -1,4 +1,4 @@
-# #Requires -PSEdition Desktop
+#Requires -PSEdition Core
 
 param(
     [Parameter(Mandatory = $false)] [string] $vmName = "*"
@@ -46,7 +46,7 @@ $functionArgs = Import-Clixml -Path $FunctionArgsPath
 & $FunctionName @functionArgs -OutputPath $OutputPath -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })}
 '@ | Set-Content -Path $runnerScriptPath
 
-        & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runnerScriptPath -ConfigFilePath $configFilePath -FunctionName $functionName -FunctionArgsPath $functionArgsPath -OutputPath $outputPath
+        & pwsh -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $runnerScriptPath -ConfigFilePath $configFilePath -FunctionName $functionName -FunctionArgsPath $functionArgsPath -OutputPath $outputPath
         if ($LASTEXITCODE -ne 0) {
             throw "DSC test '$testFileName' failed in isolated PowerShell session with exit code $LASTEXITCODE."
         }

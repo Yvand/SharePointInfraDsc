@@ -229,11 +229,6 @@
 
     Node localhost
     {
-        LocalConfigurationManager {
-            ConfigurationMode  = 'ApplyOnly'
-            RebootNodeIfNeeded = $true
-        }
-
         #**********************************************************
         # Create AD domain
         #**********************************************************
@@ -789,7 +784,6 @@ $SharePointCentralAdminPort = 5000
 
 $outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\dsc-dc.0\ConfigDc"
 ConfigDc -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -SPServerName $SPServerName -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
-Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
 C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.5

@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install DSC modules
-        shell: powershell
+        shell: pwsh
         run: setup/Install-DscModules.ps1 -copyCustomizedModules $true
 
       - name: Run PSScriptAnalyzer

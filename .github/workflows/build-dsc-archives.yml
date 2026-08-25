@@ -1,4 +1,4 @@
-name: Build DSC archives
+name: Build machine configuration packages
 permissions:
   contents: write
 on:
@@ -22,23 +22,29 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install DSC modules
-        shell: powershell
+      - name: Install machine configuration authoring modules
+        shell: pwsh
         env:
           scripts_folder: "setup"
         run: ${{ env.scripts_folder }}/Install-DscModules.ps1 -vmName "${{ env.vm_name }}" -copyCustomizedModules $true
 
-      - name: Build DSC archives
-        shell: powershell
+      - name: Build machine configuration packages
+        shell: pwsh
         env:
           scripts_folder: "setup"
         run: |
           Remove-Item "${{ env.dsc_folder }}/*.zip" -ErrorAction SilentlyContinue
-          ${{ env.scripts_folder }}/New-DscArchive.ps1 -vmName "${{ env.vm_name }}"
+          $mofFiles = Get-ChildItem "${{ env.dsc_folder }}/*.mof" -ErrorAction SilentlyContinue
+          if ($mofFiles) {
+            ${{ env.scripts_folder }}/New-DscArchive.ps1 -vmName "${{ env.vm_name }}"
+          } else {
+            Write-Warning "No compiled MOFs were supplied. Package creation requires a secure deployment-specific compilation step."
+          }
 
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.artifact_name }}
+          if-no-files-found: ignore
           path: |
             ${{ env.dsc_folder }}/*.ps1
             ${{ env.dsc_folder }}/*.zip
@@ -68,6 +74,7 @@ jobs:
           ls -alh .
 
       - name: Release
+        if: hashFiles('*.zip') != ''
         uses: softprops/action-gh-release@v2
         with:
           name: '${{ github.event.repository.name }}-${{ steps.splittag.outputs.release_version }}'
