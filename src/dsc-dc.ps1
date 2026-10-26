@@ -530,7 +530,11 @@
             Name                       = "$AdfsOidcAGName - Native application"
             ApplicationGroupIdentifier = $AdfsOidcAGName
             Identifier                 = $AdfsOidcIdentifier
-            RedirectUri                = "https://*.$DomainFQDN/"
+            RedirectUri                = @(
+                "https://$SharePointSitesAuthority.$DomainFQDN"
+                "https://OhMy.$DomainFQDN"
+                "https://HNSC1.$DomainFQDN"
+            )
             DependsOn                  = "[AdfsApplicationGroup]OidcGroup"
         }
 
