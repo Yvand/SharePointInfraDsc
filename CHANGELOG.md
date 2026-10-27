@@ -6,6 +6,7 @@
 
 - DSC for DC
   - October 2026 AD FS security update: Replaced the AD FS OIDC wildcard redirect URI with explicit HTTPS URLs for `SharePointSitesAuthority`, `OhMy` and `HNSC1`, without trailing slashes, to support exact redirect URI matching (#19)
+  - Fixed the AD FS service failing to restart after a reboot or a stop: granted the AD FS service account the "Generate security audits" (`SeAuditPrivilege`) user right in the Default Domain Controllers Policy (#20)
 - DSC for SharePoint main
   - October 2026 AD FS security update: Set `UseStateToRedirect` to `$true` on `SPTrustedIdentityTokenIssuer` to support the new AD FS redirect URI constraints (#19)
 
