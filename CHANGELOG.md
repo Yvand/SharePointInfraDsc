@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.2.0] - 2026-10-27
+
 ### Fixed
 
 - DSC for DC
