@@ -460,7 +460,7 @@
                 $domainFqdn = $using:DomainFQDN
                 $account = "$($using:DomainNetbiosName)\$($using:AdfsSvcCreds.UserName)"
                 $sid = (New-Object System.Security.Principal.NTAccount($account)).Translate([System.Security.Principal.SecurityIdentifier]).Value
-                $gpoGuid = "{6AC1786C-016F-11D2-945F-00C04FB984F9}"
+                $gpoGuid = "{6AC1786C-016F-11D2-945F-00C04FB984F9}" # well-known identifier for Default Domain Controllers Policy
                 $gpoPath = "\\$domainFqdn\SYSVOL\$domainFqdn\Policies\$gpoGuid"
                 $infPath = "$gpoPath\MACHINE\Microsoft\Windows NT\SecEdit\GptTmpl.inf"
                 $lines = [System.Collections.Generic.List[string]](Get-Content -Path $infPath -Encoding Unicode)
