@@ -6,7 +6,7 @@
 
 ### Changed
 
-- DSC for SharePoint main
+- DSC for SharePoint main + frontend
   - Added `SP26H1` and `SP26H2` to the enum type `SharePointBuild`
 
 ## [3.2.0] - 2026-10-27
