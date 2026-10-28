@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [3.2.1] - 2026-10-28
+
 ### Changed
 
 - DSC for SharePoint main
