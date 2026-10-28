@@ -2166,6 +2166,8 @@ enum SharePointBuild {
     SP24H2
     SP25H1
     SP25H2
+    SP26H1
+    SP26H2
     SPLatest
 }
 
